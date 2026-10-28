@@ -1,0 +1,4 @@
+{"strings": [
+  {"text":"A lamp","translation":"Лампа","where":"lamp/world.json title"},
+  {"text":"A lamp in the dark, lit.","translation":"Лампа в темноте, горит.","where":"lamp/world.json description"}
+]}

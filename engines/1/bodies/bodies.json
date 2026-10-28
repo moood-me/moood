@@ -1,0 +1,553 @@
+{
+ "joints": [
+  "Hips",
+  "Spine1",
+  "Spine2",
+  "Chest",
+  "Neck1",
+  "Neck2",
+  "Head",
+  "HeadEnd",
+  "Jaw",
+  "LeftEye",
+  "RightEye",
+  "LeftShoulder",
+  "LeftArm",
+  "LeftForeArm",
+  "LeftHand",
+  "LeftHandThumb1",
+  "LeftHandThumb2",
+  "LeftHandThumb3",
+  "LeftHandThumbEnd",
+  "LeftHandIndex1",
+  "LeftHandIndex2",
+  "LeftHandIndex3",
+  "LeftHandIndex4",
+  "LeftHandIndexEnd",
+  "LeftHandMiddle1",
+  "LeftHandMiddle2",
+  "LeftHandMiddle3",
+  "LeftHandMiddle4",
+  "LeftHandMiddleEnd",
+  "LeftHandRing1",
+  "LeftHandRing2",
+  "LeftHandRing3",
+  "LeftHandRing4",
+  "LeftHandRingEnd",
+  "LeftHandPinky1",
+  "LeftHandPinky2",
+  "LeftHandPinky3",
+  "LeftHandPinky4",
+  "LeftHandPinkyEnd",
+  "RightShoulder",
+  "RightArm",
+  "RightForeArm",
+  "RightHand",
+  "RightHandThumb1",
+  "RightHandThumb2",
+  "RightHandThumb3",
+  "RightHandThumbEnd",
+  "RightHandIndex1",
+  "RightHandIndex2",
+  "RightHandIndex3",
+  "RightHandIndex4",
+  "RightHandIndexEnd",
+  "RightHandMiddle1",
+  "RightHandMiddle2",
+  "RightHandMiddle3",
+  "RightHandMiddle4",
+  "RightHandMiddleEnd",
+  "RightHandRing1",
+  "RightHandRing2",
+  "RightHandRing3",
+  "RightHandRing4",
+  "RightHandRingEnd",
+  "RightHandPinky1",
+  "RightHandPinky2",
+  "RightHandPinky3",
+  "RightHandPinky4",
+  "RightHandPinkyEnd",
+  "LeftLeg",
+  "LeftShin",
+  "LeftFoot",
+  "LeftToeBase",
+  "LeftToeEnd",
+  "RightLeg",
+  "RightShin",
+  "RightFoot",
+  "RightToeBase",
+  "RightToeEnd"
+ ],
+ "vertices": 13814,
+ "units": [
+  "browDownLeft",
+  "browDownRight",
+  "browInnerUp",
+  "browOuterUpLeft",
+  "browOuterUpRight",
+  "cheekPuff",
+  "cheekSquintLeft",
+  "cheekSquintRight",
+  "eyeBlinkLeft",
+  "eyeBlinkRight",
+  "eyeLookDownLeft",
+  "eyeLookDownRight",
+  "eyeLookInLeft",
+  "eyeLookInRight",
+  "eyeLookOutLeft",
+  "eyeLookOutRight",
+  "eyeLookUpLeft",
+  "eyeLookUpRight",
+  "eyeSquintLeft",
+  "eyeSquintRight",
+  "eyeWideLeft",
+  "eyeWideRight",
+  "jawForward",
+  "jawLeft",
+  "jawOpen",
+  "jawRight",
+  "mouthClose",
+  "mouthDimpleLeft",
+  "mouthDimpleRight",
+  "mouthFrownLeft",
+  "mouthFrownRight",
+  "mouthFunnel",
+  "mouthLeft",
+  "mouthLowerDownLeft",
+  "mouthLowerDownRight",
+  "mouthPressLeft",
+  "mouthPressRight",
+  "mouthPucker",
+  "mouthRight",
+  "mouthRollLower",
+  "mouthRollUpper",
+  "mouthShrugLower",
+  "mouthShrugUpper",
+  "mouthSmileLeft",
+  "mouthSmileRight",
+  "mouthStretchLeft",
+  "mouthStretchRight",
+  "mouthUpperUpLeft",
+  "mouthUpperUpRight",
+  "noseSneerLeft",
+  "noseSneerRight"
+ ],
+ "mouth": [
+  6608,
+  423,
+  458,
+  502
+ ],
+ "people": {
+  "man": {
+   "sex": "m",
+   "years": 32,
+   "height": 1.768,
+   "face": {
+    "eyes": [
+     [
+      0.0304,
+      1.6501,
+      0.1441
+     ],
+     [
+      -0.0315,
+      1.6506,
+      0.1441
+     ]
+    ],
+    "size": 0.0043,
+    "scale": 1.038
+   }
+  },
+  "woman": {
+   "sex": "f",
+   "years": 29,
+   "height": 1.585,
+   "face": {
+    "eyes": [
+     [
+      0.0284,
+      1.4769,
+      0.1395
+     ],
+     [
+      -0.0294,
+      1.4774,
+      0.1395
+     ]
+    ],
+    "size": 0.004,
+    "scale": 0.956
+   }
+  },
+  "boy": {
+   "sex": "m",
+   "years": 14,
+   "height": 1.657,
+   "face": {
+    "eyes": [
+     [
+      0.03,
+      1.5441,
+      0.1437
+     ],
+     [
+      -0.0311,
+      1.5446,
+      0.1438
+     ]
+    ],
+    "size": 0.0043,
+    "scale": 1.014
+   }
+  },
+  "girl": {
+   "sex": "f",
+   "years": 13,
+   "height": 1.511,
+   "face": {
+    "eyes": [
+     [
+      0.0282,
+      1.4045,
+      0.1213
+     ],
+     [
+      -0.0292,
+      1.405,
+      0.1213
+     ]
+    ],
+    "size": 0.004,
+    "scale": 0.946
+   }
+  },
+  "child": {
+   "sex": "m",
+   "years": 8,
+   "height": 1.309,
+   "face": {
+    "eyes": [
+     [
+      0.0272,
+      1.2058,
+      0.1321
+     ],
+     [
+      -0.0282,
+      1.2062,
+      0.1321
+     ]
+    ],
+    "size": 0.0039,
+    "scale": 0.913
+   }
+  },
+  "toddler": {
+   "sex": "f",
+   "years": 3,
+   "height": 0.936,
+   "face": {
+    "eyes": [
+     [
+      0.0233,
+      0.8488,
+      0.0835
+     ],
+     [
+      -0.0241,
+      0.8492,
+      0.0834
+     ]
+    ],
+    "size": 0.0033,
+    "scale": 0.746
+   }
+  },
+  "oldman": {
+   "sex": "m",
+   "years": 74,
+   "height": 1.74,
+   "face": {
+    "eyes": [
+     [
+      0.0298,
+      1.6215,
+      0.141
+     ],
+     [
+      -0.0309,
+      1.6218,
+      0.141
+     ]
+    ],
+    "size": 0.0042,
+    "scale": 1.025
+   }
+  },
+  "oldwoman": {
+   "sex": "f",
+   "years": 72,
+   "height": 1.549,
+   "face": {
+    "eyes": [
+     [
+      0.028,
+      1.4427,
+      0.1452
+     ],
+     [
+      -0.029,
+      1.4432,
+      0.1453
+     ]
+    ],
+    "size": 0.004,
+    "scale": 0.943
+   }
+  },
+  "smith": {
+   "sex": "m",
+   "years": 40,
+   "height": 1.857,
+   "face": {
+    "eyes": [
+     [
+      0.0313,
+      1.7355,
+      0.1483
+     ],
+     [
+      -0.0324,
+      1.7359,
+      0.1483
+     ]
+    ],
+    "size": 0.0045,
+    "scale": 1.07
+   }
+  },
+  "death": {
+   "sex": "m",
+   "years": 35,
+   "height": 1.916,
+   "face": {
+    "eyes": [
+     [
+      0.0321,
+      1.792,
+      0.1517
+     ],
+     [
+      -0.0332,
+      1.7924,
+      0.1518
+     ]
+    ],
+    "size": 0.0046,
+    "scale": 1.093
+   }
+  }
+ },
+ "garments": {
+  "sweater": {
+   "kind": "top",
+   "credit": {
+    "author": "MargaretToigo",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/1187",
+    "asset": "toigo_fisherman_sweater"
+   }
+  },
+  "oversized": {
+   "kind": "top",
+   "credit": {
+    "author": "MargaretToigo",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/1187",
+    "asset": "toigo_fisherman_sweater"
+   }
+  },
+  "polo": {
+   "kind": "top",
+   "credit": {
+    "author": "namuhekam",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/2909",
+    "asset": "namuhekam_male_polo_shirt"
+   }
+  },
+  "tshirt": {
+   "kind": "top",
+   "credit": {
+    "author": "MargaretToigo",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/1203",
+    "asset": "toigo_basic_tucked_t-shirt"
+   }
+  },
+  "pants": {
+   "kind": "bottom",
+   "credit": {
+    "author": "MargaretToigo",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/1194",
+    "asset": "toigo_wool_pants"
+   }
+  },
+  "shorts": {
+   "kind": "bottom",
+   "credit": {
+    "author": "Cortu",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/2800",
+    "asset": "cortu_jeans_shorts"
+   }
+  },
+  "dress": {
+   "kind": "top",
+   "credit": {
+    "author": "moood",
+    "license": "CC0",
+    "source": "dev/bodies/cut.py",
+    "asset": "dress"
+   }
+  },
+  "skirt": {
+   "kind": "bottom",
+   "credit": {
+    "author": "moood",
+    "license": "CC0",
+    "source": "dev/bodies/cut.py",
+    "asset": "skirt"
+   }
+  },
+  "tunic": {
+   "kind": "top",
+   "credit": {
+    "author": "RehmanPolanski",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/2617",
+    "asset": "rehmanpolanski_viking_tunic"
+   }
+  },
+  "vikingpants": {
+   "kind": "bottom",
+   "credit": {
+    "author": "RehmanPolanski",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/2618",
+    "asset": "rehmanpolanski_viking_pants"
+   }
+  },
+  "robe": {
+   "kind": "top",
+   "credit": {
+    "author": "moood",
+    "license": "CC0",
+    "source": "dev/bodies/cut.py",
+    "asset": "robe"
+   }
+  },
+  "hood": {
+   "kind": "top",
+   "credit": {
+    "author": "moood",
+    "license": "CC0",
+    "source": "dev/bodies/cut.py",
+    "asset": "hood"
+   }
+  },
+  "apron": {
+   "kind": "apron",
+   "credit": {
+    "author": "moood",
+    "license": "CC0",
+    "source": "dev/bodies/cut.py",
+    "asset": "apron"
+   }
+  },
+  "boots": {
+   "kind": "shoes",
+   "credit": {
+    "author": "MargaretToigo",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/1743",
+    "asset": "toigo_ankle_boots_male"
+   }
+  },
+  "flats": {
+   "kind": "shoes",
+   "credit": {
+    "author": "MargaretToigo",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/1734",
+    "asset": "toigo_ballet_flats"
+   }
+  },
+  "short": {
+   "kind": "hair",
+   "credit": {
+    "author": "culturalibre",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/2892",
+    "asset": "culturalibre_hair_02"
+   }
+  },
+  "fringe": {
+   "kind": "hair",
+   "credit": {
+    "author": "culturalibre",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/2479",
+    "asset": "culturalibre_hair_06"
+   }
+  },
+  "bob": {
+   "kind": "hair",
+   "credit": {
+    "author": "MargaretToigo",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/1669",
+    "asset": "toigo_blunt_bob"
+   }
+  },
+  "shoulder": {
+   "kind": "hair",
+   "credit": {
+    "author": "culturalibre",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/2445",
+    "asset": "culturalibre_hair_05"
+   }
+  },
+  "long": {
+   "kind": "hair",
+   "credit": {
+    "author": "culturalibre",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/2893",
+    "asset": "culturalibre_hair_01"
+   }
+  },
+  "bun": {
+   "kind": "hair",
+   "credit": {
+    "author": "RehmanPolanski",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/2477",
+    "asset": "rehmanpolanski_hair_bun_brown"
+   }
+  },
+  "braid": {
+   "kind": "hair",
+   "credit": {
+    "author": "Elvaerwyn",
+    "license": "CC0",
+    "source": "http://www.makehumancommunity.org/node/1335",
+    "asset": "elvs_french_braid_variation"
+   }
+  }
+ }
+}

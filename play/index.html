@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- where the host is (docs/host.md): relative to this page; the host may put its own -->
+  <meta name="moood-host" content="/api/">
+  <title>moood</title>
+  <link rel="stylesheet" href="../engines/1/scene.css">
+  <link rel="stylesheet" href="../engines/1/volume.css">
+  <link rel="stylesheet" href="play.css">
+  <link rel="stylesheet" href="minigame/minigame.css">
+</head>
+<body>
+  <!-- A bespoke play (play.js): ?game=<game>, ?lang=. The game's own code runs it (runtime.js) — a scene full-screen,
+       and over it whatever the game shows (its layer); the page's bar over all. -->
+  <div id="scene"></div>
+  <!-- what the game draws for the language's marks to stand on (bespoke.underlay), under them -->
+  <div id="underlay"></div>
+  <!-- the language of mini-games (minigame/index.js): under the game's layer, its corner buttons over it -->
+  <div id="minigame"></div>
+  <div id="layer"></div>
+  <div id="trouble"></div>
+  <!-- the play's own clock, real and pausable (clock.js): before anything that goes by the time -->
+  <script src="../i18n/i18n.js"></script>
+  <script src="../engines/1/clock.js"></script>
+  <script src="clock.js"></script>
+  <script src="../engines/1/volume.js"></script>
+  <script src="../engines/1/stage.js"></script>
+  <script src="../engines/1/captions.js"></script>
+  <script src="../engines/1/widgets.js"></script>
+  <script src="../engines/1/select.js"></script>
+  <script src="../engines/1/actions.js"></script>
+  <script src="../engines/1/speech.js"></script>
+  <script src="../engines/1/music.js"></script>
+  <script type="module" src="play.js"></script>
+</body>
+</html>

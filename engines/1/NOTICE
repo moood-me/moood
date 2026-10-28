@@ -1,0 +1,11 @@
+moood — work of others in engines/1 under the Apache License, Version 2.0 (LICENSE-Apache-2.0.txt beside this file).
+moood converted each to a binary format of its own (soma.md, bodies/bodies.md: what was taken and how it is used).
+
+soma.bin — the SOMA body: the skin of NVIDIA Kimodo's 77-joint skeleton (https://github.com/nv-tlabs/kimodo,
+kimodo/assets/skeletons/somaskel77/skin_standard.npz).
+Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+bodies/ — the bodies, made with NAVER Anny (https://github.com/naver/anny).
+Anny, Copyright (C) 2025 NAVER Corporation. All Rights Reserved.
+Their rig adapted from NVIDIA SOMA-X (https://github.com/NVlabs/SOMA-X).
+Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.

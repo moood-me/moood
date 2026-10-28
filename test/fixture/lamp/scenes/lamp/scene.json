@@ -1,0 +1,10 @@
+{
+  "title": "The lamp",
+  "caption": "It is lit.",
+  "light": { "ambient": 0.15, "ambientColor": "#334466" },
+  "state": { "lit": true },
+  "objects": [
+    { "id": "ground", "name": "ground", "x": 0.5, "distance": 3, "height": 2, "box": [-4.2, -0.3, 4.2, 0.3] },
+    { "id": "lamp", "name": "lamp", "x": 0.5, "distance": 3, "height": 1.6 }
+  ]
+}

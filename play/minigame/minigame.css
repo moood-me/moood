@@ -1,0 +1,189 @@
+/* The language of mini-games (minigame/index.js): its layer over the scene — under the game's own (#layer), so the
+   game's buttons in its corners stand over it. A game restyles it by its style (bespoke.minigame.style → the --mg-
+   variables); the kinds of marks, the errors' movements, the plate stay the same (docs/games/miniux/language.md §7). */
+#minigame { position: fixed; inset: 0; z-index: 2; pointer-events: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  --mg-mark: #fff4de; --mg-fill: #ffd27a; --mg-good: #a6ec98; --mg-danger: #ff5b48; --mg-fork: #b4c3e6; --mg-ghost: rgba(255, 255, 255, 0.62);
+  --mg-line: 3px; --mg-font: Georgia, 'Times New Roman', serif;
+  --mg-k: 1; /* the scale: the frame's height over the language's (layer.js REF), ≥ 1 — set by the layer as it places */
+  --mg-rim: drop-shadow(0 0 0.8px rgba(0, 0, 0, 0.9)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.45)); font-family: var(--mg-font); color: var(--mg-mark); }
+/* where a mini-game takes the finger: all the screen (no selection, no long-press menu, no zoom, no pull to refresh — §2.8) */
+.mg-veil { position: fixed; inset: 0; touch-action: none; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+.mg-on .mg-veil { pointer-events: auto; }
+/* a plain choice (no plate): no veil — a mark takes a touch within its touch circle (gestures.js touchRadius: wider
+   than it is drawn), the rest stays the scene's; not a hidden one, a beat's light, nor while the scene answers */
+.mg-on.mg-free .mg-veil { pointer-events: none; }
+.mg-on.mg-free.mg-petals .mg-veil { pointer-events: auto; } /* petals out: a touch off them folds them */
+.mg-free .mg-mark::before { content: ''; position: absolute; left: 50%; top: 50%; --hit: max(calc(64px * var(--mg-k)), calc(var(--size) * 1.4));
+  width: var(--hit); height: var(--hit); margin: calc(var(--hit) / -2) 0 0 calc(var(--hit) / -2);
+  border-radius: 50%; pointer-events: auto; cursor: pointer; touch-action: none; -webkit-tap-highlight-color: transparent; }
+.mg-free.mg-turn .mg-mark::before, .mg-free .mg-hidden::before, .mg-free .mg-light::before, .mg-paused.mg-free .mg-mark::before { pointer-events: none; }
+
+/* ── marks (§2.1) ── */
+.mg-marks, .mg-fx { position: fixed; inset: 0; }
+.mg-mark { position: absolute; left: 0; top: 0; width: var(--size); height: var(--size); margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2); }
+.mg-mark[hidden] { display: none; }
+.mg-body { position: absolute; inset: 0; transform-origin: 50% 50%; }
+/* every line of a mark has a thin dark rim under it (and a soft shade): a light line read on a light ground too */
+.mg-body svg { position: absolute; inset: 0; overflow: visible; filter: var(--mg-rim); }
+.mg-body circle { fill: none; transition: stroke-dasharray 0.08s linear; }
+.mg-edge { stroke: var(--mg-mark); stroke-width: calc(var(--mg-line) * 1.25); }
+/* (under every light line of a mark a dark band, wider than it: the mark reads on any ground — light, dark, busy) */
+.mg-under { stroke: rgba(12, 14, 20, 0.55); stroke-width: calc(var(--mg-line) * 2.6); }
+.mg-spot .mg-under { stroke-width: calc(var(--mg-line) * 2.4); stroke-opacity: 0.8; }
+/* a groove: it will fill (hold) */
+/* (its empty channel half light, half dark: seen on a light ground and on a dark one) */
+.mg-groove .mg-edge { stroke: color-mix(in srgb, var(--mg-mark) 40%, rgba(20, 22, 30, 0.5)); stroke-width: calc(var(--mg-line) * 3.2); }
+.mg-groove .mg-fill { stroke: var(--mg-fill); stroke-width: calc(var(--mg-line) * 3.2); }
+/* dashed: a way from it (pull, trace, turn) */
+.mg-dash .mg-edge { stroke-dasharray: 0.07 0.045; stroke-width: calc(var(--mg-line) * 1.4); }
+/* a spot with a soft edge (rub, seek) */
+.mg-spot .mg-body { transform: scale(var(--shrink, 1)); transition: transform 0.2s ease-out; }
+.mg-blot { fill: rgba(255, 240, 210, 0.13) !important; stroke: none; }
+.mg-spot .mg-edge { stroke-dasharray: 0.02 0.03; stroke-width: calc(var(--mg-line) * 1.4); }
+.mg-spot .mg-fill { stroke: var(--mg-fill); stroke-width: calc(var(--mg-line) * 2); }
+/* the one outer arc, one meaning in a mini-game (§2.12): the danger, a level growing red (§3.4) — or a limit's time,
+   running down */
+.mg-arc.mg-danger { stroke: var(--mg-danger); stroke-width: calc(var(--mg-line) * 1.4); stroke-linecap: round; }
+.mg-arc.mg-time { stroke: var(--mg-mark); stroke-opacity: 0.75; stroke-width: calc(var(--mg-line) * 0.8); }
+/* a dot under the finger (hold anywhere) — the touch is taken, nothing more */
+.mg-dot .mg-edge { stroke-opacity: 0.8; stroke-width: var(--mg-line); }
+/* waiting for the touch, each kind shows what to do with it (§3.1, П38): a ring — a short tap of its own every two
+   seconds; a groove — its fill creeps a little and ebbs (hold); dashes — they run outward (drag, along, round); a spot —
+   it breathes and its edge stirs (rub, search). Touched, it stops: the finger is on it */
+.mg-waiting .mg-body { animation: mg-breath 2.4s ease-in-out infinite; }
+@keyframes mg-breath { 50% { scale: 1.08; } }
+.mg-ring.mg-waiting .mg-body { animation: mg-tap 2.4s ease-in-out infinite; }
+@keyframes mg-tap { 0%, 70%, 100% { scale: 1; } 78% { scale: 0.84; } 88% { scale: 1.06; } }
+.mg-groove.mg-waiting .mg-fill { animation: mg-creep 2.4s ease-in-out infinite; }
+@keyframes mg-creep { 0%, 100% { stroke-dasharray: 0 1; } 55% { stroke-dasharray: 0.3 1; } }
+.mg-dash.mg-waiting .mg-edge { animation: mg-march 1.2s linear infinite; }
+@keyframes mg-march { to { stroke-dashoffset: -0.115; } }
+.mg-spot.mg-waiting .mg-edge { animation: mg-march 3s linear infinite; }
+/* (a thing glows: one breath in one place — the marks wait without pulsing) */
+.mg-glowing .mg-waiting .mg-body, .mg-glowing .mg-waiting .mg-fill, .mg-glowing .mg-waiting .mg-edge { animation: none; }
+/* held: the finger is on it — it lights and grows a little, a halo round it, seen past the finger (М10) */
+.mg-held .mg-body { scale: 1.1; transition: scale 0.12s ease-out; }
+.mg-held .mg-edge { stroke: var(--mg-mark); stroke-width: calc(var(--mg-line) * 1.5); }
+.mg-groove.mg-held .mg-edge { stroke-width: calc(var(--mg-line) * 3.2); stroke: color-mix(in srgb, var(--mg-mark) 55%, rgba(20, 22, 30, 0.5)); }
+.mg-held .mg-body svg { filter: var(--mg-rim) drop-shadow(0 0 calc(12px * var(--mg-k)) rgba(255, 220, 160, 0.95)); }
+.mg-hidden { opacity: 0; pointer-events: none; }
+.mg-mark { transition: opacity 0.18s ease; }
+/* a quieter second path; a target (empty), the one what is carried is in now, one not to go to */
+.mg-quiet { opacity: 0.8; }
+.mg-target .mg-edge { stroke-opacity: 0.9; stroke-width: var(--mg-line); }
+.mg-target.mg-reached .mg-edge { stroke: var(--mg-good); stroke-opacity: 1; stroke-width: calc(var(--mg-line) * 1.6); }
+.mg-target.mg-reached .mg-body { scale: 1.15; transition: scale 0.12s ease-out; }
+.mg-closed { opacity: 0.3; }
+.mg-closed .mg-edge { stroke-dasharray: 0.03 0.05; }
+.mg-open .mg-body { scale: 0.8; }
+/* a rhythm's beat: a second ring closing on the mark, touching its edge on the beat (§4.8) */
+.mg-closing { position: absolute; inset: calc(8px * var(--mg-k)); border-radius: 50%; border: calc(var(--mg-line) * 0.8) solid var(--mg-mark); opacity: 0.8;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(0, 0, 0, 0.5); transform: scale(var(--r, 2.4)); pointer-events: none; }
+/* a way's colour (the game's): after what is shown, one's own — neutral, neither good nor bad (М27) */
+.mg-theirs .mg-edge { stroke: var(--mg-mark); }
+.mg-own .mg-edge { stroke: var(--mg-fork); }
+/* a beat's sign without a mark: a soft light without edges, growing toward each beat (rhythm drives its opacity) */
+.mg-light { opacity: 0; transition: none; }
+.mg-light .mg-body { border-radius: 50%; background: radial-gradient(circle, rgba(255, 244, 214, 0.95), rgba(255, 236, 196, 0.5) 38%, rgba(255, 236, 196, 0) 70%); }
+/* the scene's turn: no marks (§2.3) */
+.mg-marks, .mg-paths { transition: opacity 0.3s ease; }
+.mg-turn .mg-marks, .mg-turn .mg-paths { opacity: 0; }
+
+/* ── ways, lines, circles (svg over the screen) ── */
+.mg-paths { position: fixed; inset: 0; width: 100%; height: 100%; overflow: visible; fill: none; filter: var(--mg-rim); }
+.mg-way, .mg-line, .mg-circle { stroke: var(--mg-mark); stroke-opacity: 0.9; stroke-width: calc(var(--mg-line) * var(--mg-k)); stroke-dasharray: calc(8px * var(--mg-k)) calc(9px * var(--mg-k)); stroke-linecap: round; }
+.mg-line-done { stroke: var(--mg-fill); stroke-width: calc(var(--mg-line) * 1.6 * var(--mg-k)); stroke-linecap: round; }
+.mg-arrow { stroke: var(--mg-mark); stroke-width: calc(var(--mg-line) * var(--mg-k)); stroke-linecap: round; stroke-linejoin: round; }
+.mg-tension { stroke: var(--mg-danger); stroke-width: calc(var(--mg-line) * (1.2 + var(--k, 0) * 2.4) * var(--mg-k)); stroke-opacity: calc(0.5 + var(--k, 0) * 0.5); stroke-linecap: round; }
+/* lead's track: under the finger (or the ghost) clear; resting — quieter, still seen: there is a way to lead */
+.mg-track { stroke: var(--mg-mark); stroke-opacity: 0.8; stroke-width: calc(var(--mg-line) * 1.6 * var(--mg-k)); stroke-linecap: round; transition: stroke-opacity 0.2s; }
+.mg-knob { fill: var(--mg-mark); fill-opacity: 0.95; transition: fill-opacity 0.2s; }
+.mg-track.mg-idle { stroke-opacity: 0.5; }
+.mg-knob.mg-idle { fill-opacity: 0.6; }
+
+/* ── effects ── */
+.mg-fx > div { position: absolute; left: 0; top: 0; }
+.mg-fx i { position: absolute; display: block; border-radius: 50%; }
+.mg-ripple i { width: calc(64px * var(--mg-k)); height: calc(64px * var(--mg-k)); margin: calc(-32px * var(--mg-k)); border: calc(2.5px * var(--mg-k)) solid var(--mg-mark); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(0, 0, 0, 0.4); }
+/* a touch taken: a ring of light round the finger, wider than a fingertip — seen past it */
+.mg-touch i { width: calc(84px * var(--mg-k)); height: calc(84px * var(--mg-k)); margin: calc(-42px * var(--mg-k)); border: calc(3px * var(--mg-k)) solid var(--mg-mark);
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 12px rgba(255, 244, 222, 0.6); }
+.mg-spark i { width: calc(7px * var(--mg-k)); height: calc(7px * var(--mg-k)); margin: calc(-3.5px * var(--mg-k)); background: var(--mg-fill); box-shadow: 0 0 6px var(--mg-fill); }
+.mg-crumb i { width: calc(8px * var(--mg-k)); height: calc(8px * var(--mg-k)); margin: calc(-4px * var(--mg-k)); background: var(--mg-danger); }
+.mg-flash i { width: calc(44px * var(--mg-k)); height: calc(44px * var(--mg-k)); margin: calc(-22px * var(--mg-k)); border: calc(3px * var(--mg-k)) solid var(--mg-good); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45); }
+
+/* a press's petals: 2–4 small buttons with a word (§4.1) */
+/* (placed by `translate` — gestures.js; centred by transform, from the corner it is scaled about: it appears where it
+   stands, nothing flies in) */
+.mg-petal { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); transform-origin: 0 0; min-height: 40px; padding: 8px 14px; border: 1px solid rgba(255, 244, 222, 0.35); border-radius: 999px;
+  background: rgba(12, 14, 20, 0.86); color: var(--mg-mark); font: 16px/1.2 var(--mg-font); white-space: nowrap; pointer-events: auto; cursor: pointer;
+  touch-action: none; -webkit-tap-highlight-color: transparent; }
+/* (on a pause nothing is taken — index.js: the veil under them ignores it too) */
+.mg-paused .mg-petal { pointer-events: none; }
+/* a seek's lens under the finger: warmer near (§4.7); it fills when found */
+.mg-lens { position: absolute; left: 0; top: 0; width: calc(120px * var(--mg-k)); height: calc(120px * var(--mg-k)); margin: calc(-60px * var(--mg-k)); border-radius: 50%;
+  border: 3px solid color-mix(in srgb, var(--mg-danger) calc(var(--warm, 0) * 100%), var(--mg-fork));
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.1));
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 0 calc(var(--warm, 0) * 28px) color-mix(in srgb, var(--mg-danger) calc(var(--warm, 0) * 100%), transparent); }
+.mg-lens[hidden] { display: none; }
+.mg-lens::after { content: ''; position: absolute; inset: -9px; border-radius: 50%;
+  background: conic-gradient(var(--mg-fill) calc(var(--u, 0) * 1turn), transparent 0);
+  -webkit-mask: radial-gradient(circle, transparent calc(64px * var(--mg-k)), #000 calc(65px * var(--mg-k))); mask: radial-gradient(circle, transparent calc(64px * var(--mg-k)), #000 calc(65px * var(--mg-k))); }
+
+/* ── the plate (§2.6): top middle of the window, where a title would be (plate.js places it) ── */
+.mg-plate { position: fixed; left: 0; top: 0; display: flex; flex-direction: column; align-items: stretch; gap: 7px; padding: 9px 16px 11px;
+  border-radius: 14px; background: rgba(10, 12, 18, 0.55); box-shadow: 0 4px 22px rgba(0, 0, 0, 0.3); opacity: 0; transition: opacity 0.4s ease;
+  pointer-events: none; --done: 0; }
+.mg-plate.mg-in { opacity: 1; pointer-events: auto; }
+.mg-task { text-align: center; font: italic 400 clamp(17px, 2.2vw, 23px)/1.2 var(--mg-font); color: var(--mg-mark); text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+  text-wrap: balance; }
+.mg-row { display: flex; align-items: center; gap: 10px; }
+.mg-sample { flex: none; max-width: 90px; }
+/* the bar: the fill from the left — done; the shade from the right — what is left before it is lost; notches — the
+   steps; chips — the errors; the glow on the fill's edge — how it goes now */
+.mg-bar { position: relative; flex: 1; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.16); }
+.mg-fill-bar { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--done) * 100%); border-radius: 3px; background: var(--mg-fill);
+  transition: width var(--ebb, 0.12s) linear; }
+.mg-shade { position: absolute; right: 0; top: -2px; bottom: -2px; border-radius: 3px;
+  background: repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.75) 0 3px, rgba(60, 10, 10, 0.75) 3px 6px); transition: width 0.25s linear; }
+.mg-shade[hidden] { display: none; }
+.mg-notches, .mg-notches i { position: absolute; }
+.mg-notches { inset: 0; }
+.mg-notch { top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: rgba(10, 12, 18, 0.85); }
+.mg-chip { position: absolute; top: -4px; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: var(--mg-danger);
+  box-shadow: 0 0 0 2px rgba(10, 12, 18, 0.85); }
+.mg-glow { position: absolute; top: 50%; left: calc(var(--done) * 100%); width: 10px; height: 10px; margin: -5px; border-radius: 50%;
+  background: var(--mg-mark); opacity: 0.55; box-shadow: 0 0 4px rgba(255, 244, 222, 0.4); transition: left var(--ebb, 0.12s) linear, opacity 0.2s, scale 0.2s, background 0.2s; }
+.mg-glow.mg-good { opacity: 1; scale: 1.5; background: var(--mg-fill); box-shadow: 0 0 14px var(--mg-fill), 0 0 4px #fff; }
+.mg-glow.mg-bad { opacity: 1; scale: 1.4; background: var(--mg-danger); box-shadow: 0 0 12px var(--mg-danger); animation: mg-tremble 0.12s linear infinite; }
+@keyframes mg-tremble { 25% { translate: -2px 1px; } 75% { translate: 2px -1px; } }
+/* no glow (a choice: neither good nor bad) */
+.mg-glow.mg-none { display: none; }
+/* a choice's pieces: each coloured by the way it went there — after the shown one (the mark's colour), one's own (the
+   player's colour), nothing (pale); neither good nor bad (М27) */
+.mg-way-theirs, .mg-way-own, .mg-way-none { position: absolute; top: 0; bottom: 0; }
+.mg-way-theirs { background: var(--mg-mark); }
+.mg-way-own { background: var(--mg-fork); }
+.mg-way-none { background: rgba(255, 255, 255, 0.3); }
+/* the scene's turn: the glow breathes — not stuck, waiting */
+.mg-breathe .mg-glow { animation: mg-wait 2.4s ease-in-out infinite; }
+@keyframes mg-wait { 50% { scale: 1.8; opacity: 1; } }
+.mg-sample[hidden] { display: none; }
+/* ── the ghost finger (§2.2) ── */
+.mg-ghost { position: fixed; inset: 0; pointer-events: none; }
+.mg-ghost[hidden] { display: none; }
+/* (placed by `translate` — ghost.js: its press scales it round its own middle) */
+.mg-ghost i { position: absolute; left: 0; top: 0; border-radius: 50%; }
+.mg-ghost { --tip: calc(56px * var(--mg-k)); }
+.mg-ghost-tip { width: var(--tip); height: var(--tip); margin: calc(var(--tip) / -2); background: var(--mg-ghost); border: calc(3px * var(--mg-k)) solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.5); transition: scale 0.1s, box-shadow 0.1s; }
+/* pressed: it sinks in, a ring of light round it — the press seen */
+.mg-ghost.mg-down .mg-ghost-tip { scale: 0.84; box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.5), 0 1px 5px rgba(0, 0, 0, 0.5), 0 0 0 calc(10px * var(--mg-k)) rgba(255, 255, 255, 0.45); }
+.mg-ghost-trail { width: calc(var(--tip) / 2); height: calc(var(--tip) / 2); margin: calc(var(--tip) / -4); background: var(--mg-ghost); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
+
+/* ── the debug (the playground's) ── */
+.mg-debug { position: fixed; inset: 0; width: 100%; height: 100%; }
+.mg-debug-text { position: fixed; left: calc(env(safe-area-inset-left, 0px) + 12px); bottom: 12px; margin: 0; padding: 8px 10px; border-radius: 8px;
+  background: rgba(0, 0, 0, 0.6); color: #cfe; font: 12px/1.35 ui-monospace, monospace; white-space: pre; }
+.mg-debug[hidden], .mg-debug-text[hidden] { display: none; }

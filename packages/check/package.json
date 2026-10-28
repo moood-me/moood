@@ -1,0 +1,40 @@
+{
+  "name": "@moood/check",
+  "version": "0.1.0",
+  "description": "A moood repository checked: its worlds, games and articles (any number, at any depth), what they say of themselves and of each other, and every text a person reads or hears written as tr()/say()/think() with a literal and translated into each language they say they are in; check --write lays out the languages' files.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moood-me/moood.git",
+    "directory": "packages/check"
+  },
+  "homepage": "https://github.com/moood-me/moood/tree/main/packages/check",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "moood-check": "cli.js"
+  },
+  "files": [
+    "index.js",
+    "cli.js",
+    "extract.js",
+    "scopes.js",
+    "repository.js",
+    "lines.js",
+    "problems/",
+    "i18n/",
+    "play/",
+    "engines/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "acorn": "^8.15.0",
+    "acorn-walk": "^8.3.4"
+  },
+  "scripts": {
+    "build": "node build.js"
+  }
+}

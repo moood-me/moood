@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>moood · motion</title>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #151a22; font: 13px system-ui, sans-serif; }
+    canvas { position: fixed; inset: 0; width: 100%; height: 100%; }
+    .label { position: fixed; padding: 3px 7px; color: #d6dae1; background: rgba(14, 17, 22, 0.6); border-bottom-right-radius: 6px; }
+    .label b { color: #e8c98a; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <!-- A made motion as frames on its body, for a renderer (a host's: docs/host.md): what an
+       assistant looks at. Handed in: window.__mooodMotion — the motion ({n, fps, names, q, p}: the motion
+       service's body of it); window.__mooodMotionShow — {at: [seconds…], views: ["front" | "side" |
+       "back" | {yaw, pitch, dist}…], kit: its module clip or null (the module's skeleton over the body),
+       look: how the person is seen (MooodShapes.look's — kind "shapes" —, or MooodFigure.look's: a body;
+       by default the body's man), cell: [w, h], lang: the language its labels are in (the source's by default)}: a
+       row per view, a column per moment, each frame labelled. The page is as large as the sheet; the title turns
+       "ready" when it is drawn, errors in window.__mooodRenderErrors. -->
+  <canvas id="sheet"></canvas>
+  <script src="../../i18n/i18n.js"></script>
+  <script src="motion.js"></script>
+  <script type="module">
+    import { words } from '../../i18n/words.js';
+
+    window.__mooodRenderErrors = [];
+    const tr = MooodI18n.part('engine1');
+    const viewName = v => (v === 'front' ? tr.c('a view of a person', 'from the front') : v === 'side' ? tr.c('a view of a person', 'from the side')
+      : v === 'back' ? tr.c('a view of a person', 'from the back') : tr.c('a view of a person', 'a view'));
+    try {
+      const motion = window.__mooodMotion, show = window.__mooodMotionShow;
+      MooodI18n.said('engine1', await words(new URL('./', location.href), show.lang || MooodI18n.source));
+      const [w, h] = show.cell, canvas = document.getElementById('sheet');
+      const look = show.look || {}, v = MooodMotion.view(canvas, await MooodMotion.body(), motion, show.kit);
+      if (look.kind !== 'shapes') await MooodFigure.load(look);  // (a body's files: its person, its clothes)
+      const cells = [];
+      show.views.forEach((view, r) => show.at.forEach((s, c) => {
+        const t = Math.max(0, Math.min(motion.n - 1, s * motion.fps));
+        cells.push([c * w, r * h, w, h, t, typeof view === 'string' ? { facing: view } : view]);
+        const label = document.createElement('div'), at = document.createElement('b');
+        label.className = 'label';
+        label.style.left = `${c * w}px`; label.style.top = `${r * h}px`;
+        at.textContent = tr('{s} s', { s: s.toFixed(2) });
+        label.append(at, ` · ${viewName(view)}`);
+        document.body.append(label);
+      }));
+      v.draw(0, {}, { kit: !!show.kit, cells, look });
+    } catch (e) {
+      window.__mooodRenderErrors.push(String(e && e.stack || e));
+    }
+    document.title = 'ready';
+  </script>
+</body>
+</html>

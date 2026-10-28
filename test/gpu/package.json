@@ -1,0 +1,9 @@
+{
+  "name": "moood-gpu-check",
+  "private": true,
+  "description": "engine 3's GPU programs checked in node, on Dawn's GPU-less backend: every WGSL module, layout and pipeline, and one frame of every pass, validated (engines/3/gpu/check.js)",
+  "type": "module",
+  "engines": { "node": ">=22.7" },
+  "devDependencies": { "webgpu": "0.6.2" },
+  "scripts": { "check": "node check.mjs" }
+}

@@ -1,0 +1,4 @@
+{"strings": [
+  {"text":"An evening","translation":"Вечер","where":"evening/game.json title"},
+  {"text":"An evening by the lamp.","translation":"Вечер у лампы.","where":"evening/game.json description"}
+]}

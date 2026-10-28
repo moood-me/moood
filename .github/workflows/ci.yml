@@ -1,0 +1,83 @@
+# moood's open part checked on every push and pull request: its own texts translated (check over each folder of
+# pages, its problems' words, the test fixture), the tests (test/: check, the local player) and engine 3's GPU programs
+# (test/gpu: on Dawn's GPU-less backend). Then, from what passed:
+# a push to main publishes the local player's image (ghcr.io/moood-me/moood-player — :latest and the commit's sha);
+# a tag check-v<version> publishes @moood/check at that version (its package.json says it; the NPM_TOKEN secret).
+name: ci
+on:
+  push:
+    branches: ['**']
+    tags: ['check-v*']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: check, and what it shares with the runtime
+        working-directory: packages/check
+        run: npm ci && npm run build
+      - name: moood's own texts, translated
+        run: for d in engines/1 engines/3 scene play player packages/check/problems test/fixture; do node packages/check/cli.js "$d" || exit 1; done
+      - name: tests
+        run: node --test test/*.test.js
+      - name: engine 3's GPU programs, validated
+        working-directory: test/gpu
+        run: npm ci && node check.mjs
+
+  image:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/moood-me/moood-player:latest
+            ghcr.io/moood-me/moood-player:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/moood-me/moood
+            org.opencontainers.image.description=moood's local player: a folder's worlds and games, shown and played
+            org.opencontainers.image.licenses=MIT
+
+  npm:
+    needs: check
+    if: startsWith(github.ref, 'refs/tags/check-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: the package, built
+        working-directory: packages/check
+        run: npm ci && npm run build
+      - name: the tag is its version
+        working-directory: packages/check
+        run: test "check-v$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")" = "$GITHUB_REF_NAME"
+      - name: published
+        working-directory: packages/check
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

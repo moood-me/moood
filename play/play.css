@@ -1,0 +1,29 @@
+/* A bespoke play (play.js): the game's layer over the scene — it lets presses through to the scene;
+   what the game puts in it takes them (the game's own styles: bespoke.css). */
+#layer { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+#layer > * { pointer-events: auto; }
+/* under the language's marks: what the game draws for them to stand on — no touch of its own (the scene's camera has
+   it), but what of it the game gives pointer-events: auto (a map's own controls); the wheel over these places is the
+   scene's all the same (runtime.js) */
+#underlay { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+
+/* a phone held upright: asked to turn it (landscape.js) — over everything, the play paused meanwhile */
+#turn { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  padding: 24px; text-align: center; background: #0E1116; color: #E6E8EC; font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+#turn[hidden] { display: none; }
+#turn svg { width: 72px; height: 72px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+#turn svg .after { stroke: #e8c98a; }
+#turn b { font-size: 19px; font-weight: 500; }
+#turn span { color: #8B93A0; font-size: 14px; }
+
+/* the page's bar (play.js): top left, over the scene and the game's layers */
+.bar { position: fixed; left: 16px; top: 12px; z-index: 4; display: flex; gap: 6px; align-items: center; }
+.bar > * { height: 40px; width: 40px; padding: 0; border: 0; border-radius: 6px; background: rgba(17, 20, 24, 0.45); color: #FFFFFF;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.bar > [hidden] { display: none; }
+/* the way back to the host's page of the game: its name */
+.bar > .back { width: auto; padding: 0 12px; font: 15px/1 system-ui, -apple-system, "Segoe UI", sans-serif; text-decoration: none; }
+.bar svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.bar svg .solid { fill: currentColor; }
+#pause .go, #pause.paused .pause { display: none; }
+#pause.paused .go { display: inline; fill: currentColor; }

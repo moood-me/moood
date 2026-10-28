@@ -1,0 +1,6 @@
+{"strings": [
+  {"text":"the scene is getting ready","translation":"сцена готовится","where":"page.js"},
+  {"text":"this device cannot show the scene","translation":"это устройство не может показать сцену","where":"page.js"},
+  {"text":"the scene could not be shown","translation":"сцену не удалось показать","where":"page.js"},
+  {"text":"the graphics device was lost","translation":"графическое устройство потеряно","where":"page.js"}
+]}

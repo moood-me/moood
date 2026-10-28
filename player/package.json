@@ -1,0 +1,10 @@
+{
+  "name": "@moood/player",
+  "private": true,
+  "description": "moood's local player: the worlds and games of a folder shown and played by moood's pages (docs/host.md).",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  }
+}

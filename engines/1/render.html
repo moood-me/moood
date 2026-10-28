@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>moood · render</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="scene.css">
+  <!-- (the page's own fades — titles, captions, widgets coming in — go by the real clock, not the
+       film's: here all is shown at once, the same however fast the machine) -->
+  <style>html, body { margin: 0; height: 100%; overflow: hidden; background: #000; } #scene { position: fixed; inset: 0; width: 100%; height: 100%; } .titles { right: 0; }
+    *, *::before, *::after { transition: none !important; animation: none !important; }</style>
+</head>
+<body>
+  <!-- A scene from its starting viewpoint, no UI — what a renderer (a host's: docs/host.md — the pictures of scenes,
+       the artist's look at its own work) takes its frames of. It hands the spec in as
+       window.__mooodSpec; errors the scene's code threw end up in window.__mooodErrors (starting it
+       too), what it does wrong without failing (a name it does not know, a mistyped key) in
+       window.__mooodWarnings, what its scripts told (scene.tell) in window.__mooodTells ({at: seconds
+       since it started — an engine-3 scene's: the scene's own seconds when it was told —, text, about}). The stage is window.__mooodStage: a render steps the film unseen
+       to the moments it takes (draw(false)) and asks what is where (inspect()); it is checked as it is
+       drawn (a painting cut off by its box is said). ?debug — what is where, over the frame. An engine-3
+       scene: its tier is given (window.__mooodDevice); ?showcase — its film is asked in the
+       very moment it is shown (it opens on the film's first beat), never by a later call. window.__mooodLoaded — a
+       promise: true once everything the scene loads by itself has loaded (the scene built with what it fetches — its
+       people's engine, their bodies —, the page's fonts, its widgets' pictures); false — the scene could not be shown
+       (why: __mooodErrors). A renderer waits for it before it moves the clock. -->
+  <div id="scene"></div>
+  <header class="titles"><h1 id="title"></h1><p id="caption"></p></header>
+  <script src="../../i18n/i18n.js"></script>
+  <script src="stage.js"></script>
+  <script>
+    // (a picture: the engines' own signs — waiting, failing — are not in it; their words, the source language's)
+    MooodI18n.said('engine1', MooodI18n.translator(MooodI18n.source)); MooodI18n.said('engine3', MooodI18n.translator(MooodI18n.source));
+  </script>
+  <script src="captions.js"></script>
+  <script src="widgets.js"></script>
+  <script>
+    (() => {
+      let loaded;
+      window.__mooodLoaded = new Promise(r => { loaded = r; });
+      const failed = e => { (window.__mooodErrors = window.__mooodErrors || []).push(String(e?.message || e)); loaded(false); };
+      // the pictures of the page — its widgets' too (each in a shadow root of its own) — decoded
+      const pictures = root => [...root.querySelectorAll('*')].flatMap(el => [...(el.tagName === 'IMG' ? [el] : []), ...(el.shadowRoot ? pictures(el.shadowRoot) : [])]);
+      try {
+        const spec = window.__mooodSpec;
+        // the language it is shown in, its texts' translations into it (none: the source language) — what it reads
+        // as the page shows it (seen), and what its code has as tr (kit.js)
+        const words = window.__mooodWords || {}, lang = words.lang || MooodI18n.source, strings = words.strings || [];
+        const tr = MooodI18n.translator(lang, strings, 'the scene'), seen = MooodI18n.shown(spec, tr);
+        const query = new URLSearchParams(location.search), bare = query.has('bare');  // a picture for the list: no text
+        if (!bare) {
+          document.getElementById('title').textContent = seen.title || '';
+          document.getElementById('caption').textContent = seen.caption || '';
+        }
+        const modules = { texts: window.__mooodModules || {}, lang, strings }; // the modules the scene lists, given (kit.js)
+        const canvas = document.getElementById('scene'), stage = window.__mooodStage = Moood.mount(canvas, { check: true });
+        // the starting state, scripts running (their errors are reported) — before the scene is shown, so its first frame is as they set it
+        // (when a thing was told: an engine-3 scene's thread says it with the event — the scene's own seconds, its time
+        // moving unseen in a render; the older engines' is the page's clock since the start)
+        const t0 = performance.now(), told = window.__mooodTells = [];
+        MooodState.start(spec, {}, { stage, modules, tell: (text, about, at) => told.push({ at: spec.engine === 3 ? at : (performance.now() - t0) / 1000, text, about }) });
+        const shown = stage.show(spec, modules);
+        // (an engine-3 scene whose showcase is asked: started with the scene, in this same task)
+        if (spec.engine === 3 && query.has('showcase')) stage.showcase.start();
+        if (!bare) MooodWidgets.create({ canvas, stage }).show({ ...seen, widgets: (seen.widgets || []).map(w => ({ ...w, at: 0, for: 0 })) }, tr);
+        // the captions by the scene's time, as the page shows them then
+        if (!bare) MooodCaptions.show(seen.captions || [], stage);
+        if (!bare) MooodCaptions.card(document.querySelector('.titles'), stage);
+        shown.then(() => stage.ready()).then(() => document.fonts.ready)
+          .then(() => Promise.all(pictures(document).map(i => i.decode().catch(() => {})))).then(() => loaded(true), failed);
+      } catch (e) { failed(e); }
+    })();
+  </script>
+</body>
+</html>
