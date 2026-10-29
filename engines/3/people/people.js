@@ -4,9 +4,11 @@
 // the characters, the styles…) over what the engine has. How they move is the scene's state — where they stand (the
 // element's place, as any element's), and keys of their own: <id>_do, _turn, _look, _reach, _with, _wear, _gait, _steps,
 // _on, _here, _still, _mood (people.md).
-//   Twice a tick (contracts PP1–PP11). Once every step, seen or unseen, SCENE calls frame: everyone's player is
-// moved, and who is here is posed — placed upright where SCENE's placing has them (or where they are held), their
-// points, box, sphere and capsules made, the same arrays every step; nothing of the GPU. Once in every drawn frame
+//   Twice a tick (contracts PP1–PP11). Once every step, seen or unseen, SCENE calls frame: the player of everyone
+// here is moved and they are posed — placed upright where SCENE's placing has them (or where they are held), their
+// points, box, sphere and capsules made, the same arrays every step; nothing of the GPU. Who is not here costs nothing
+// a step (their player stands; what they wear and have with them is still built in the background) and comes back as
+// a new shot sets them. Once in every drawn frame
 // RENDER calls show: who of those here is in a view gets their bones (the joints' rows, the tubes' chains, the cloth's
 // step — at rest when they were not shown the frame before, across a new shot, after LATE of their own time), written
 // once; a look put on or parts taken since their last step are posed there first.
@@ -17,7 +19,7 @@
 //     reads(values), frame(t, values, shot, stands — (id) → whether they stand with the story: a cut waits, 2.4), root(id, out), settle(id), prepare(values), unprepare(values), ended(),
 //     building(), point(id, name, out), pointFor(values, id, name, out), box(id, out), height(id), pick(origin, way),
 //     mark(id, bits), startOf(…),
-//     durationOf(…), speedOf(…), list, save(), restore(data), dispose(), show(seen), version(id), sphere(id, out),
+//     durationOf(…), speedOf(…), list, save(), restore(data), dispose(), show(seen), shown(), version(id), sphere(id, out),
 //     capsules(id), draw(pass, kind, inView, id, mirrored, counters), inks
 //   persons — [{ id, index, node, o, inside }] (inside: marked so — in a room wherever they stand); cast — the scene's
 //   modules (a person's `person.cast` names one);
@@ -426,6 +428,9 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
     return k.held && !h.seat ? null : H.ground;
   };
   const step = (H, t, values, shot) => {
+    // (not here — frame's H.here: nothing of them worked out, their player not moved; they come back as a new shot sets
+    // them, from the state as it is then — what they do, where they stand, how they face —, their clock gone on)
+    if (!H.here) { H.shot = NaN; H.player.shot = NaN; return; }
     const P = H.player, k = H.k, keys = H.keys, h = H.held, W = H.entry.W, M = W.G.model, I = W.I;
     const land = told(H, nowRead);
     // (a face's expression: at rest when none)
@@ -435,13 +440,12 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
     // (put where they are at once this step — their place, or what carries them, set: no way walked)
     k.placed = placed(H.id);
     H.at[3] = t;
-    P.update(H.at, k, land, shot, H.here);
+    P.update(H.at, k, land, shot);
     // (in a room: marked so, else as where they stand now is — carried by another, as that one is: stepped before them)
     const bearer = k.by != null ? byId.get(k.by) : null;
     H.inside = H.marked || (bearer ? bearer.inside : inside(k.by, H.at));
     H.shot = shot;
     if (cut) H.cut = true;
-    if (!H.here) return;
     // (upright where they stand, turned as they face: π − facing about the vertical — their +z the way they face)
     const e = H.W, c = Math.cos(Math.PI - P.facing), si = Math.sin(Math.PI - P.facing);
     e[0] = c; e[1] = 0; e[2] = -si; e[3] = 0; e[4] = 1; e[5] = 0; e[6] = si; e[7] = 0; e[8] = c; e[9] = H.at[0]; e[10] = H.at[1]; e[11] = H.at[2];
@@ -517,6 +521,8 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
   // (those of a draw in its view; a person's block as the dynamic offset; what a shot ahead holds, by its values)
   // (those of a new shot, set again once all are where it has them)
   const drawn = [], offset = [0], holds = new Map(), readSet = new Set(), recut = [];
+  // (how many the last show showed: shown())
+  let shownN = 0;
   // what a model's pose and bones are told in numbers (shapes.js: a number handed to a function is made on the heap,
   // these are written where they are): [x, y, z, turn — where they stand and how they are turned in what carries
   // them; dt — their own seconds since the step (the shown frame) before; floor — its height in their own space;
@@ -581,7 +587,7 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
     // (what each hand is told to reach for: under a cut none goes over from another)
     for (let i = 0; i < REACHES.length; i++) Q.aim.limbs[i].ref = k.reach[REACHES[i]] ? k.refs[REACHES[i]] : undefined;
     A.at[3] = moment;
-    Q.update(A.at, k, land, 0, true);
+    Q.update(A.at, k, land, 0);
     if (root) { root[0] = A.at[0]; root[1] = A.at[1]; root[2] = A.at[2]; }
     const own = POINT_NAMES.indexOf(name);
     if (own >= 0) { Q.point(POINT_SPECS[own], out); return true; }
@@ -654,12 +660,14 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
         // (what swings is at rest unless they were shown the frame before)
         H.resting = !H.live || H.steps > 0;
         H.steps++;
+        // (in the scene now: who is not is not stepped — step)
+        H.here = values[H.keys.here] !== false;
       }
       // (a new shot — theirs alone, set at once: settle — is whole at once: once all are where it has them, those of it
       // who read where a person is are set again, looking at and reaching for the points as they are in it — another's
       // head, a part just taken)
       empty(recut);
-      for (let i = 0; i < list.length; i++) if (list[i].shot !== shot && readsPeople(list[i], values)) recut.push(list[i]);
+      for (let i = 0; i < list.length; i++) if (list[i].here && list[i].shot !== shot && readsPeople(list[i], values)) recut.push(list[i]);
       for (let pass = 0; pass < 2; pass++) for (let i = 0; i < list.length; i++) if (list[i].carried === !!pass) step(list[i], t, values, shot);
       for (let i = 0; i < recut.length; i++) { recut[i].shot = NaN; recut[i].player.shot = NaN; }
       for (let pass = 0; pass < 2; pass++) for (let i = 0; i < recut.length; i++) if (recut[i].carried === !!pass) step(recut[i], t, values, shot);
@@ -778,10 +786,12 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
     // a part put away between two shows counts)
     show(seen) {
       let any = false;
+      shownN = 0;
       for (let i = 0; i < list.length; i++) {
         const H = list[i], P = H.player, now = H.here && P.posed && seen(H.sphere);
         if (now !== H.shown) { H.shown = now; H.version++; any = true; }
         if (!now) { H.live = false; continue; }
+        shownN++;
         const W = H.entry.W, own = Math.max(0, P.clockT - H.shownAt);
         // (a look put on, parts taken since their last step — a frame drawn with no step between: posed as they stand
         // before they are shown, what swings as it was — at rest if the look is new on them)
@@ -809,6 +819,8 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
       S.bones.table.flush();
       return any;
     },
+    // how many the last show showed — here and in a view (the frame's, a mirror's, a light's): those drawn (PP7)
+    shown: () => shownN,
     // one more whenever what is drawn of them changed (PP8)
     version: id => byId.get(String(id))?.version ?? 0,
     sphere(id, out) {

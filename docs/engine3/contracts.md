@@ -489,7 +489,7 @@ across, −3…4 down).
 ### 4.4 Counters and the stand (RN8)
 
 `R.counters = { frames, drawn, held, idle, pixels, draws, triangles, placed, lit, blended, shapes: Int32Array(SHAPES+1),
-mirrored, particles, people, quads, listed, asked, persons }` — objects rewritten in place. `R.lacks = { wait,
+mirrored, particles, people, quads, listed, asked, persons, shown }` — objects rewritten in place (`persons`: the world's; `shown`: those shown in the call, `people.shown()`). `R.lacks = { wait,
 sheets, pages, mirrors, cells, land }`. `thread.js` puts `world.opened` in its row as `opened`. `R.timing` — `{ [name]: { js, gpu } }` for the stages `place, view, lights,
 land, mirrors, shadows, ahead, particles, people, cull, cull mirrors, cull shadows, cull ahead, ask, ask mirrors,
 ask shadows, ask ahead, weigh, judge, request, outcome, write, submit` then `PASSES`; −1 not run; `null` unless
@@ -1069,7 +1069,7 @@ slices). A cast's fault in a first look rejects (named with the person). Sets `g
 | Id | Call | Returns / does | Caller |
 |---|---|---|---|
 | PP2 | `reads(values) → Set<id>` | elements whose points people read (`_on`, `_look`, `_reach`; not persons); same Set unless one of those values is another object | `step.js` (c) |
-| PP3 | `frame(t, values, shot)` | wear/with asked or taken, everyone posed (pose, root, points, box, sphere, capsules); `shot` ≠ last → set as a cut sets them; no bones, no GPU | `step.js` (d) |
+| PP3 | `frame(t, values, shot)` | wear/with asked or taken, everyone here posed (pose, root, points, box, sphere, capsules) — one not here is not stepped at all and comes back as a cut sets them; `shot` ≠ last → set as a cut sets them; no bones, no GPU | `step.js` (d) |
 | PP3 | `root(id, out12) → bool` | root world matrix (3 × 4, as a node row); false if not here / not posed | `step.js` |
 | PP3 | `settle(id)` | set as a cut at their next step | `director.js` |
 | PP4 | `prepare(values) → bool` | builds and holds the looks/parts `<id>_wear` / `_with` name; true when all built. Keyed by the `values` object | `shots.js` each tick a shot is live |
@@ -1091,6 +1091,7 @@ Person state keys: `<id>_do, _turn, _look, _reach, _with, _wear, _gait, _steps, 
 
 | Id | Call | Returns / does |
 |---|---|---|
+| PP7 | `shown() → int` | how many the last `show` showed (here and in a view) — `R.counters.shown` | `renderer.js` |
 | PP7 | `show(seen) → bool` | once per `R.frame`, after views are placed. `seen(sphere4) → bool` is RENDER's. For each person here and posed: shown or not; for the shown: posed first if a look/part came since the last step, bones (at rest when first shown, after more than one step since the last show, after a cut/settle, when what carries them changed, or after `LATE` 0.25 s of their clock), uniform, ink; one bones write. True if anyone became shown/hidden, a shown person's version changed, or a shown person is OFFERED |
 | PP8 | `version(id) → int` | +1 whenever what is drawn of them changed (shown/hidden included) |
 | PP8 | `sphere(id, out4) → bool` | x, y, z, radius (world); false not here / not posed |
@@ -1155,7 +1156,7 @@ Loaded by `thread.js` only when `host.flags.stand` is set (`?stand`, `?stand=det
 | `cycle sent\|evicted\|denied\|bias\|own\|again\|wanted\|named\|has\|insert\|room` | `sheets.cycle` | the cycle's pages (SH13; `named`, `has`, `insert`, `room` in units, 16 a slot) |
 | `step director\|world\|animates\|people\|camera\|lights` | `row.step` (detail) | ms; −1 not detail / no step |
 | `tick pace\|step\|show\|render\|after`, `tick stand` | `row.tick` (detail); `tick stand` written by the stand | ms; −1 |
-| `R frames … persons` (17: frames, drawn, held, idle, pixels, draws, triangles, placed, lit, mirrored, blended, particles, people, quads, listed, asked, persons) | `R.counters` | |
+| `R frames … shown` (18: frames, drawn, held, idle, pixels, draws, triangles, placed, lit, mirrored, blended, particles, people, quads, listed, asked, persons, shown) | `R.counters` | |
 | `R shape <k>` | `R.counters.shapes[k]` | lit points by RENDER's SHAPE number |
 | `R.wideNames…` (detail only) | `R.wide` | asks by kind/slot (`ms, quads, nodes, places, names` — `names`: `name()` calls, a page named twice counts twice; the distinct pages are `cycle named`), views, culls (render/survey.js) |
 
@@ -1184,7 +1185,8 @@ Thresholds (engine 3 checks all but `steady repaints`, `steady uploads (px)`, an
 | worker JS median / p99 (ms) | 3 / 6 | callbacks that drew |
 | GPU p95 (ms) | 8 | told, not judged (`limit: null`, `why`) |
 | GC pause worst (ms) | 2 | the scene thread's (`gc.worker`) |
-| allocated a frame (bytes) | 1024 | heap profile, `engines/3/` scripts only, over film s × 60 |
+| allocated a frame (bytes) | 1024 | heap profile, `engines/3/` scripts only, over film s × 60 — the profiled run's film after a 10 s warm-up (`WARM_UP`) |
+| allocated a frame, warm-up (bytes) | — | told, not judged: the same over the warm-up (`allocated.warmUp`) |
 | main thread long tasks / a frame (ms) | 0 / 1 | the page's |
 | open (ms) | 2000 | told, not judged; by marks |
 | open long tasks | 0 | |
