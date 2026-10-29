@@ -1,0 +1,23 @@
+{"strings": [
+  {"text":"Turn your phone","translation":"Павярні тэлефон","where":"landscape.js"},
+  {"text":"The game is played across.","translation":"У гульню гуляюць гарызантальна.","where":"landscape.js"},
+  {"text":"The whole play from the start","translation":"Уся партыя з пачатку","where":"play.js"},
+  {"text":"Continue on the new commit","translation":"Працягнуць на новым каміце","where":"play.js"},
+  {"text":"Pause","translation":"Паўза","where":"play.js"},
+  {"text":"Fast forward (Space)","translation":"Перамотка (прабел)","where":"play.js"},
+  {"text":"Chapters","translation":"Раздзелы","where":"play.js"},
+  {"text":"Volume","translation":"Гучнасць","where":"play.js"},
+  {"text":"The whole screen","translation":"На ўвесь экран","where":"play.js"},
+  {"text":"No game is asked for (?game=).","translation":"Гульня не пазначана (?game=).","where":"play.js"},
+  {"text":"Begin the whole play again?","translation":"Пачаць усю партыю нанова?","where":"play.js"},
+  {"text":"Continue the play on the new commit? What the game kept goes on with it, but it may not fit the new code, and something may break — then begin the play again (↺). There is no going back.","translation":"Працягнуць партыю на новым каміце? Захаванае гульнёй пяройдзе з ёю, але можа не падысці новаму коду, і нешта можа зламацца — тады пачні партыю нанова (↺). Вярнуцца назад не атрымаецца.","where":"play.js"},
+  {"text":"The play could not continue on the new commit: {why}","translation":"Партыю не ўдалося працягнуць на новым каміце: {why}","where":"play.js"},
+  {"text":"Go on","translation":"Далей","where":"play.js"},
+  {"text":"The play could not be opened: {why}","translation":"Партыю не ўдалося адкрыць: {why}","where":"play.js"},
+  {"text":"no voice: {why}","translation":"няма голасу: {why}","where":"runtime.js"},
+  {"text":"no music: {why}","translation":"няма музыкі: {why}","where":"runtime.js"},
+  {"text":"mini-game: {why}","translation":"міні-гульня: {why}","where":"runtime.js"},
+  {"text":"“{text}” — {who}","translation":"«{text}» — {who}","where":"runtime.js"},
+  {"text":"not kept: {why}","translation":"не захавалася: {why}","where":"runtime.js"},
+  {"text":"the game broke: {why}","translation":"гульня зламалася: {why}","where":"runtime.js"}
+]}
