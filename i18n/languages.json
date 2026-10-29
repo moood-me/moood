@@ -5,5 +5,6 @@
   "de": { "name": "Deutsch", "locale": "de_DE" },
   "es": { "name": "Español", "locale": "es_ES" },
   "ja": { "name": "日本語", "locale": "ja_JP" },
-  "be": { "name": "Беларуская", "locale": "be_BY" }
+  "be": { "name": "Беларуская", "locale": "be_BY" },
+  "fr": { "name": "Français", "locale": "fr_FR" }
 }
