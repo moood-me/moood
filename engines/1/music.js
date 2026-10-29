@@ -17,7 +17,8 @@
 // before it, its words said — words.js speak): track(music, signal) → a promise of its key (POST music),
 // listen(key, signal) → of its stream (GET music: a Response) — a refusal an Error in the page's language, its code
 // with it (scene/host.js); silent(why) — the music could not be heard (why: in the page's language); show(music) — the
-// open scene's (or none); pause(on) — the play paused; asked(music) — a scene's music as the host is asked for it (the
+// open scene's (or none); pause(on) — the play paused (the music fades out over HUSH seconds, and its sound stands
+// till the play goes on — fading back in to the volume set); asked(music) — a scene's music as the host is asked for it (the
 // body of POST music: {prompts, config}), or null — none sounds: what a host that makes the music ahead makes; LIMITS —
 // what a host making it with Lyria takes (beyond it, a request refused: check says it of a scene). A classic script:
 // it sets globalThis.MooodMusic (a page's script; a module's import — check and the host's side read asked() and
@@ -25,6 +26,7 @@
 globalThis.MooodMusic = (() => {
   const RATE = 48000, LEAD = 0.25, FADE = 4, AHEAD = 8; // seconds of audio queued ahead; of a crossfade; of a recording decoded ahead
   const TRIES = 3, AGAIN = 5; // a music asked for again while nothing more is heard, and seconds between
+  const HUSH = 0.8; // seconds the music fades out as the play is paused (then its sound stands), and back in as it goes on
   const OPUS = { codec: 'opus', sampleRate: RATE, numberOfChannels: 2 };
   // (Lyria RealTime's: its settings' ranges — bpm a whole number —, its scales — a major and its relative minor —, the
   // descriptions that sound at most, and their characters)
@@ -35,7 +37,8 @@ globalThis.MooodMusic = (() => {
   let ctx = null, out = null;
   let playing = false, pushTimer = null;
   let deck = null; // what sounds now: { what, gain, nextT, stop() }
-  let standing = false; // an engine 3 scene stands now (Moood.onPause): what starts meanwhile waits with it
+  let held = false; // the play paused, or an engine 3 scene standing (Moood.onPause): what starts meanwhile waits with it
+  let hushing = 0; // (the sound's standing, due once the music has faded out)
   let mute = false; // the host makes no music
   const refused = new Set(); // the musics refused (the quota spent): not asked for again
 
@@ -228,12 +231,12 @@ globalThis.MooodMusic = (() => {
     if (playing) return;
     try {
       ctx = ctx || new AudioContext({ sampleRate: RATE });
-      // (an engine 3 scene standing: the music begins as the scene goes on — stands)
-      await (standing ? ctx.suspend() : ctx.resume());
+      // (the play paused, an engine 3 scene standing: the music begins as it goes on — pause)
+      await (held ? ctx.suspend() : ctx.resume());
       if (playing) return; // begun by another asking meanwhile
-      if (!out) { out = ctx.createGain(); out.connect(ctx.destination); }
-      out.gain.setTargetAtTime(MooodVolume.get('music'), ctx.currentTime, 0.3);
+      if (!out) { out = ctx.createGain(); out.gain.value = 0; out.connect(ctx.destination); }
       playing = true;
+      hush(); // (faded in to the volume set — or held at 0, if it is held meanwhile)
       push();
     } catch (e) { playing = false; failed(e); }
   }
@@ -241,7 +244,8 @@ globalThis.MooodMusic = (() => {
   // ── the page's side ──────────────────────────────────────────────────────
   function init(opts) {
     ({ track, listen, silent } = opts);
-    MooodVolume.on((kind, v) => { if (kind === 'music' && out) out.gain.setTargetAtTime(v, ctx.currentTime, 0.1); });
+    // (held: it fades back in to the volume set as it goes on)
+    MooodVolume.on((kind, v) => { if (kind === 'music' && out && !held) out.gain.setTargetAtTime(v, ctx.currentTime, 0.1); });
     // it starts at once, as far as the browser lets sound begin; where it does not, the first gesture of any kind
     // starts it
     const first = () => { removeEventListener('pointerdown', first, true); removeEventListener('keydown', first, true); start(); };
@@ -249,8 +253,9 @@ globalThis.MooodMusic = (() => {
     addEventListener('keydown', first, true);
     start();
     // (an engine 3 scene standing — the play paused, nobody watching it: the music stands with it; of any stage of the
-    // page, mounted before this or after — a page without a stage, none: a host's page where music is tuned)
-    globalThis.Moood?.onPause(stands);
+    // page, mounted before this or after — a page without a stage, none: a host's page where music is tuned. Moood is
+    // stage.js's global binding, not a property of globalThis: a classic script's const)
+    if (typeof Moood !== 'undefined') Moood.onPause(pause);
   }
 
   // the open scene's music (from its spec), or none
@@ -259,15 +264,28 @@ globalThis.MooodMusic = (() => {
     if (playing) pushSoon();
   }
 
-  // the play paused — or an engine 3 scene standing: the music stands where it is, and goes on when it isn't (it is the
-  // sound's clock that stands, not what plays; going on, it ends an engine 3 scene's standing too — of one the stage
-  // left for another engine's while the play was paused)
-  function pause(on) {
-    if (!on) standing = false;
-    if (ctx) (on ? ctx.suspend() : ctx.resume()).catch(() => {});
+  // the play paused — or an engine 3 scene standing (the play paused, nobody watching it, a layer of the page over it):
+  // the music fades out and stands where it is, and goes on when it isn't, fading back in (it is the sound's clock that
+  // stands, not what plays; going on, it ends an engine 3 scene's standing too — of one the stage left for another
+  // engine's while the play was paused)
+  function pause(on) { held = !!on; hush(); }
+  // the music as it is held or not: the output faded to 0 over HUSH seconds, then the sound's clock stood — by the
+  // browser's own timer (a play's clock stands with the play: ../1/clock.js); or the clock going on and the output
+  // faded back in to the volume set. A change meanwhile takes the fade over from where it is (going on during a fade
+  // out, the sound never stands)
+  function hush() {
+    if (!ctx) return;
+    const T = globalThis.__mooodTimers ?? globalThis;
+    T.clearTimeout(hushing);
+    if (out) {
+      const g = out.gain, t = ctx.currentTime, v = g.value; // (where it is now: read before its fade is taken off)
+      g.cancelScheduledValues(t);
+      g.setValueAtTime(v, t);
+      g.linearRampToValueAtTime(held ? 0 : MooodVolume.get('music'), t + HUSH);
+    }
+    if (held) hushing = T.setTimeout(() => { if (held) ctx.suspend().catch(() => {}); }, out ? HUSH * 1000 : 0);
+    else ctx.resume().catch(() => {});
   }
-  // an engine 3 scene stands (the play paused, nobody watching it, a layer of the page over it), and goes on
-  function stands(on) { standing = on; pause(on); }
 
   return { init, show, pause, asked, LIMITS };
 })();
