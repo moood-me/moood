@@ -44,7 +44,7 @@ test('its page, in Russian, with what check finds wrong said in Russian', async 
   const r = await ask('/?lang=ru');
   assert.equal(r.status, 200);
   assert.match(r.body, /Вечер/);
-  assert.match(r.body, /<code>stray\/world.json<\/code> &#34;languages&#34; — xx: таких у moood нет \(en, ru\)/);
+  assert.match(r.body, /<code>stray\/world.json<\/code> &#34;languages&#34; — xx: таких у moood нет \(en, ru, ja\)/);
 });
 
 test('a scene and a play as the pages ask for them', async () => {
