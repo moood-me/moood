@@ -165,3 +165,27 @@ test('a thing\'s named point it marks is framed; one it does not mark is said, n
   const unpainted = scene({ mode: 'walk', points: [{ ...bowl, painted: false }] }, { camera_target: 'bowl#coins' });
   assert.equal(unpainted.said.length, 0, unpainted.said.join('|'));
 });
+
+// ahead the operator steps round nothing: a settled lens inside someone's body is said once (where it goes unchanged)
+test('ahead: a thing framed with the lens inside a person standing before it is said', () => {
+  const bowl = { id: 'bowl', x: 0, d: 6, h: 0.15, marks: ['coins'], painted: true };
+  const { p, said, depth } = scene({ mode: 'walk', people: [{ id: 'f', x: 0, d: 5.4, away: true }], points: [bowl] }, { camera_target: 'bowl#coins', camera_shot: 'full' });
+  assert.ok(depth('f') > 0 && Math.abs(p.z - (6 - 0.595)) < 1e-6, JSON.stringify(p));
+  assert.equal(said.length, 1, said.join('|'));
+  assert.match(said[0], /camera_target "bowl#coins" is framed from inside the body of "f"/);
+});
+
+test('ahead: nobody where the lens settles — nothing said', () => {
+  const { said } = scene({ mode: 'walk', people: [{ id: 'f', x: 2, d: 5.4 }], points: [{ id: 'bowl', x: 0, d: 6, h: 0.15, marks: ['coins'], painted: true }] },
+    { camera_target: 'bowl#coins', camera_shot: 'full' });
+  assert.equal(said.length, 0, said.join('|'));
+});
+
+test('ahead (picture): a person framed past someone standing at the lens is said; looking round it goes round instead', () => {
+  const D = EYE / 0.8, people = [{ id: 'a', x: 0, d: 8 }, { id: 'c', x: 0, d: 8 - D }];
+  const ahead = scene({ mode: 'picture', people }, { camera_target: 'a' });
+  assert.equal(ahead.said.length, 1, ahead.said.join('|'));
+  assert.match(ahead.said[0], /camera_target "a" is framed from inside the body of "c"/);
+  const round = scene({ mode: 'around', people }, { camera_target: 'a' });
+  assert.ok(!round.said.some(w => /from inside/.test(w)), round.said.join('|'));
+});
