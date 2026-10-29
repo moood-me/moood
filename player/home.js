@@ -15,10 +15,10 @@ const query = o => new URLSearchParams(o).toString();
 // the language the page is in: ?lang=, else the person's choice (the cookie the pages read too), else what the
 // browser asks for, else the source
 export function chosen(asked, cookie, accept) {
-  if (asked in LANGUAGES) return asked;
+  if (Object.hasOwn(LANGUAGES, asked)) return asked;
   const c = /(?:^|;\s*)lang=([^;]+)/.exec(cookie ?? '')?.[1];
-  if (c in LANGUAGES) return c;
-  for (const l of (accept ?? '').split(',').map(x => x.split(';')[0].trim().toLowerCase().split('-')[0])) if (l in LANGUAGES) return l;
+  if (Object.hasOwn(LANGUAGES, c)) return c;
+  for (const tag of (accept ?? '').split(',')) { const m = MooodI18n.meant(Object.keys(LANGUAGES), tag.split(';')[0].trim()); if (m) return m; }
   return MooodI18n.source;
 }
 

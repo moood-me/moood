@@ -144,6 +144,15 @@
   };
   const said = (name, tr) => { parts[name] = tr; };
 
-  const MooodI18n = { source: 'en', PSEUDO, keyOf, translator, FIELDS, markupTexts, markup, shown, bind, part, said };
+  // The one of `codes` (moood's languages: languages.json's keys) a person's language tag (BCP 47: a browser's, a
+  // system's) means — by its language and script, both maximized: zh-TW and zh-HK are zh-Hant, so zh-hant; pt-PT and
+  // pt-BR are pt; zh-CN is zh-Hans, none of ours —, or null (none, or not a tag).
+  const meant = (codes, tag) => {
+    let want;
+    try { want = new Intl.Locale(tag).maximize(); } catch { return null; }
+    return codes.find(c => { const m = new Intl.Locale(c).maximize(); return m.language === want.language && m.script === want.script; }) ?? null;
+  };
+
+  const MooodI18n = { source: 'en', PSEUDO, keyOf, translator, FIELDS, markupTexts, markup, shown, bind, part, said, meant };
   globalThis.MooodI18n ??= MooodI18n;  // (loaded twice — a page's script and a module's import: one, the first)
 })();

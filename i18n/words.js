@@ -27,7 +27,7 @@ export const languages = async () => (await fetch(new URL('./languages.json', im
 // browser asks for, else the source.
 export function chosen(list) {
   const cookie = /(?:^|;\s*)lang=([^;]+)/.exec(document.cookie)?.[1];
-  if (cookie in list || cookie === MooodI18n.PSEUDO) return cookie;
-  for (const l of navigator.languages || []) if (l.toLowerCase().split('-')[0] in list) return l.toLowerCase().split('-')[0];
+  if (Object.hasOwn(list, cookie) || cookie === MooodI18n.PSEUDO) return cookie;
+  for (const l of navigator.languages || []) { const m = MooodI18n.meant(Object.keys(list), l); if (m) return m; }
   return MooodI18n.source;
 }
