@@ -667,13 +667,17 @@ export function createWorld(C, env) {
   // the sky (out: the unit direction toward it); 3 — on the frame (an insert's: out = frame heights to the right of
   // the frame's middle, down from its top, 0), there only inside its iris as far as it is open. over: its top when it
   // marks no point of its own (its anchor its height up). The refs: PG9's, [across, distance, elevation] (the elevation
-  // over the land there), {on: id, at: [across, distance, elevation]} (in that element's own frame, as "on" places).
+  // over the land there), {on: id, at: [across, distance, elevation]} (in that element's own frame, as "on" places; a
+  // person's own frame: where they stand, turned as they face — their root, as an element's at that place and facing —,
+  // none while they are not here).
   const mid = { x: 0, y: 0, part: -1, layer: -1 }, st = [0, 0];
   world.pointFor = (ref, out, yaw = world.yaw, over = false) => {
     if (framedPoint(ref)) {
       const el = byId.get(ref.on);
-      if (!el || NOT_CARRYING.has(el.kind)) return 0;
-      carryOf(el, carried);
+      if (!el) return 0;
+      if (el.kind === 'person') { if (!world.people || !el.visible || !world.people.root(ref.on, carried)) return 0; }
+      else if (NOT_CARRYING.has(el.kind)) return 0;
+      else carryOf(el, carried);
       m34.point(carried, 0, ref.at[0], ref.at[2] ?? 0, -ref.at[1], out);
       return 1;
     }
@@ -716,12 +720,13 @@ export function createWorld(C, env) {
   // WT8: a point of the world by what names it → out; false: there is none in the world. get (key → value): as those
   // values would have things — a cut to a person posed ahead (PP1 `point`, PP5): a point in an element's frame by that
   // frame then, an element's point — its point of now — carried with its node there (world.carriedWith; a copy's, and
-  // a person's — PEOPLE poses them —, as now)
+  // a person's — PEOPLE poses them —, as now; so a point in a person's frame)
   const carriedThen = new Float64Array(12);
   world.pointOf = (ref, out, get) => {
     if (get === undefined || get === state.value) return world.pointFor(ref, out) === 1;
     if (framedPoint(ref)) {
       const el = byId.get(ref.on);
+      if (el && el.kind === 'person') return world.pointFor(ref, out) === 1;
       if (!el || NOT_CARRYING.has(el.kind)) return false;
       carryWith(el, get, carriedThen);
       m34.point(carriedThen, 0, ref.at[0], ref.at[2] ?? 0, -ref.at[1], out);

@@ -212,7 +212,7 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
   // (the point an `on` names — "mother#hands", {at, up}, "cart#bed" — or null: a seat, on their feet)
   const onAt = on => (typeof on === 'string' ? on : on && typeof on === 'object' && typeof on.at === 'string' ? on.at : null);
   // (the element a point is read from — an element's point, one in an element's own frame — not a person's: null)
-  const owner = ref => (framedPoint(ref) ? ref.on : typeof ref === 'string' && ref && !byId.has(refOf(ref).id) ? refOf(ref).id : null);
+  const owner = ref => (framedPoint(ref) ? (byId.has(ref.on) ? null : ref.on) : typeof ref === 'string' && ref && !byId.has(refOf(ref).id) ? refOf(ref).id : null);
 
   // (all of theirs let go: their looks — the rows, the models' holds —, their blocks, the inks)
   const dispose = () => {
@@ -287,12 +287,15 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
   // ── what they aim at ─────────────────────────────────────────────────
   // a point of the world (world metres) a person looks at or reaches for: an element's id (a person's head; an element's
   // point), "id#name" (a point it names), [across, distance, elevation], or {on: id, at: [across, distance, elevation]}
-  // (in that element's own frame, going and turning with it) — into out; false if there is none (yet). get: as those
-  // values would have the world's things (a person posed ahead: pointFor; none — now)
+  // (in that element's own frame, going and turning with it; in a person's — theirs too —: where they stand, turned as
+  // they face) — into out; false if there is none (yet). get: as those values would have the world's things (a person
+  // posed ahead: pointFor; none — now)
   const aim = (v, who, out, get) => {
     if (Array.isArray(v) || (v && typeof v === 'object')) {
+      // (in the frame of one not here, or not posed yet — before their first step: nowhere, nothing to say)
+      if (framedPoint(v) && byId.has(v.on)) { const P = byId.get(v.on); if (!P.here || !P.player.posed) return false; }
       if (point(v, out, get)) return true;
-      who.warn(framedPoint(v) ? `aims at a point on "${v.on}" — there is no such element (a person's points are "id#name")` : 'aims at [across, distance, elevation] (metres), or {"on": id, "at": [across, distance, elevation]}');
+      who.warn(framedPoint(v) ? `aims at a point on "${v.on}" — there is no such element or person` : 'aims at [across, distance, elevation] (metres), or {"on": id, "at": [across, distance, elevation]}');
       return false;
     }
     if (typeof v !== 'string' || !v) return false;
@@ -342,7 +345,11 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
     h.seat = null; h.in = null; h.by = null; h.thing = null;
     if (typeof on === 'string' && on) { h.at = on; h.up = 0; }
     else if (Array.isArray(on)) { if (!(numbers(on))) return false; h.seat = on; }
-    else if (framedPoint(on)) { h.seat = on.at; h.in = on; }
+    else if (framedPoint(on)) {
+      // (a person carries no one in their own frame: on their arms — a point of theirs — is how)
+      if (byId.has(on.on)) { H.warn(`"_on": {"on": "${on.on}", …} — a person carries no one in their frame: on their arms is "${on.on}#hands" (or {"at": "${on.on}#hands", "up": …})`); return false; }
+      h.seat = on.at; h.in = on;
+    }
     else if (on && typeof on === 'object' && typeof on.at === 'string') { h.at = on.at; h.up = Number(on.up) || 0; }
     else return false;
     if (!h.seat) { const who = refOf(h.at).id; h.by = byId.get(who) ?? null; h.thing = h.by ? null : who; }
@@ -602,8 +609,8 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
     if (m) { W.G.model.mark(m, W.I, Q.P, u3); Q.world(u3, 0, out); } else Q.point(H.partSpecs[i], out);
     return true;
   }
-  // (whether a ref — a `look`'s, a `reach`'s — names a person: one of their points)
-  const personal = v => typeof v === 'string' && !!v && byId.has(refOf(v).id);
+  // (whether a ref — a `look`'s, a `reach`'s — names a person: one of their points, or a point in their frame)
+  const personal = v => (typeof v === 'string' && !!v && byId.has(refOf(v).id)) || (framedPoint(v) && byId.has(v.on));
   // (whether they read where a person is: on another's arms, looking at one, reaching for one)
   const readsPeople = (H, values) => {
     if (H.carried || personal(values[H.keys.look])) return true;
