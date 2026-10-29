@@ -30,11 +30,11 @@ const WORDS = Object.freeze({
   // (a beam's: where it points, how wide, how soft its edge — world/light.js reads them)
   cone: ['bearing', 'height', 'width', 'soft'],
   // (`lit` on a plane: accepted, does nothing in engine 3 — LG5)
-  element: ['id', 'name', 'x', 'y', 'across', 'distance', 'elevation', 'bearing', 'facing', 'tilt', 'rotation', 'plane', 'width', 'depth', 'height', 'box', 'code', 'animate', 'redraw', 'place', 'on', 'onLand', 'copies',
+  element: ['id', 'name', 'x', 'y', 'across', 'distance', 'elevation', 'bearing', 'facing', 'tilt', 'roll', 'rotation', 'plane', 'width', 'depth', 'height', 'box', 'code', 'animate', 'redraw', 'place', 'on', 'onLand', 'copies',
     'sky', 'insert', 'iris', 'person', 'particles', 'unseen', 'glows', 'inside', 'translucent', 'reflect', 'glass', 'lit', 'walk', 'water', 'drape', 'flicker', 'solid', 'seen', 'shadow', 'clip', 'behind', 'inFront',
     'shader', 'uniforms', 'script', 'color'],
-  place: ['across', 'distance', 'elevation', 'x', 'facing', 'tilt', 'rotation', 'bearing'],
-  copy: ['across', 'distance', 'elevation', 'facing', 'tilt', 'rotation', 'scale', 'flip', 'tint', 'glow', 'seed'],
+  place: ['across', 'distance', 'elevation', 'x', 'facing', 'tilt', 'roll', 'rotation', 'bearing'],
+  copy: ['across', 'distance', 'elevation', 'facing', 'tilt', 'roll', 'rotation', 'scale', 'flip', 'tint', 'glow', 'seed'],
   // (a caster's `soft`, a mirror's and a pane's `blur`: accepted, do nothing in engine 3 — LG5)
   shadow: ['light', 'onto', 'strength', 'soft'],
   reflect: ['strength', 'fade', 'blur', 'rough', 'ripple'],
@@ -74,8 +74,8 @@ function cameraSetup(spec, warn) {
 // threads, by index: E.index IS its place in C.elements — WT9):
 //   { index, path (its place in spec.objects: the `objects[i]` the page names it by), id, name, who, o (the spec
 //     object), kind: card | plane | sky | insert | person | particles | unseen,
-//     at: { across, distance, elevation, radial }, bearing, facing, tilt, plane: { width, depth, rotation, tilt } | null,
-//     place: { field: key } | null, on, height, box, copies: [{ across, distance, elevation, facing (a card's), tilt,
+//     at: { across, distance, elevation, radial }, bearing, facing, tilt, roll, plane: { width, depth, rotation, tilt } | null,
+//     place: { field: key } | null, on, height, box, copies: [{ across, distance, elevation, facing, roll (a card's), tilt,
 //     rotation (a plane's), scale, flip, tint: [r, g, b], glow, seed }] | null, paints (it has paint code), code: fn(g, e) | null (made when first read:
 //     the artist's), animate: fn(e) | null (likewise: the thread's), redraw: { key: step } | null, flags, shadow,
 //     reflect, glass (a mirror's and a pane's numbers — a mirror's strength, rough, ripple may be state keys —, or null: WT11), clip: { inside, ids, set — its cutter set's
@@ -128,19 +128,20 @@ export function compile(spec, warn, tr) {
     else if (on == null && !num(o.across) && num(o.x)) across = (o.x - 0.5) * STAGE * distance;
     E.at = { across, distance, elevation: num(o.elevation) ? o.elevation : 0, radial: E.bearing != null ? radial : Math.sqrt(across * across + distance * distance) };
     E.on = on;
-    // its turn: a card's facing and tilt (degrees; null: it faces the eye), a plane's rotation and tilt
+    // its turn: a card's facing, tilt and roll (degrees; null: it faces the eye), a plane's rotation and tilt
     const bad = k => o[k] != null && !num(o[k]) && warn(`${who}: "${k}" is degrees, a number`);
-    bad('facing'); bad('tilt'); bad('rotation');
+    bad('facing'); bad('tilt'); bad('roll'); bad('rotation');
     if (kind === 'plane') {
-      if (o.facing != null) warn(`${who}: a plane turns by "rotation" (and "tilt"), not "facing"`);
+      if (o.facing != null || o.roll != null) warn(`${who}: a plane turns by "rotation" (and "tilt"), not "${o.facing != null ? 'facing' : 'roll'}"`);
       const tilt = num(o.tilt) ? o.tilt : 0;
       if (Math.abs((((tilt % 180) + 180) % 180) - 90) <= 10 && !o.reflect) warn(`${who}: a plane tilted ${tilt}° stands nearly upright — a wall, a door is a card ("facing", "tilt" from upright); a mirror on a wall is a plane ("reflect")`);
       E.plane = { width: Math.max(0.05, num(o.width) ? o.width : 4), depth: Math.max(0.05, num(o.depth) ? o.depth : 4), rotation: num(o.rotation) ? o.rotation : 0, tilt };
-      E.facing = null; E.tilt = null;
+      E.facing = null; E.tilt = null; E.roll = null;
     } else {
       E.plane = null;
       E.facing = num(o.facing) ? o.facing : null;
       E.tilt = num(o.tilt) ? o.tilt : null;
+      E.roll = num(o.roll) ? o.roll : null;
       if (E.tilt != null && Math.abs(E.tilt) > 90) warn(`${who}: "tilt" ${E.tilt}° lays it face down — a card leans from upright, −90…90; what lies flat is a plane`);
     }
     // what moves it: its place's keys
@@ -177,9 +178,9 @@ export function compile(spec, warn, tr) {
     E.flags = {
       glows: !!o.glows, inside: !!o.inside, translucent: unit('translucent', 0), unseen: !!o.unseen,
       onLand: on == null && o.onLand !== false && kind !== 'sky' && kind !== 'insert' && kind !== 'plane',
-      // a card facing the eye (no facing, no tilt — nor a place turning it): turned about the vertical to the view's
+      // a card facing the eye (no facing, tilt, roll — nor a place turning it): turned about the vertical to the view's
       // yaw, upright
-      faceEye: (kind === 'card' || kind === 'unseen') && E.facing == null && E.tilt == null && !E.place?.facing && !E.place?.tilt,
+      faceEye: (kind === 'card' || kind === 'unseen') && E.facing == null && E.tilt == null && E.roll == null && !E.place?.facing && !E.place?.tilt && !E.place?.roll,
       reflect: kind === 'plane' ? mirrorOf(o, who, warn) : null,
       glass: glassOf(o, who, warn, kind),
       walk: kind === 'plane' && !!o.walk, water: kind === 'plane' && !!o.water, drape: kind === 'plane' && !!o.drape,
@@ -386,23 +387,23 @@ function standsOf(text) {
 function copiesOf(o, E, who, warn) {
   if (o.copies == null) return null;
   const refuse = why => { warn(`${who}: "copies" — ${why}`); return null; };
-  if (!Array.isArray(o.copies) || !o.copies.length || !o.copies.every(object)) return refuse('a list of { across, distance, elevation?, facing? (a card\'s) or rotation? (a plane\'s), tilt?, scale?, flip?, tint?, glow?, seed? }');
+  if (!Array.isArray(o.copies) || !o.copies.length || !o.copies.every(object)) return refuse('a list of { across, distance, elevation?, facing?, roll? (a card\'s) or rotation? (a plane\'s), tilt?, scale?, flip?, tint?, glow?, seed? }');
   if (E.kind !== 'card' && E.kind !== 'plane' && E.kind !== 'unseen') return refuse('for a card or a plane (not people, particles, the sky or an insert)');
   if (E.kind === 'plane' && (o.reflect || o.drape)) return refuse('not for a plane that mirrors or is draped on the land');
   if (E.flags.glass) return refuse('not for a pane of glass');
-  if (E.place) { warn(`${who}: with "copies" each stands where its copy says — its "place" is not taken`); E.place = null; E.flags.faceEye = (E.kind === 'card' || E.kind === 'unseen') && E.facing == null && E.tilt == null; }
+  if (E.place) { warn(`${who}: with "copies" each stands where its copy says — its "place" is not taken`); E.place = null; E.flags.faceEye = (E.kind === 'card' || E.kind === 'unseen') && E.facing == null && E.tilt == null && E.roll == null; }
   return o.copies.map((raw, k) => {
     const c = known(raw, 'copy', `${who}: copies[${k}]`, warn), n = (v, d) => (num(v) ? v : d);
     if (!num(c.across) || !num(c.distance)) warn(`${who}: copies[${k}]: "across" and "distance" (metres) say where it stands`);
     const tint = c.tint == null ? [1, 1, 1] : linearOf(c.tint) || (warn(`${who}: copies[${k}]: "tint" is a colour ("#rrggbb")`), [1, 1, 1]);
     if (c.scale != null && !(num(c.scale) && c.scale >= 0.25 && c.scale <= 4)) warn(`${who}: copies[${k}]: "scale" is 0.25…4`);
-    // (a copy turns as its element does: a card's by its own "facing", a plane's by its own "rotation" — each with its
-    // own "tilt"; what it does not say, the element's)
-    if (E.kind === 'plane' && c.facing != null) warn(`${who}: copies[${k}]: a plane's copy turns by its own "rotation" — "facing" is a card's: not taken`);
+    // (a copy turns as its element does: a card's by its own "facing" and "roll", a plane's by its own "rotation" — each
+    // with its own "tilt"; what it does not say, the element's)
+    if (E.kind === 'plane' && (c.facing != null || c.roll != null)) warn(`${who}: copies[${k}]: a plane's copy turns by its own "rotation" — "${c.facing != null ? 'facing' : 'roll'}" is a card's: not taken`);
     if (E.kind !== 'plane' && c.rotation != null) warn(`${who}: copies[${k}]: a card's copy turns by its own "facing" — "rotation" is a plane's: not taken`);
     return {
       across: n(c.across, E.at.across), distance: n(c.distance, E.at.distance), elevation: n(c.elevation, E.at.elevation),
-      facing: E.kind !== 'plane' && num(c.facing) ? c.facing : null, tilt: num(c.tilt) ? c.tilt : null, rotation: E.kind === 'plane' && num(c.rotation) ? c.rotation : null,
+      facing: E.kind !== 'plane' && num(c.facing) ? c.facing : null, tilt: num(c.tilt) ? c.tilt : null, roll: E.kind !== 'plane' && num(c.roll) ? c.roll : null, rotation: E.kind === 'plane' && num(c.rotation) ? c.rotation : null,
       scale: clamp(n(c.scale, 1), 0.25, 4), flip: !!c.flip, tint, glow: Math.max(0, n(c.glow, 1)), seed: n(c.seed, k),
     };
   });
