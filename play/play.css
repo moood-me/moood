@@ -27,3 +27,14 @@
 .bar svg .solid { fill: currentColor; }
 #pause .go, #pause.paused .pause { display: none; }
 #pause.paused .go { display: inline; fill: currentColor; }
+
+/* what kept the play from being opened (play.js): in the middle, with what can be done */
+#unopened { position: fixed; left: 50%; top: 50%; z-index: 5; transform: translate(-50%, -50%); width: min(460px, calc(100vw - 32px));
+  box-sizing: border-box; padding: 20px 22px; border-radius: 10px; background: rgba(17, 20, 24, 0.92); color: #E6E8EC;
+  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; }
+#unopened[hidden] { display: none; }
+#unopened p { margin: 0 0 16px; }
+#unopened .acts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+#unopened .acts > * { padding: 9px 14px; border: 0; border-radius: 6px; background: rgba(255, 255, 255, 0.12); color: #FFFFFF;
+  font: inherit; font-size: 15px; text-decoration: none; cursor: pointer; }
+#unopened .acts > :first-child { background: #e8c98a; color: #111418; }

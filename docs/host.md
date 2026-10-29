@@ -14,10 +14,12 @@ relative to the page). A host that answers elsewhere puts its own address there.
 
 - `scene/?world=<world>&scene=<folder>&lang=<lang>` — a scene of a world, alive: its film (`showcase`), music, lines,
   captions, widgets. No `scene` — the world's first scene (its main one).
-- `play/?game=<game>&lang=<lang>` — my play of the game (begun if there is none), run by the game's own code.
+- `play/?game=<game>&lang=<lang>&back=<page>` — my play of the game (begun if there is none), run by the game's own
+  code. `back` (none — none): the host's own page of the game (relative to `H`, at the page's origin — another is not
+  taken), the bar's way back from the start, before the host answers `GET play` (its `back`) or if it never does.
 
 A host that serves a page at an address of its own (the public site: `/<lang>/play/<slug>`) says what it shows in
-`<meta name="moood-page" content="game=<game>&lang=<lang>">` — the same query, in place of the address's.
+`<meta name="moood-page" content="game=<game>&lang=<lang>&back=<page>">` — the same query, in place of the address's.
 
 `<world>` and `<game>` are the host's names for them — the local player's (`player/`): their folders in the
 repository (`classics/usher`; `.` the root); moood's studio's: `owner/repo@ref:path` (a branch's is its head now). `lang` — one of `i18n/languages.json`; none — the browser's choice (a
@@ -39,12 +41,12 @@ logs it, never shows it).
 | `GET H play?play=&lang=` | `{id, game: {id, title, mine}, world, code, people, save, back?}` (below) |
 | `PUT H play?play=` *save* | 204 — what the game keeps of the play (a JSON object, ≤ 1 MB) in place of what it kept |
 | `POST H restart?play=` | `{id}` — the play gone, a new one begun (it is "my play" of the game from now on) |
-| `POST H continue?play=` | 204 — the play, what the game kept with it, moved to the commits its game and world are at now (a host whose plays are pinned to commits: below) |
+| `POST H continue?play=` | 204 — the play, what the game kept with it, moved to the commits its game and world are at now — a published game's: to the publication it is at now (a host whose plays are pinned: below) |
 | `GET H <code><path>` | a file of the game's `bespoke/` folder, as it is (`game.js` and what it imports, its `lang/`, pictures, sounds) |
 | `POST H speak` `{text, voice, how}` | `{url}` — a line's voice (relative to the request), ready-made or made once by its key: these fields (below) |
 | `POST H music` `{music: {prompts, config}}` | `{key}` — a scene's music, by its description (`MooodMusic.asked(spec.music)`, `engines/1/music.js`: what a host that makes it ahead makes); its recording begun, if it is neither recorded nor being made (below) |
 | `GET H music?key=` | its recording, as a stream of frames (`engines/1/music.js`: Opus seconds, events) — only listened to: whole, or as it is made; none being made, the stream ends (below) |
-| `GET H changes?world=` or `?game=` | an event stream (`text/event-stream`): a message each time a file of the world (the game's or its world's) is saved; the page is shown anew (a play goes on from what the game kept). Of a game, a host whose plays are pinned to commits tells instead an event `newer` each time my play of it could continue on newer commits (at once, if it could already): the page offers to (`continue`). A host that does not tell answers 204 |
+| `GET H changes?world=` or `?game=` | an event stream (`text/event-stream`): a message each time a file of the world (the game's or its world's) is saved; the page is shown anew (a play goes on from what the game kept). Of a game, a host whose plays are pinned to commits tells instead an event `newer` when my play of it could continue on newer commits (at once, if it could already; the page listens no more once told, and a host may end the stream as it tells): the page offers to (`continue`). A host that does not tell answers 204 |
 
 - **A scene** — `spec`: put together from its folder (below), as written (not translated); `title` — in the language;
   `strings` — its translation into the language (the entries of its `lang/<lang>.json`; `[]` for English);
@@ -57,7 +59,8 @@ logs it, never shows it).
   a host that keeps plays keeps the world's commit too); `code`: the address (relative to `H`, ending in `/`) of the
   game's `bespoke/` folder; `people`: the game's people — its `bespoke/people.json` as it is, `{}` if it has none
   (`player/folder.js` `peopleOf`); `save`: what the game kept (`{}` at first); `back` — the host's own page of the game
-  (an address relative to `H`; none — none): the bar's first, "← its title".
+  (an address relative to `H`; none — none): the bar's first, "← its title" (before the answer, or without one: the
+  page's `back`, above).
 - **A line's voice** — `text`: what is said, as written — inline tags in it (`<sigh>`, `<short pause>`, in English) are
   how it is said there, heard and never shown; `voice`: the voice's name (who it is: its timbre, age, accent); `how`: the
   manner ("quietly, with a smile"; English; may be empty) — a game's line: its person's lasting manner, then the line's
@@ -77,8 +80,12 @@ logs it, never shows it).
   and its world's; the game's branch moves on, the play does not. When the branch (or the world's, if it names one)
   is at another commit, `changes?game=` tells `newer` (its data — anything; the page reads none of it), and the page
   offers, beside ↺, to continue on the new commits — warning that what the game kept may not fit the new code (if it
-  breaks, ↺); `continue` moves the play there, and there is no going back. A host whose plays are its files as they
-  are now (the local player) never tells `newer` and has no `continue`.
+  breaks, ↺); `continue` moves the play there, and there is no going back. A host that publishes games (the public
+  site) keeps a play on the publication it began on: when the game is at another publication now, `changes?game=`
+  tells `newer` as the page asks (and ends), and `continue` moves the play, what the game kept with it, to the
+  publication the game is at now. A play the host cannot open in the page's language (`language`) while it tells
+  `newer` is offered, in place of the refusal, just that move (or ↺). A host whose plays are its files as they are now
+  (the local player) never tells `newer` and has no `continue`.
 
 ## Refusals
 

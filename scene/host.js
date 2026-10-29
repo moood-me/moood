@@ -76,9 +76,10 @@ export const music = {
 
 // files saved (docs/host.md: changes — of a world, {world}, or of a game and its world, {game}): the page shown anew
 // as one is; a host whose plays are pinned to commits tells instead, of a game, when my play of it could continue on
-// newer ones (newer(), each time it is told); a host that does not tell answers nothing
+// newer ones (newer(), once: told, the page listens no more — a host may end the stream as it tells); a host that does
+// not tell answers nothing
 export function follow(what, newer) {
   const told = new EventSource(at(`changes?${query(what)}`));
   told.onmessage = () => location.reload();
-  if (newer) told.addEventListener('newer', newer);
+  if (newer) told.addEventListener('newer', () => { told.close(); newer(); });
 }
