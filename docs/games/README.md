@@ -27,3 +27,11 @@ what ⏭ does where the player may forward (the page speeds a line heard up firs
 they are beside it: the code fetches them by its own address, `new URL('sounds/sea.mp3', import.meta.url)`. Only what
 is free to put in a public repository (CC0, or the author's own), and a few hundred KB each: every file is loaded by
 whoever plays.
+
+Everything a game (or a scene) loads is its own: nothing from another address — no fonts from Google Fonts, no scripts,
+styles or pictures from a CDN. The pages allow only their own address (and `data:`; their Content-Security-Policy), so
+anything else is blocked — and a stylesheet whose `@import` is blocked fails, which stops the game («no stylesheet
+ui.css»). A font goes in `bespoke/` with the game — its `woff2` files, or as `data:` in `@font-face` (`fonts.css` of
+the games in moood-me/works-003, works-005 do so) —, under a free licence (SIL OFL), with the subsets of every
+language the game speaks (Latin with its extended letters, Cyrillic …; a language whose letters the font lacks falls
+back to another font).
