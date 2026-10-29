@@ -107,8 +107,8 @@ in it.
 
 ## 6. The author
 
-- The author's sign (`bespoke.game.mine`: on the author's site, never on the public one) opens the author's map: every
-  chapter, its steps, the mini-games of each — to go straight to any. Gone to, a step is a replay from there — in a
+- The author's sign (`bespoke.game.mine`: on the author's site; on the public site too — to the game's author, signed
+  in there with the same Google account as in the studio) opens the author's map: every chapter, its steps, the mini-games of each — to go straight to any. Gone to, a step is a replay from there — in a
   chapter the main run has played, from its state kept at that step, as "Replay from here" (else as if nothing was
   chosen before it: a kept replay never loses the main run's choices); a mini-game — its step played up to it unseen and without time (the scene catching up
   in its instant mode: `bespoke.show` with `then`), then on, seen. A jump tells the game nothing — what the scene
