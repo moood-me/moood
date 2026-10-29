@@ -14,7 +14,9 @@
 //     it is seen — a jump into the middle of what the game does there: the old engine catches up on one clock with the
 //     game (scenestate.js catchUp); engine 3 takes the values and cuts in its instant mode (bespoke.instant) as it
 //     opens, before anything of it is painted — all the scene does then ends at once, as it would end (the waits and what was heard need no time there) — and
-//     shows the scene in one cut. Meanwhile the game is told nothing (tell, arrived, line, cut, signal). fade: false
+//     shows the scene in one cut. Meanwhile the game is told nothing (tell, arrived, line, cut, signal): a piece whose
+//     end the game waits for (a beat that tells it is over) is set after the show, never in `then` — set there, it ends
+//     unheard (engine 3 says so in the scene's warnings). fade: false
 //     (the default) — the scene comes in one cut, never from black; true (1.4 s) or seconds — through black: the one
 //     before fades out, the new one in once it is drawn. An engine-3 scene shown after another lives on — its film,
 //     its people, its lines, as it would go — while the new one is made, and goes when that one is whole (a game shows

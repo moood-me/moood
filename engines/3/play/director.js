@@ -89,9 +89,15 @@ export function createDirector(env) {
   // (to the page with `at` — the scene's seconds when it happened: PG7; not while it is brought up silently —
   // `simulating`: a seek's, a restore's unseen steps, 2.5)
   const PAGE = new Set(['arrived', 'line', 'cut', 'signal', 'tell']);
+  // (a game's jump — bespoke.show's `then`: simulating in the instant mode — tells it nothing; what the scene tells or
+  // signals there the game never hears: said, since a game waiting for it waits in vain — a piece whose end it waits
+  // for is set after the show, never in `then`)
   function hear(type, data) {
     emit(type, data?.who ?? data?.name ?? null, data);
     if (PAGE.has(type) && !simulating) env.post({ t: 'event', type, data, at: t });
+    else if (simulating && instantly && (type === 'tell' || type === 'signal')) {
+      warn(`the game's jump (bespoke.show's "then"): the scene ${type === 'tell' ? `told "${data.text}"` : `signalled "${data.name}"`} as it was worked out — the game hears nothing of a jump: a piece whose end it waits for is set after the show, not in "then"`);
+    }
   }
 
   // ── actions ──
