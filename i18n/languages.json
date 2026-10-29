@@ -2,5 +2,6 @@
   "en": { "name": "English", "locale": "en_US" },
   "ru": { "name": "Русский", "locale": "ru_RU" },
   "uk": { "name": "Українська", "locale": "uk_UA" },
-  "de": { "name": "Deutsch", "locale": "de_DE" }
+  "de": { "name": "Deutsch", "locale": "de_DE" },
+  "es": { "name": "Español", "locale": "es_ES" }
 }
