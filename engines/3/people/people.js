@@ -3,7 +3,7 @@
 // is. Who they are and how they move is the world's: its cast (a module the element names — its data: the motions,
 // the characters, the styles…) over what the engine has. How they move is the scene's state — where they stand (the
 // element's place, as any element's), and keys of their own: <id>_do, _turn, _look, _reach, _with, _wear, _gait, _steps,
-// _on, _here, _still, _mood (people.md).
+// _on, _here, _still, _mood, _reflected (people.md).
 //   Twice a tick (contracts PP1–PP11). Once every step, seen or unseen, SCENE calls frame: the player of everyone
 // here is moved and they are posed — placed upright where SCENE's placing has them (or where they are held), their
 // points, box, sphere and capsules made, the same arrays every step; nothing of the GPU. Who is not here costs nothing
@@ -20,7 +20,7 @@
 //     building(), point(id, name, out), pointFor(values, id, name, out), box(id, out), height(id), pick(origin, way),
 //     mark(id, bits), startOf(…),
 //     durationOf(…), speedOf(…), list, save(), restore(data), dispose(), show(seen), shown(), version(id), sphere(id, out),
-//     capsules(id), draw(pass, kind, inView, id, mirrored, counters), inks
+//     capsules(id), reflected(id), draw(pass, kind, inView, id, mirrored, counters), inks
 //   persons — [{ id, index, node, o, inside }] (inside: marked so — in a room wherever they stand); cast — the scene's
 //   modules (a person's `person.cast` names one);
 //   anchor(id, out, values?) — where SCENE's placing puts that person now (world metres: their place keys, through
@@ -236,7 +236,7 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
       const H = { id, index: person.index, node: person.node, o, p, cast: c ?? NO_CAST, marked: !!person.inside, inside: !!person.inside, slot: list.length + 1, block: block(S),
         made: `${p.cast == null ? '' : p.cast}\n${JSON.stringify(o.person)}`, shot: undefined,
         warn: text => { if (!said.has(text)) { said.add(text); warn(`${o.name || id}: ${text}`); } },
-        keys: Object.fromEntries(['do', 'turn', 'look', 'reach', 'with', 'wear', 'gait', 'steps', 'on', 'here', 'still', 'mood'].map(k => [k, `${id}_${k}`])),
+        keys: Object.fromEntries(['do', 'turn', 'look', 'reach', 'with', 'wear', 'gait', 'steps', 'on', 'here', 'still', 'mood', 'reflected'].map(k => [k, `${id}_${k}`])),
         // (the keys that touch how they stand: theirs, their place's, and those that move what they stand "on"; the acts
         // made for the shots that frame them posed ahead, by what each has them do — pointFor)
         told: [...TOLD.map(k => `${id}_${k}`), ...(o.place && typeof o.place === 'object' ? Object.values(o.place).filter(v => typeof v === 'string') : []), ...(o.on != null ? moves(String(o.on)) : [])], cutActs: new Map(),
@@ -255,7 +255,8 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
         // (else what swings is at rest, their cloth put on); steps: frames since their last show; cut: set as a cut sets
         // them since their last show (their cloth put on at rest there); unposed: a look put on or parts taken since
         // their last step (posed at their next show, if no step comes before it)
-        here: true, shown: false, live: false, resting: true, steps: 0, shownAt: 0, cut: false, unposed: true, byShown: undefined, floor: -1e9,
+        // reflected: drawn in mirrors (<id>_reflected not false), as the last step read it
+        here: true, reflected: true, shown: false, live: false, resting: true, steps: 0, shownAt: 0, cut: false, unposed: true, byShown: undefined, floor: -1e9,
         // version: one more whenever what is drawn of them changed (PP8); showed: the one their last show saw
         version: 0, showed: -1, marks: 0, painted: -1, inked: false };
       // (what they stand on — the land, a bridge, a deck that heels under them: SCENE's, where they are)
@@ -436,6 +437,9 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
     // (a face's expression: at rest when none)
     const mood = values[keys.mood];
     I.expression = typeof mood === 'string' ? mood : null;
+    // (in mirrors or not: a change is a change of what is drawn of them — the mirrors that see them drawn again)
+    const reflected = values[keys.reflected] !== false;
+    if (reflected !== H.reflected) { H.reflected = reflected; H.version++; }
     const cut = shot !== H.shot, was = P.clockT;
     // (put where they are at once this step — their place, or what carries them, set: no way walked)
     k.placed = placed(H.id);
@@ -830,15 +834,17 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
       return true;
     },
     capsules: id => byId.get(String(id))?.capsules ?? null,
+    // whether that person is drawn in mirrors (<id>_reflected not false)
+    reflected: id => byId.get(String(id))?.reflected ?? true,
     // inside RENDER's pass, its groups 0 and 1 set (PP10; kind: 'main' | 'depth' — people are in no mask): those shown
     // whose sphere is in this view (inView) — or the one named —, kind by kind: the kind's pipeline for the pass
-    // (`mirrored`: a mirror's view, the winding turned),
+    // (`mirrored`: a mirror's view, the winding turned; who is not reflected is not drawn in it),
     // the people's group, each one's uniform, their meshes — each draw and its triangles added to RENDER's counters
     // (RN8). → whether anyone was drawn
     draw(pass, kind, inView, id, mirrored, counters) {
       const only = id == null ? null : String(id);
       empty(drawn);
-      for (let i = 0; i < list.length; i++) { const H = list[i]; if (H.shown && (only === null || H.id === only) && inView(H.sphere)) drawn.push(H); }
+      for (let i = 0; i < list.length; i++) { const H = list[i]; if (H.shown && (only === null || H.id === only) && (!mirrored || H.reflected) && inView(H.sphere)) drawn.push(H); }
       if (!drawn.length) return false;
       pass.setBindGroup(2, S.group());
       const one = S.person();

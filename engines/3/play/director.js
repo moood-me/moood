@@ -576,6 +576,7 @@ export function createDirector(env) {
       on: point => set('on', point ?? null),
       here: (yes = true) => set('here', !!yes),
       still: (on = true) => set('still', !!on),
+      reflected: (yes = true) => set('reflected', !!yes),
       mood: expression => set('mood', expression),
       talk: (on = true) => set('talk', on ? 1 : 0),
       // where a motion done once, ending facing `turn`, begins — from where it ends ({across, distance, turn}; null
