@@ -11,11 +11,12 @@
 //   tr.said(who, text)                             a line someone says (say, think) in the language: who tells apart
 //                                                  what is the same text in the source but not in another (the
 //                                                  runtime's: say and think say it so)
-//   tr.line(who, text, {how}), tr.thought(…)     a line kept to be said later (a list of answers, an ending's
+//   tr.line(who, text, {how, spoken}), tr.thought(…)  a line kept to be said later (a list of answers, an ending's
 //                                                  lines) — aloud (say) or thought (think): {text — it as written,
-//                                                  how — its own manner (English, never translated), or ''} — say/think
-//                                                  translate it; marked so that it is found, and how it is heard
-//                                                  (gettext's N_)
+//                                                  how — its own manner (English, never translated), or ''; spoken —
+//                                                  what its voice says instead of it, as written (never translated),
+//                                                  or null} — say/think translate it; marked so that it is found, and
+//                                                  how it is heard (gettext's N_)
 // — and a translation of it, in a language's file, is found by it: no translation is an error (fail-fast), never
 // the source shown instead. The source language itself needs no file. A file's entries (check writes them):
 //   {"text": "…", "plural"?: "…", "context"?: "…", "who"?: "…", "translation": "…" | {"one": "…", "few": "…", …},
@@ -29,7 +30,7 @@
   const SEP = '\u0004', WHO = '\u0005';
   const keyOf = (context, text, who) => (who ? `${who}${WHO}${text}` : context ? `${context}${SEP}${text}` : text);
   // (a line kept: tr.line, tr.thought — said later, by say/think)
-  const kept = (who, text, { how = '' } = {}) => ({ text, how });
+  const kept = (who, text, { how = '', spoken = null } = {}) => ({ text, how, spoken });
 
   // what goes into a text: {name} — params.name (none given — an error: a text says what it needs)
   function fill(text, params, where) {

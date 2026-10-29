@@ -54,9 +54,10 @@ export function say({ code, values: v }, tr) {
     case 'line-speaker': return tr('{name}(who, text) — the text written here, its speaker not: a line is said by someone written beside it ({name}(\'who\', \'…\'))', v);
     case 'line-whose': return tr('.{name}(\'…\') — whose line it is is not written beside it: s.person(\'who\').{name}(\'…\'), or s.{name}(\'who\', \'…\')', v);
     case 'line-bare': return tr('{name}(who, text) — a text in it is not a line: write it whole here, or mark each where it is written (tr.line, tr.thought)', v);
-    case 'line-kept-how': return tr('{name}(who, line, { how }) — a kept line\'s own manner is kept with it: tr.line(who, text, { how })', v);
+    case 'line-kept-how': return tr('{name}(who, line, { how, spoken }) — a kept line\'s own manner and spoken words are kept with it: tr.line(who, text, { how, spoken })', v);
     case 'voice-not-literal': return tr('{name} — its voice, how are not literals', v);
     case 'how-not-literal': return tr('{name} — its how is not a literal', v);
+    case 'spoken-not-literal': return tr('{name} — its spoken is not a literal', v);
     case 'voice-who': return tr('{name} — "who" is not heard: a voice is {voice, how}', v);
     case 'voice-spread': return tr('{name} — its voice is spread (…): say it whole, in literals', v);
     case 'voice-game': return tr('{name} — a game\'s line is heard in its person\'s voice (people.json): its own is { how }', v);

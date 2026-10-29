@@ -1,8 +1,8 @@
 // The lines heard, as they are heard in each language their world or game is in — what their voices are made of (a
 // check of a repository asks which are missing): [{scope, lang, who, said, text, voice, how}] — scope: whose line it
 // is (a game's, a scene's, a module's: check's name of it); text: what the voice says, its inline tags with it
-// (<sigh>). A game's: said by its people, in the manner they last in and the line's own (play/voices.js — the
-// runtime's own rule); a scene's or a module's: said with
+// (<sigh>). A game's: said by its people, in the manner they last in and the line's own, its words spoken instead of it
+// if it has them (the same in every language — play/voices.js: the runtime's own rule); a scene's or a module's: said with
 // their voice ({voice, how} — speech.js asks for it so), a line with none is not heard. A line with no translation is
 // left out (check says so). The repository is read through its source (repository.js).
 import { heard } from './play/voices.js';
@@ -40,7 +40,7 @@ async function gameLines(source, s, r) {
     for (const e of r.said) {
       const p = people[e.who];
       if (!p?.voice) continue;  // (no one so, or one with no voice: check says the first)
-      try { out.push({ scope: s.name, lang, who: e.who, said: e.said, ...heard(p, e.said, tr.said(e.who, e.text), e.how) }); }
+      try { out.push({ scope: s.name, lang, who: e.who, said: e.said, ...heard(p, e.said, e.spoken ?? tr.said(e.who, e.text), e.how) }); }
       catch { /* (untranslated: check says so) */ }
     }
   }
