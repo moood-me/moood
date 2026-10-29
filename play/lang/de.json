@@ -1,0 +1,23 @@
+{"strings": [
+  {"text":"Turn your phone","translation":"Dreh dein Handy","where":"landscape.js"},
+  {"text":"The game is played across.","translation":"Das Spiel wird quer gespielt.","where":"landscape.js"},
+  {"text":"The whole play from the start","translation":"Die ganze Partie von vorn","where":"play.js"},
+  {"text":"Continue on the new commit","translation":"Auf dem neuen Commit weiterspielen","where":"play.js"},
+  {"text":"Pause","translation":"Pause","where":"play.js"},
+  {"text":"Fast forward (Space)","translation":"Vorspulen (Leertaste)","where":"play.js"},
+  {"text":"Chapters","translation":"Kapitel","where":"play.js"},
+  {"text":"Volume","translation":"Lautstärke","where":"play.js"},
+  {"text":"The whole screen","translation":"Vollbild","where":"play.js"},
+  {"text":"No game is asked for (?game=).","translation":"Kein Spiel angegeben (?game=).","where":"play.js"},
+  {"text":"Begin the whole play again?","translation":"Die ganze Partie neu beginnen?","where":"play.js"},
+  {"text":"Continue the play on the new commit? What the game kept goes on with it, but it may not fit the new code, and something may break — then begin the play again (↺). There is no going back.","translation":"Die Partie auf dem neuen Commit fortsetzen? Was das Spiel gespeichert hat, geht mit, passt aber vielleicht nicht zum neuen Code, und etwas kann kaputtgehen — dann beginne die Partie neu (↺). Zurück geht es nicht mehr.","where":"play.js"},
+  {"text":"The play could not continue on the new commit: {why}","translation":"Die Partie konnte auf dem neuen Commit nicht fortgesetzt werden: {why}","where":"play.js"},
+  {"text":"Go on","translation":"Weiter","where":"play.js"},
+  {"text":"The play could not be opened: {why}","translation":"Die Partie konnte nicht geöffnet werden: {why}","where":"play.js"},
+  {"text":"no voice: {why}","translation":"keine Stimme: {why}","where":"runtime.js"},
+  {"text":"no music: {why}","translation":"keine Musik: {why}","where":"runtime.js"},
+  {"text":"mini-game: {why}","translation":"Minispiel: {why}","where":"runtime.js"},
+  {"text":"“{text}” — {who}","translation":"„{text}“ — {who}","where":"runtime.js"},
+  {"text":"not kept: {why}","translation":"nicht gespeichert: {why}","where":"runtime.js"},
+  {"text":"the game broke: {why}","translation":"das Spiel ist kaputtgegangen: {why}","where":"runtime.js"}
+]}

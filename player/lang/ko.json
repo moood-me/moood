@@ -1,0 +1,17 @@
+{"strings": [
+  {"text":"“{text}” is not translated ({file}).","translation":"“{text}”이(가) 번역되지 않았어요 ({file}).","where":"home.js"},
+  {"text":"{file} is not right: check says what is wrong.","translation":"{file}에 문제가 있어요. 무엇이 잘못됐는지는 check가 알려 줘요.","where":"home.js"},
+  {"text":"Its world {ref} is in another repository: lay it beside the game and name it by its path.","translation":"이 게임의 세계 {ref}은(는) 다른 저장소에 있어요. 게임 옆에 두고 경로로 지정해 주세요.","where":"home.js"},
+  {"text":"There is no “{name}” here.","translation":"여기에는 “{name}”이(가) 없어요.","where":"home.js"},
+  {"text":"It cannot be shown ({code}).","translation":"보여 줄 수 없어요 ({code}).","where":"home.js"},
+  {"text":"Not in this language. It is in:","translation":"이 언어로는 없어요. 있는 언어:","where":"home.js"},
+  {"text":"the main scene","translation":"메인 장면","where":"home.js"},
+  {"text":"No scenes yet.","translation":"아직 장면이 없어요.","where":"home.js"},
+  {"text":"Played on the world {world}","translation":"세계 {world}에서 플레이해요","where":"home.js"},
+  {"text":"Play","translation":"플레이","where":"home.js"},
+  {"text":"moood — the local player","translation":"moood — 로컬 플레이어","where":"home.js"},
+  {"text":"No worlds or games in this folder: a world is a folder with world.json, a game one with game.json, at any depth.","translation":"이 폴더에는 세계도 게임도 없어요. world.json이 있는 폴더가 세계, game.json이 있는 폴더가 게임이에요 (깊이는 상관없어요).","where":"home.js"},
+  {"text":"Worlds","translation":"세계","where":"home.js"},
+  {"text":"Games","translation":"게임","where":"home.js"},
+  {"text":"What check finds wrong","translation":"check가 찾은 문제","where":"home.js"}
+]}
