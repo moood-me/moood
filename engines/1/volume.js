@@ -42,13 +42,45 @@ const MooodVolume = (() => {
   }
   function mute(k, on) { write(`muted:${k}`, on ? 1 : 0); tell(); }
   // output(ctx) → a GainNode of that AudioContext as loud as the "sounds" channel: what plays sounds connects to it
-  // (and it, onward, to ctx.destination or its own chain) instead of to the destination
+  // (and it, onward, to ctx.destination or its own chain) instead of to the destination. The context is then this
+  // page's to run: it sounds as soon as the browser lets sound begin (again at a touch or a key of the page: a browser
+  // lets it begin only then) — unless the sounds are held (hold), as the scene's music is: held, every output fades to 0
+  // over HUSH seconds, then its context stands (what was asked of it meanwhile waits, and begins as it goes on); going
+  // on, its context runs again and it fades back in to the volume set. A sound's code never suspends or resumes it.
+  const HUSH = 0.8;
+  const outputs = new Set(); // {ctx, node, standing: its timer}
+  let held = false;
   function output(ctx) {
-    const node = ctx.createGain();
-    node.gain.value = get('sound');
-    on((k, v) => { if (k === 'sound') node.gain.setTargetAtTime(v, ctx.currentTime, 0.1); });
+    const node = ctx.createGain(), o = { ctx, node, standing: 0 };
+    node.gain.value = held ? 0 : get('sound');
+    outputs.add(o);
+    on((k, v) => { if (k === 'sound' && !held) node.gain.setTargetAtTime(v, ctx.currentTime, 0.1); });
+    if (held) ctx.suspend().catch(() => {}); else ctx.resume().catch(() => {});
     return node;
   }
+  // the sounds held (the play paused, its scene standing or being made ready) or going on: each output's fade taken
+  // over from where it is; the context stood after its fade — by the browser's own timer (a play's clock stands while
+  // the play is paused: clock.js) — unless it goes on meanwhile (then it never stands)
+  function hold(on) {
+    if (!!on === held) return;
+    held = !!on;
+    const T = globalThis.__mooodTimers ?? globalThis;
+    for (const o of outputs) {
+      const { ctx, node } = o;
+      if (ctx.state === 'closed') { outputs.delete(o); continue; }
+      T.clearTimeout(o.standing);
+      const g = node.gain, t = ctx.currentTime, v = g.value; // (where it is now: read before its fade is taken off)
+      g.cancelScheduledValues(t);
+      g.setValueAtTime(v, t);
+      g.linearRampToValueAtTime(held ? 0 : get('sound'), t + HUSH);
+      if (held) o.standing = T.setTimeout(() => { if (held) ctx.suspend().catch(() => {}); }, HUSH * 1000);
+      else ctx.resume().catch(() => {});
+    }
+  }
+  // (a context the browser held back: asked again at a touch or a key — what it answers)
+  const touched = () => { if (!held) for (const { ctx } of outputs) if (ctx.state === 'suspended') ctx.resume().catch(() => {}); };
+  addEventListener('pointerdown', touched, true);
+  addEventListener('keydown', touched, true);
   addEventListener('storage', e => { if (e.key?.startsWith(PREFIX)) tell(); });
 
   // ── the sign on the buttons ──────────────────────────────────────────────
@@ -125,5 +157,5 @@ const MooodVolume = (() => {
     if (panel && !panel.hidden && !panel.contains(e.target)) panel.hidden = true;
   });
 
-  return { get, set, mute, on, output };
+  return { get, set, mute, on, output, hold, get held() { return held; } };
 })();

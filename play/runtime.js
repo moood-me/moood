@@ -120,11 +120,13 @@
 //     going — it is told 'skip' (the language has no ⏭ of its own: the game calls this from the page's ⏭ —
 //     bespoke.forward — when it lets the mini-game be skipped; a game without forward, from its own ⏭)
 //   bespoke.pause(on) — the play paused (true) or going on: its time stands (the game's timers, the scene's painting
-//     and film: clock.js), the voice heard and the music wait, the page's animations stand (an engine 3 scene stands
-//     for other reasons too — nobody watching it, a layer of the site over it —, its voices and music with it: they go
-//     on when none of the reasons holds); bespoke.paused — whether it is. The pause is the page's: its ⏸, the same for
+//     and film: clock.js), the voice heard, the music and the game's own sounds wait, the page's animations stand (an
+//     engine 3 scene stands for other reasons too — nobody watching it, a layer of the site over it —, its voices, music
+//     and sounds with it: they go on when none of the reasons holds); bespoke.paused — whether it is. The pause is the page's: its ⏸, the same for
 //     every game — a game draws none of its own
-//   bespoke.onPause(fn) — fn(paused) as the play is paused or goes on: what the game stops itself (its own sounds)
+//   bespoke.onPause(fn) — fn(paused) as the play is paused or goes on: what the game stops itself — not its own sounds:
+//     through MooodVolume.output they wait with the play as its music does (paused, its scene standing or being made
+//     ready), fading out and back in
 //   bespoke.menu(open) — what the page's ☰ opens: the game's own menu (its chapters, where the play stands), drawn as the
 //     game likes; open() each time ☰ is pressed. None (null, or never given) — no ☰. A game draws no ☰ of its own
 //   bespoke.forward(fn) — the page's ⏭ (and Space, but in a field typed into), shown while fn is given: pressed, a line
@@ -211,7 +213,13 @@ export async function start({ game, play, lang, scenes, people, load, saved, kee
   let quiet = 0;  // (the show jumping now: the game told nothing of its scene meanwhile)
   let showing = 0;  // (the show asked last: one asked before it, still on its way, shows nothing)
   const FADE = 1.4; // (s: a scene's fade through black, unless the game says how long)
-  async function show(ref, { state = {}, fade = false, captions = true, then = null } = {}) {
+  // (the game's own sounds wait while a scene is made ready — from asked till shown —, as its music begins once it is:
+  // sounds())
+  async function show(ref, how) {
+    opening++; sounds();
+    try { return await open(ref, how); } finally { opening--; sounds(); }
+  }
+  async function open(ref, { state = {}, fade = false, captions = true, then = null } = {}) {
     const s = find(ref), mine = ++showing;
     if (!s) throw new Error(`the world has no scene "${ref}"`);
     const v = await versionOf(s);
@@ -442,6 +450,10 @@ export async function start({ game, play, lang, scenes, people, load, saved, kee
       // (an engine 3 scene: its voices and its music stand and go on with the scene itself — the stage's onPause, which
       // the play's pause is one reason of)
       if (stage.state.engine !== 3) { MooodSpeech.pause(paused); MooodMusic.pause(paused); }
+      // (going on over another engine's scene: a standing of the engine 3 scene the stage left meanwhile is over, as the
+      // music's is)
+      if (!paused && stage.state.engine !== 3) standing = false;
+      sounds();
       minigames.pause(paused);
       if (paused) stood = document.getAnimations().filter(a => a.playState === 'running').map(a => (a.pause(), a));
       else { for (const a of stood) a.play(); stood = []; }
@@ -456,6 +468,13 @@ export async function start({ game, play, lang, scenes, people, load, saved, kee
     },
   };
   let paused = false, stood = []; // (the page's animations the pause stopped)
+  // The game's own sounds (MooodVolume.output: the "sounds" slider) wait as the scene's music does — held while the play
+  // is paused, while its engine 3 scene stands (the stage's onPause: nobody watching it, a layer of the site over it, a
+  // picture held under the sign) and while a scene is being made ready (show): faded out, their audio's clock standing;
+  // going on, faded back in (volume.js hold). The game stops nothing of them itself
+  let standing = false, opening = 0;
+  const sounds = () => MooodVolume.hold(paused || standing || opening > 0);
+  stage.onPause(on => { standing = !!on; sounds(); });
   const pausing = []; // (the game's: told as the play is paused or goes on)
 
   // the page's ⏭ (bespoke.forward): the line heard hurried, else the game's fn; Space — the same, while it is shown (a

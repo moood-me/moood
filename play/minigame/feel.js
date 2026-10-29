@@ -13,17 +13,17 @@
 //     tension (u — the danger), time (u — how near the limit; level 0 — the time stands)
 //   feel.buzz(ms | [ms…]) — a vibration, if the phone has one and the game's style allows it
 //   feel.style(style) — the game's key (style.key: Lyria's name of a relative pair, sounds.js KEYS; none — KEY, D
-//     major / B minor), its sounds and whether it vibrates; feel.mute(on) — no sound at all (the author's switch); feel.pause(on) — the audio stands with the play; feel.away(on) — and while the page is not seen
+//     major / B minor), its sounds and whether it vibrates; feel.mute(on) — no sound at all (the author's switch). The
+//     audio waits with the play as the game's own sounds do — its pause, its scene standing (the page not seen): the
+//     site's output (MooodVolume.output) fades it out and back in, its clock standing meanwhile
 //   feel.wake() — the page may be heard: called on a touch (a browser lets audio start only then)
 //   feel.heard() → {sounds: [[event, as]…], tones: [[process, as]…]} — what the language sounds, by role (the author's
 //     board: an event 'end:<how>' is played as play('end', {how}))
 import { LANGUAGE, KEYS, KEY, sound, layer, load } from './sounds.js';
 
 export function createFeel() {
-  let ctx = null, out = null, key = KEY, own = {}, vibrate = true, muted = false, paused = false, away = false;
+  let ctx = null, out = null, key = KEY, own = {}, vibrate = true, muted = false;
   const live = () => !!ctx && ctx.state === 'running' && !muted;
-  // (the audio stands while the play is paused or the page is not seen; goes on when neither holds)
-  const stand = () => { if (!ctx) return; if (paused || away) ctx.suspend(); else ctx.resume(); };
   const turn = {}; // event → which of its sounds is next (taken in turn)
   const audio = () => {
     if (ctx) return ctx;
@@ -52,7 +52,8 @@ export function createFeel() {
   }
   return {
     // → a promise: once it may be heard (or could not be)
-    wake() { audio(); return ctx.state === 'suspended' && !paused && !away ? ctx.resume().catch(() => {}) : Promise.resolve(); },
+    // (held — the play paused, its scene standing —: it goes on with the play, not at a touch)
+    wake() { audio(); return ctx.state === 'suspended' && !MooodVolume.held ? ctx.resume().catch(() => {}) : Promise.resolve(); },
     play(name, opts = {}) {
       if (!live()) return;
       try {
@@ -80,9 +81,6 @@ export function createFeel() {
     },
     heard: () => ({ sounds: Object.entries(LANGUAGE.sounds).map(([e, v]) => [e, v.as]), tones: Object.entries(LANGUAGE.tones).map(([p, v]) => [p, v.as]) }),
     mute(on) { muted = !!on; },
-    pause(on) { paused = !!on; stand(); },
-    // the page not seen (another tab, the phone's call): what lasts stands, and goes on when it is seen again
-    away(on) { away = !!on; stand(); },
   };
 }
 

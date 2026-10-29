@@ -156,7 +156,6 @@ export function createMinigames({ root, where, frame, screen, onFrame, highlight
     const was = paused || away;
     away = document.hidden;
     if (away) awayFrom = performance.now(); else awayAll += performance.now() - awayFrom;
-    feel.away(away);
     stand(was);
   });
 
@@ -487,7 +486,6 @@ export function createMinigames({ root, where, frame, screen, onFrame, highlight
       const was = paused || away;
       paused = !!on;
       root.classList.toggle('mg-paused', paused);
-      feel.pause(paused);
       stand(was);
     },
     // the player's skip, asked by the game's own ⏭: the going mini-game is told (false: none going)

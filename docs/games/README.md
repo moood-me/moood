@@ -19,9 +19,14 @@ language of mini-games — how, and how to choose a mechanic that is the charact
 
 A game's own sounds (Web Audio in `bespoke/`) obey the listener's third slider, "sounds" (beside music and voices;
 `engines/1/volume.js`): the game puts `MooodVolume.output(ctx)` — a gain of its `AudioContext` that follows the
-slider — between its sounds and `ctx.destination`, and never reads the slider itself. Lines of speech go through
-`MooodSpeech` and obey "voices". The play's pause, ⏭ and menu are the page's, the same for every game: a game draws
-no ⏸, ⏭ or ☰ of its own — it stops what is its own (its sounds) on `bespoke.onPause(fn)`, gives `bespoke.forward(fn)`
+slider — between its sounds and `ctx.destination`, and never reads the slider itself. Its context is then the page's
+to run, and the sounds wait with the play as the scene's music does: while the play is paused, while its scene stands
+(nobody watching it) and while a scene is being made ready (from `bespoke.show` till it is shown — the play's start,
+between scenes) they fade out and their audio's clock stands — what the game asks meanwhile begins as the play goes on,
+fading back in; it sounds as soon as the browser lets sound begin (at the first touch). So the game never suspends or
+resumes its context, and needs no pause of its own for them. Lines of speech go through `MooodSpeech` and obey
+"voices". The play's pause, ⏭ and menu are the page's, the same for every game: a game draws no ⏸, ⏭ or ☰ of its own
+— it stops what else is its own on `bespoke.onPause(fn)`, gives `bespoke.forward(fn)`
 what ⏭ does where the player may forward (the page speeds a line heard up first; `null` — no ⏭), and
 `bespoke.menu(open)` what ☰ opens — the map of the play, for every player (`games.md`). `bespoke/` may hold files other than code — a recording (MP3), a picture — served as
 they are beside it: the code fetches them by its own address, `new URL('sounds/sea.mp3', import.meta.url)`. Only what
