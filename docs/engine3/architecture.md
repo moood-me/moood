@@ -3172,7 +3172,9 @@ crossfade comes at a loop's seam, seconds in); a long loop is a
   (`clearView`) are tried from the bearing their face looks along (their root's +z now; posed by a shot's values, the
   facing PEOPLE gives with their root: PP5 `pointFor`), a thing's from the viewer's bearing; the first clear one,
   nearest that, within the area; none in the area — the viewer's bearing. The lines of sight start where the eye will
-  be at each spot (`eyeFor` there: over water, over a deck). Ahead (walk, panorama, picture) it has no bearings: it
+  be at each spot (`eyeFor` there: over water, over a deck). A spot whose eye is in a person's body — any one here,
+  the target too: within their capsules (PEOPLE's, as they stand now) or as near as the near plane (`inBody`) — is
+  no way round: its lines of sight, cast from 0.2 m out, would not see that. Ahead (walk, panorama, picture) it has no bearings: it
   films from the viewer's side, as the language says — a face turned from the start is its back.
 - **Safari, iPhones**: nothing of ours shuts them out; whether Safari's WebGPU in a worker carries the engine is
   unchecked and not promised.
