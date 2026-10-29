@@ -1,0 +1,17 @@
+{"strings": [
+  {"text":"“{text}” is not translated ({file}).","translation":"「{text}」尚未翻譯（{file}）。","where":"home.js"},
+  {"text":"{file} is not right: check says what is wrong.","translation":"{file} 有問題：check 會說明哪裡不對。","where":"home.js"},
+  {"text":"Its world {ref} is in another repository: lay it beside the game and name it by its path.","translation":"它的世界 {ref} 在另一個儲存庫中：請把它放在遊戲旁邊，並以路徑指稱。","where":"home.js"},
+  {"text":"There is no “{name}” here.","translation":"這裡沒有「{name}」。","where":"home.js"},
+  {"text":"It cannot be shown ({code}).","translation":"無法顯示（{code}）。","where":"home.js"},
+  {"text":"Not in this language. It is in:","translation":"沒有這個語言的版本。可用的語言：","where":"home.js"},
+  {"text":"the main scene","translation":"主場景","where":"home.js"},
+  {"text":"No scenes yet.","translation":"尚無場景。","where":"home.js"},
+  {"text":"Played on the world {world}","translation":"在世界 {world} 中進行","where":"home.js"},
+  {"text":"Play","translation":"開始遊戲","where":"home.js"},
+  {"text":"moood — the local player","translation":"moood — 本機播放器","where":"home.js"},
+  {"text":"No worlds or games in this folder: a world is a folder with world.json, a game one with game.json, at any depth.","translation":"此資料夾中沒有世界或遊戲：世界是含有 world.json 的資料夾，遊戲是含有 game.json 的資料夾，可在任何層級。","where":"home.js"},
+  {"text":"Worlds","translation":"世界","where":"home.js"},
+  {"text":"Games","translation":"遊戲","where":"home.js"},
+  {"text":"What check finds wrong","translation":"check 找到的問題","where":"home.js"}
+]}

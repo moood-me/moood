@@ -1,0 +1,6 @@
+{"strings": [
+  {"text":"the scene is getting ready","translation":"場景準備中","where":"page.js"},
+  {"text":"this device cannot show the scene","translation":"此裝置無法顯示場景","where":"page.js"},
+  {"text":"the scene could not be shown","translation":"無法顯示場景","where":"page.js"},
+  {"text":"the graphics device was lost","translation":"圖形裝置已遺失","where":"page.js"}
+]}
