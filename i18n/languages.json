@@ -9,5 +9,6 @@
   "fr": { "name": "Français", "locale": "fr_FR" },
   "zh-hant": { "name": "繁體中文", "locale": "zh_TW" },
   "pt": { "name": "Português (Brasil)", "locale": "pt_BR" },
-  "pl": { "name": "Polski", "locale": "pl_PL" }
+  "pl": { "name": "Polski", "locale": "pl_PL" },
+  "ko": { "name": "한국어", "locale": "ko_KR" }
 }
