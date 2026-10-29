@@ -49,7 +49,7 @@ is built, mini-games, how to write a game's story. Most of it is in Russian for 
 - `test/` — the tests (`node --test test/*.test.js`, once `packages/check` is built: `npm ci && npm run build` there)
   and their fixture; `test/gpu/` — engine 3's GPU programs checked in node (`npm ci && node check.mjs` there);
   `.github/workflows/ci.yml` — check, the tests and the GPU check on every push and pull request; from `main` the player's image, `ghcr.io/moood-me/moood-player`; from a tag
-  `check-v<version>` `@moood/check` on npm (the repository's secret `NPM_TOKEN`: an npm token that may publish it).
+  `check-v<version>` `@moood/check` on npm (npm's trusted publishing: the package trusts this repository's `ci.yml`; no token).
 - `docs/host.md` — what the pages ask of whatever serves them; `docs/engine3/` — engine 3's own documents (its design,
   contracts, plan: for whoever changes it); `docs/history/` — what was done and how.
 

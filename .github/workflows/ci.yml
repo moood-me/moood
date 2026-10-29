@@ -2,7 +2,8 @@
 # pages, its problems' words, the test fixture), the tests (test/: check, the local player) and engine 3's GPU programs
 # (test/gpu: on Dawn's GPU-less backend). Then, from what passed:
 # a push to main publishes the local player's image (ghcr.io/moood-me/moood-player — :latest and the commit's sha);
-# a tag check-v<version> publishes @moood/check at that version (its package.json says it; the NPM_TOKEN secret).
+# a tag check-v<version> publishes @moood/check at that version (its package.json says it) — npm's trusted publishing:
+# npm trusts this workflow of this repository (the package's settings there), no token; provenance comes with it.
 name: ci
 on:
   push:
@@ -70,6 +71,8 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
+      # (trusted publishing wants npm 11.5.1 or later)
+      - run: npm install -g npm@11
       - name: the package, built
         working-directory: packages/check
         run: npm ci && npm run build
@@ -78,6 +81,4 @@ jobs:
         run: test "check-v$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")" = "$GITHUB_REF_NAME"
       - name: published
         working-directory: packages/check
-        run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
