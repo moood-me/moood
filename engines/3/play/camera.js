@@ -257,9 +257,13 @@ export function createCamera(world, state, host) {
     const ax = Math.sin(F.turn), az = -Math.cos(F.turn), c = V3(), Mm = M.m;
     let far = 0, drop = 0, ground = null;
     for (const el of world.elements) {
-      if (el.kind !== 'plane' || el.flags.unseen || ((el.copies ? el.copies[0].tilt : null) ?? el.spec.plane.tilt) || Math.abs(el.spot.elevation) >= 0.2) continue;
+      if (el.kind !== 'plane' || el.flags.unseen) continue;
+      // (the ground: a plane lying level at the ground's height in the world — as it is placed through what carries it,
+      // its world matrix, not its own elevation and tilt, which are its carrier's)
+      const n = 12 * el.node;
+      if (Math.hypot(Mm[n + 6], Mm[n + 8]) > 1e-6 * Math.abs(Mm[n + 7]) || Math.abs(Mm[n + 10]) >= 0.2) continue;
       // (its far edge: the farthest of its corners ahead of the eye — and how far under the eye it lies)
-      const [l, t, r, b] = el.box, n = 12 * el.node;
+      const [l, t, r, b] = el.box;
       for (const [x, y] of [[l, t], [r, t], [r, b], [l, b]]) {
         c[0] = Mm[n] * x - Mm[n + 3] * y + Mm[n + 9]; c[1] = Mm[n + 1] * x - Mm[n + 4] * y + Mm[n + 10]; c[2] = Mm[n + 2] * x - Mm[n + 5] * y + Mm[n + 11];
         const d = (c[0] - o[0]) * ax + (c[2] - o[2]) * az;
