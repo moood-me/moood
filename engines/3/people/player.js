@@ -228,7 +228,7 @@ const UN = new Float64Array(7);
 
 // a frame of motion M as played on the spot (its way and its turn taken out: 'loop' — its smoothed way at that very
 // frame; 'once' — where it ends: done once, it leaves them where they are, facing as they face), into Q (local turns)
-// and R (the pelvis), weighted with what they hold (nlerp) — the frame and the weight: U [u, w]
+// and R (the pelvis), weighted with what they hold (nlerp) — the frame and the weight: U [u, w] (w 1: the frame alone)
 function frameOf(M, U, mode, Q, R) {
   const u = U[0], w = U[1], f = Math.max(0, Math.min(M.n - 1, u)), a = Math.floor(f), b = Math.min(M.n - 1, a + 1), t = f - a, L = M.L, e = M.n - 1, F = FO;
   // (both ways worked out, one taken: a mode first played late is not code the compiler has never seen run)
@@ -236,15 +236,16 @@ function frameOf(M, U, mode, Q, R) {
   const ey = M.heading[e], ex = M.root[e * 3], ez = M.root[e * 3 + 2];
   F[0] = loop ? wy : ey; F[1] = loop ? wx : ex; F[2] = loop ? wz : ez;
   const yaw = F[0], ys = Math.sin(-yaw / 2), yc = Math.cos(-yaw / 2), ox = F[1], oz = F[2];
-  // (whole: nothing held to mix with — w ≥ 1; else k of what is held)
-  const whole = !(w < 1), k = 1 - w;
+  // (k of what is held — none at w 1: one way for every weight, a crossfade first come late not code the compiler has
+  // never seen run — 5.16)
+  const k = 1 - w;
   for (let j = 0; j < J; j++) {
     const ia = (a * J + j) * 4, ib = (b * J + j) * 4, sg = t * (L[ia] * L[ib] + L[ia + 1] * L[ib + 1] + L[ia + 2] * L[ib + 2] + L[ia + 3] * L[ib + 3] < 0 ? -1 : 1);
     F[3] = L[ia] * (1 - t) + L[ib] * sg; F[4] = L[ia + 1] * (1 - t) + L[ib + 1] * sg; F[5] = L[ia + 2] * (1 - t) + L[ib + 2] * sg; F[6] = L[ia + 3] * (1 - t) + L[ib + 3] * sg;
     // (the pelvis: its way turned off)
     if (j === 0) { const x = F[3], y = F[4], z = F[5], q = F[6]; F[3] = yc * x + ys * z; F[4] = yc * y + ys * q; F[5] = yc * z - ys * x; F[6] = yc * q - ys * y; }
     const x = F[3], y = F[4], z = F[5], q = F[6], l = Math.sqrt(x * x + y * y + z * z + q * q) || 1, o = j * 4;
-    if (whole) { Q[o] = x / l; Q[o + 1] = y / l; Q[o + 2] = z / l; Q[o + 3] = q / l; continue; }
+    // (on the side of what is held: at w 1 the frame's own turn, its sign kept as the held one's — the same turn)
     const s = w * (Q[o] * x + Q[o + 1] * y + Q[o + 2] * z + Q[o + 3] * q < 0 ? -1 : 1) / l;
     const nx = Q[o] * k + s * x, ny = Q[o + 1] * k + s * y, nz = Q[o + 2] * k + s * z, nw = Q[o + 3] * k + s * q, L2 = Math.sqrt(nx * nx + ny * ny + nz * nz + nw * nw) || 1;
     Q[o] = nx / L2; Q[o + 1] = ny / L2; Q[o + 2] = nz / L2; Q[o + 3] = nw / L2;
@@ -252,7 +253,7 @@ function frameOf(M, U, mode, Q, R) {
   const px = M.root[a * 3] * (1 - t) + M.root[b * 3] * t - ox, py = M.root[a * 3 + 1] * (1 - t) + M.root[b * 3 + 1] * t, pz = M.root[a * 3 + 2] * (1 - t) + M.root[b * 3 + 2] * t - oz;
   // (the pelvis's place turned as its turn was: (0, sin, 0, cos) of −yaw about the vertical)
   const c2 = Math.cos(-yaw), s2 = Math.sin(-yaw), rx = c2 * px + s2 * pz, rz = -s2 * px + c2 * pz;
-  if (whole) { R[0] = rx; R[1] = py; R[2] = rz; } else { R[0] = R[0] * k + rx * w; R[1] = R[1] * k + py * w; R[2] = R[2] * k + rz * w; }
+  R[0] = R[0] * k + rx * w; R[1] = R[1] * k + py * w; R[2] = R[2] * k + rz * w;
 }
 // (frameOf's: its turn and its way off — yaw, ox, oz —, then a joint's turn as it is mixed: numbers a branch leaves
 // are kept in an array — 5.16)
@@ -494,9 +495,9 @@ export class Player {
   // under way, a carriage at speed, a ship turning walks no one; only their own place in it does. ground(p) — the land under them
   // (p: a point of the world, x and z, its height put in p[1]), null on another's arms; shot — the state's shots: in a
   // new one they are already where it has them, doing what it says, facing as they are turned, looking and reaching at
-  // what they do — nothing gone over from before; here — whether they are in the scene now: one who is not keeps
-  // their state (what they do, where they are, how they face, their clock) and is not posed
-  update(at, k, ground, shot, here = true) {
+  // what they do — nothing gone over from before. Only while they are in the scene: one who is not is not updated at
+  // all (people.js: they come back as a new shot sets them)
+  update(at, k, ground, shot) {
     const ax = at[0], ay = at[1], az = at[2], now = at[3];
     // (where they stand in what carries them: its whole frame taken off — its place, turn, tilt — their own place there)
     // (N: numbers a branch leaves — kept in an array, not made by the merge of two ways: 5.16)
@@ -581,7 +582,6 @@ export class Player {
     } else if (this.landing && this.landing.act !== this.act) this.landing = null;
     this.wasHeld = !!k.held;
     this.at[0] = ax; this.at[1] = ay; this.at[2] = az; this.lat[0] = lx; this.lat[1] = ly; this.lat[2] = lz;
-    if (!here) return;
     this.sample();
     fk(this.rig, this.fit, this.Q, this.root, this.P);
     this.after();

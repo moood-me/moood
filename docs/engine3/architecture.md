@@ -1218,7 +1218,8 @@ of the emitters drawn (each one's whole count while anything of it may be in the
 alone knows), `R.counters.people` — people's triangles (they are in
 `triangles` too), and what the call worked on: `quads` (the world's), `listed` (the quads listed by the culls of the
 frame's view, its mirrors' and its shadow cells'), `asked` (the quads the asks worked out — SH10's items: a quad
-worked out for three views counts three), `persons` (the world's); `R.stamped()` — the elements with quads stamped in the frame's view, by calls where its camera
+worked out for three views counts three), `persons` (the world's), `shown` (the persons shown: here and in any
+of the call's views — `people.shown()`, PP7); `R.stamped()` — the elements with quads stamped in the frame's view, by calls where its camera
 stood and moved, by table (quad, node, layer) and how far a node or layer moved (`world/tables.js` `T.measure`: kept
 only while measuring) — the stand keeps its running sum at each segment's start (`call('stand', 'segment', name)`); **`R.lacks`** — what the call's frame still lacked: `{ wait, sheets, pages, mirrors, cells, land }` (`wait`:
 `f.wait`; `sheets`: not `sheets.whole(world)`; the others numbers — `land` in tiles; what `R.missing()` words);
@@ -1810,7 +1811,9 @@ fails: there is no older figure to keep —, named with the person and the look.
 own Set, rebuilt only when someone's `_on` / `_look` / `_reach` value is another object. SCENE never changes it.
 
 **PP3 `people.frame(t, values, shot)`** — SCENE, once every step, seen or unseen, after the animates of PP2's
-elements: players' state; for who is here — the pose, root, points, box, sphere, capsules. `shot`: **the state's
+elements: for who is here — their player's state, the pose, root, points, box, sphere, capsules; one who is not here
+is not stepped at all (their player stands: nothing of them costs a step) and comes back as a cut sets them — where
+the state has them then, doing what it says, their clock gone on meanwhile. `shot`: **the state's
 count of cuts** (`state.shots` — one more at every `cut`, and nothing else; saved and restored with the state) —
 when it differs from the last call's, everyone is set as a cut sets them. It is NOT `f.shot`: the frame's number
 also moves at an unseen jump, a `still`, a restore and a camera key set at once (RN4) — moments at which the
@@ -2030,7 +2033,11 @@ thresholds wrong for it, or saying something other than their name):
 - `GC pause worst` is the scene's thread's alone (the frame is drawn there; a pause of the page holds the HTML
   layers, not the frame, and is in `main thread …`);
 - `allocated a frame` is the engine's own: the scene thread's allocation by a sampling heap profile of that
-  worker over the film — in a run of its own, not the traced one: ending the sampler makes V8 collect the whole
+  worker over the film, the steady state — the profiled run's film begins after a warm-up of 10 s of it, profiled
+  apart and told as `allocated a frame, warm-up`, not judged (until Chromium has compiled a once-a-frame function
+  for speed, some seconds in, every fraction it works out is put on the heap: on people 37 KB a frame in the first
+  2 s, 0.2 KB from about 10 s; a stall that makes is `GC pause worst`'s, judged over the traced film from the
+  opening) — in a run of its own, not the traced one: ending the sampler makes V8 collect the whole
   heap at once (a full, non-incremental collection — the profiler's pause, not the scene's), so it never falls in a run
   whose GC is judged —, summed by script — the engine's modules (`engines/3/**`) judged against the limit, per
   display frame at 60 a second; the scene's own code (animates, films, casts) and the messages reported beside
@@ -3116,7 +3123,9 @@ edited by any area. The app shows a scene in a WebView, where WebGPU is not on: 
   the heap a number a loop carries and changes now and then (a bound widened by `Math.min`/`max` or an `if`) and one
   that two ways of a branch leave (`c ? a : b` of fractions) — those go in arrays too (people's bounds, cloth's lap,
   `frameOf`, a quad's sphere and its piece's bounds, the lit set's grid); a way first taken late is worked out beside
-  the common one and one of them taken, where that is cheap (a straight leg, a motion done once); a long loop is a
+  the common one and one of them taken, where that is cheap (a straight leg, a motion done once), or one way serves
+both (a motion's frame mixed into what is held at every weight, a whole frame among them: `frameOf` — the first
+crossfade comes at a loop's seam, seconds in); a long loop is a
   function apart from the code after it (it is compiled while it runs — the code after it, never yet run, would throw
   the function back at its first run: a page's edges, a motion's making); and the records one place reads are of one
   shape (every Camera by `render/views.js` `newCamera`, a cull's options, a mirror's group and image) — records of two
