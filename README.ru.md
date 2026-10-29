@@ -1,4 +1,4 @@
-[English](README.md) · Русский
+[English](README.md) · Русский · [Українська](README.uk.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [日本語](README.ja.md) · [Беларуская](README.be.md) · [Français](README.fr.md) · [繁體中文](README.zh-hant.md) · [Português (Brasil)](README.pt.md) · [Polski](README.pl.md) · [한국어](README.ko.md)
 
 # moood
 
@@ -48,7 +48,7 @@
 - `test/` — тесты (`node --test test/*.test.js`, когда `packages/check` собран: там `npm ci && npm run build`) и их
   фикстура; `test/gpu/` — проверка GPU-программ движка 3 в node (там `npm ci && node check.mjs`);
   `.github/workflows/ci.yml` — check, тесты и проверка GPU на каждый push и pull request; из `main` — образ плеера, `ghcr.io/moood-me/moood-player`; из тега `check-v<версия>` —
-  `@moood/check` в npm (секрет репозитория `NPM_TOKEN`: токен npm, которому можно его публиковать).
+  `@moood/check` в npm (доверенная публикация npm: пакет доверяет `ci.yml` этого репозитория; без токена).
 - `docs/host.md` — что страницы просят у того, кто их показывает; `docs/engine3/` — документы самого движка 3
   (устройство, стыки, план: тому, кто его меняет); `docs/history/` — что сделано и как.
 
