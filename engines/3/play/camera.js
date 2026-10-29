@@ -432,6 +432,23 @@ export function createCamera(world, state, host) {
     Ov[0] = o[0] + Dv[0] * PASS.FROM; Ov[1] = o[1] + Dv[1] * PASS.FROM; Ov[2] = o[2] + Dv[2] * PASS.FROM;
     return world.raycast(Ov, Dv, L - PASS.FROM - 0.01, skip, yaw ?? Math.atan2(Dv[0], -Dv[2]));
   }
+  // whether an eye at o (a world point) is in a person's body — any one here, the target too: within their capsules
+  // (PEOPLE's, as they stand now) or as near them as the near plane — where the lens would cut into them
+  const Sp = new Float64Array(4);
+  function inBody(o) {
+    const P = world.people;
+    if (!P) return false;
+    for (const el of world.persons) {
+      if (!P.sphere(el.id, Sp) || Math.hypot(o[0] - Sp[0], o[1] - Sp[1], o[2] - Sp[2]) > Sp[3] + NEAR) continue;
+      const K = P.capsules(el.id), C = K.data;
+      for (let i = 0; i < K.n * 7; i += 7) {
+        const sx = C[i + 3] - C[i], sy = C[i + 4] - C[i + 1], sz = C[i + 5] - C[i + 2], ss = sx * sx + sy * sy + sz * sz;
+        const u = ss > 1e-12 ? clamp(((o[0] - C[i]) * sx + (o[1] - C[i + 1]) * sy + (o[2] - C[i + 2]) * sz) / ss, 0, 1) : 0;
+        if (Math.hypot(o[0] - C[i] - sx * u, o[1] - C[i + 1] - sy * u, o[2] - C[i + 2] - sz * u) <= C[i + 6] + NEAR) return true;
+      }
+    }
+    return false;
+  }
   // the operator's eye framing a target from (ux, uz) of the frame: its height over the start's level — the eye's height
   // over what is under it, raised as high as what the target stands on is over the land or the water under the target
   // (up: a deck, the back it rides, a boat) — over the land or the water under the camera; over what is under it, at
@@ -443,7 +460,8 @@ export function createCamera(world, state, host) {
   // the operator's way round for this shot (looking round): { turn — radians round the target from the bearing toward
   // it from where the viewer is, near — the share of its distance }, by lines of sight (between) from the eye as high
   // as it will be there (eyeFor; dh: what the viewer's height and camera_h add). A person is filmed from before their
-  // face: the ways round are tried from the bearing their face looks along (T.face), a thing's from the viewer's
+  // face: the ways round are tried from the bearing their face looks along (T.face), a thing's from the viewer's. A way
+  // whose eye is in someone's body (inBody — the target's too) is no way: it sees nothing
   function clearView(T, X, Z, D, c, up, near0, dh) {
     const el = T.el;
     skipOf(el);
@@ -459,9 +477,9 @@ export function createCamera(world, state, host) {
       const cx = X - Dk * Math.sin(a), cz = Z - Dk * Math.cos(a);
       if (room && (cx < room[0] || cx > room[1] || cz < room[2] || cz > room[3])) continue;
       const h = eyeFor(cx, cz, up, T.Y, near0) + dh;
+      if (inBody(toWorld(cx, h, cz, Cv))) continue;
       let hidden = 0;
       for (let k = 0; k < SIGHTS; k++) {
-        toWorld(cx, h, cz, Cv);
         toWorld(X, lo + (hi - lo) * (k + 0.5) / SIGHTS, Z, Tv);
         if (between(Cv, Tv, null)) hidden++;
         // (already too hidden, and no less than the best way so far: the rest of its lines not cast)
