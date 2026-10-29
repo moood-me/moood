@@ -3,5 +3,6 @@
   "ru": { "name": "Русский", "locale": "ru_RU" },
   "uk": { "name": "Українська", "locale": "uk_UA" },
   "de": { "name": "Deutsch", "locale": "de_DE" },
-  "es": { "name": "Español", "locale": "es_ES" }
+  "es": { "name": "Español", "locale": "es_ES" },
+  "ja": { "name": "日本語", "locale": "ja_JP" }
 }
