@@ -387,7 +387,12 @@ export function createCamera(world, state, host) {
       tgt.tall = world.people?.height(id) ?? EYE;
     } else {
       const m = world.markOf(el, R.name);
-      if (named && !m) return HOLD;
+      if (named && !m) {
+        // (a name it has never marked — its painting has no such point, its animate has marked none so far: said, the
+        // camera holding where it framed, or the scene's own; one not painted yet is waited for)
+        if (el.isPainted && !el.marked.has(R.name)) host.warn(`camera_target: "${ref}" — "${id}" marks no point "${R.name}" (its painting's e.at names none, nor has its animate marked one): nothing to frame — the camera holds where it was framing, or stays the scene's own`);
+        return HOLD;
+      }
       if (m) { world.pointOf(ref, P); marked = true; }
       else { midP.x = (el.box[0] + el.box[2]) / 2; midP.y = (el.box[1] + el.box[3]) / 2; world.sheetPoint(el, R.copy, midP, world.yaw, P); }
       // (a plane has no height: what is framed at its point is as tall as one standing there)

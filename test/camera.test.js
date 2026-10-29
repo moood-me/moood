@@ -38,7 +38,8 @@ function depthIn(o, K) {
   return most;
 }
 
-// people: [{ id, x, d, away (faces away from the viewer), giant, here }]; points: [{ id, x, d, h }] (unseen, h tall);
+// people: [{ id, x, d, away (faces away from the viewer), giant, here }]; points: [{ id, x, d, h, marks, painted }]
+// (unseen, h tall; marks: the names its painting marks, painted: whether it is painted yet — a thing that paints);
 // land(x, d) / water(x, d): what the eye stands over, the land or the water without the walk planes
 function scene({ mode, people = [], points = [], land = () => 0, water = land }, values) {
   const elements = [], byId = new Map(), m = new Float64Array(12 * (people.length + points.length) + 12);
@@ -52,7 +53,7 @@ function scene({ mode, people = [], points = [], land = () => 0, water = land },
   }
   for (const q of points) {
     const n = at(q.x, 0, q.d, false);
-    const el = { id: q.id, kind: 'unseen', node: n, nodes: [n], box: [-0.1, -q.h, 0.1, 0], below: [], spec: { name: null, height: q.h, paints: false }, flags: {}, isPainted: false };
+    const el = { id: q.id, kind: 'unseen', node: n, nodes: [n], box: [-0.1, -q.h, 0.1, 0], below: [], spec: { name: null, height: q.h, paints: !!q.marks }, flags: {}, isPainted: !!q.painted, marks: q.marks || [], marked: new Map(), at: [q.x, q.h, -q.d] };
     elements.push(el); byId.set(q.id, el);
   }
   const here = id => values[`${id}_here`] !== false && caps.get(id).here !== false;
@@ -71,8 +72,8 @@ function scene({ mode, people = [], points = [], land = () => 0, water = land },
     tables: { nodes: { m } }, elements, byId, persons: elements.filter(e => e.kind === 'person'), people: people_,
     standAt: (x, d) => land(x, d), surfaceAt: (x, d) => water(x, d),
     refOf: ref => { const h = ref.indexOf('#'), id = h < 0 ? ref : ref.slice(0, h), name = h < 0 ? null : ref.slice(h + 1); return { id, name, copy: 0, head: name ? ref : `${id}#head` }; },
-    pointOf(ref, out) { const [id, name] = ref.split('#'); return byId.get(id)?.kind === 'person' && here(id) ? people_.point(id, name, out) : false; },
-    markOf: () => null,
+    pointOf(ref, out) { const [id, name] = ref.split('#'), el = byId.get(id); if (el?.kind !== 'person') { out.set(el.at); return true; } return byId.get(id)?.kind === 'person' && here(id) ? people_.point(id, name, out) : false; },
+    markOf: (el, name) => (el.isPainted && el.marks.includes(name) ? { x: 0, y: 0, part: -1, layer: -1 } : null),
     sheetPoint(el, copy, mid, yaw, out) { const o = 12 * el.node; out[0] = m[o + 9] + mid.x; out[1] = m[o + 10] - mid.y; out[2] = m[o + 11]; return out; },
     carriedWith: () => m.subarray(0, 12), chain: el => [el],
     raycast(o, d, max = Infinity, skip = null) {
@@ -148,4 +149,19 @@ test('ahead (picture) the operator still steps round nothing', () => {
   const D = EYE / 0.8;
   const { p, depth } = scene({ mode: 'picture', people: [{ id: 'c', x: 0, d: 8 - D }], points: [{ id: 'pair', x: 0, d: 8, h: EYE }] }, { camera_target: 'pair' });
   assert.ok(Math.abs(p.z - (8 - D)) < 1e-6 && depth('c') > 0, JSON.stringify(p));
+});
+
+// a thing's named point (camera_target "id#name"): framed when its painting marks it; a name it never marks is said —
+// the camera keeps the scene's own —, one not painted yet waited for, unsaid
+test('a thing\'s named point it marks is framed; one it does not mark is said, not silently dropped', () => {
+  const bowl = { id: 'bowl', x: -1, d: 6, h: 0.15, marks: ['coins'], painted: true };
+  const framed = scene({ mode: 'walk', points: [bowl] }, { camera_target: 'bowl#coins', camera_shot: 'medium' });
+  assert.ok(Math.abs(framed.p.x + 1) < 1e-6 && framed.p.z > 5, JSON.stringify(framed.p));
+  assert.equal(framed.said.length, 0, framed.said.join('|'));
+  const typo = scene({ mode: 'walk', points: [bowl] }, { camera_target: 'bowl#coin', camera_shot: 'medium' });
+  assert.ok(Math.abs(typo.p.x) < 1e-6 && Math.abs(typo.p.z) < 1e-6, JSON.stringify(typo.p));
+  assert.equal(typo.said.length, 1);
+  assert.match(typo.said[0], /"bowl#coin" — "bowl" marks no point "coin"/);
+  const unpainted = scene({ mode: 'walk', points: [{ ...bowl, painted: false }] }, { camera_target: 'bowl#coins' });
+  assert.equal(unpainted.said.length, 0, unpainted.said.join('|'));
 });
