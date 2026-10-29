@@ -551,7 +551,7 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
   };
   // the one carrying the person being posed ahead on their arms, posed ahead before them (posedAhead): who — null:
   // none —, where they stand and how they face then, the point of theirs that holds them
-  const byThen = { H: null, at: new Float64Array(3), facing: 0, point: new Float64Array(3) };
+  const byThen = { H: null, at: new Float64Array(4), facing: 0, point: new Float64Array(3) };
   // H posed on the people's own player as a cut to `values` will set them (pointFor) — its point `name` into out, their
   // root into root (if given) → false: not here under them, or no such point
   function posedAhead(H, values, name, out, root, depth) {
@@ -582,7 +582,7 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
     for (let i = 0; i < REACHES.length; i++) Q.aim.limbs[i].ref = k.reach[REACHES[i]] ? k.refs[REACHES[i]] : undefined;
     A.at[3] = moment;
     Q.update(A.at, k, land, 0, true);
-    if (root) { root[0] = A.at[0]; root[1] = A.at[1]; root[2] = A.at[2]; }
+    if (root) { root[0] = A.at[0]; root[1] = A.at[1]; root[2] = A.at[2]; root[3] = Q.facing; }
     const own = POINT_NAMES.indexOf(name);
     if (own >= 0) { Q.point(POINT_SPECS[own], out); return true; }
     const i = H.partNames.indexOf(name);
@@ -719,7 +719,7 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
     // (an element's frame, a seat in it, the one whose arms they are on — posed so first), their turn, what they do at
     // its beginning, held or seated as the values say — on the people's own player, set as theirs is now and told a new
     // shot, as the cut's step will tell theirs: nothing of the person is touched, nothing made a call. root: where their
-    // root stands then (into it, 3 numbers). → false: the values move nothing of them (none of their keys, their place's,
+    // root stands then and which way they face (into it, 4 numbers: x, y, z, their facing — radians, as a player's). → false: the values move nothing of them (none of their keys, their place's,
     // nor of what carries them — SCENE then takes them as they are now), they are not here under them, or they have no
     // such point
     pointFor(values, id, name, out, root) {
