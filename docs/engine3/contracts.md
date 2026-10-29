@@ -1085,7 +1085,7 @@ slices). A cast's fault in a first look rejects (named with the person). Sets `g
 | PP6 | `save() → { [id]: { made, player, shot } }`, `restore(data)` | no cloth, springs, faces; a person whose `person` changed starts afresh | `director.js` |
 | PP6 | `dispose()` | looks, blocks, `inks` let go | `thread.js` |
 
-Person state keys: `<id>_do, _turn, _look, _reach, _with, _wear, _gait, _steps, _on, _here, _still, _mood`.
+Person state keys: `<id>_do, _turn, _look, _reach, _with, _wear, _gait, _steps, _on, _here, _still, _mood, _reflected`.
 
 **RENDER's calls (PP7–PP11)**
 
@@ -1095,7 +1095,8 @@ Person state keys: `<id>_do, _turn, _look, _reach, _with, _wear, _gait, _steps, 
 | PP8 | `version(id) → int` | +1 whenever what is drawn of them changed (shown/hidden included) |
 | PP8 | `sphere(id, out4) → bool` | x, y, z, radius (world); false not here / not posed |
 | PP8 | `capsules(id) → { n, data: Float64Array(7n) } | null` | ax, ay, az, bx, by, bz, r (world) |
-| PP10 | `draw(pass, kind, inView, id, mirrored, counters) → bool` | `kind` `'main' | 'depth'`; `inView(sphere)`; `id` one person or null; sets groups 2 and 3, pipelines, buffers, `drawIndexed`; adds to `counters.draws`, `counters.triangles`. True if anyone drawn |
+| PP8 | `reflected(id) → bool` | `<id>_reflected !== false` as the last step read it (a change: `version` + 1); `render/mirrors.js` `stale` counts only those reflected |
+| PP10 | `draw(pass, kind, inView, id, mirrored, counters) → bool` | `kind` `'main' | 'depth'`; `inView(sphere)`; `id` one person or null; sets groups 2 and 3, pipelines, buffers, `drawIndexed`; adds to `counters.draws`, `counters.triangles`. `mirrored`: who is not `reflected` is left out (every mirror's image — planes and panes; shadows, the main view untouched). True if anyone drawn |
 | PP11 | `inks: GPUBuffer` | uniform, 256 × vec4f: slot's ink (linear rgb, spare); slot = place in `list` + 1 (0 unused) |
 
 **PP9 pipelines** (`people/person.wgsl.js`)

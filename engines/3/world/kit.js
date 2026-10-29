@@ -279,7 +279,7 @@ function keys(spec) {
   for (const o of Array.isArray(spec?.objects) ? spec.objects : []) {
     if (!o || typeof o !== 'object') continue;
     add(UNIT, o.insert); add(NUM, ...Object.values(obj(o.place)));
-    if (o.person && o.id != null) { for (const k of ['do', 'look', 'reach', 'with', 'wear', 'gait', 'steps', 'on', 'here', 'still']) add({}, `${o.id}_${k}`); add(NUM, `${o.id}_turn`); add({ type: 'string' }, `${o.id}_mood`); add({ range: [0, 1] }, `${o.id}_talk`); }
+    if (o.person && o.id != null) { for (const k of ['do', 'look', 'reach', 'with', 'wear', 'gait', 'steps', 'on', 'here', 'still', 'reflected']) add({}, `${o.id}_${k}`); add(NUM, `${o.id}_turn`); add({ type: 'string' }, `${o.id}_mood`); add({ range: [0, 1] }, `${o.id}_talk`); }
     add({}, ...(Array.isArray(o.redraw) ? o.redraw : Object.keys(obj(o.redraw))));
   }
   for (const l of Array.isArray(spec?.lights) ? spec.lights : []) if (l && typeof l === 'object') { add(UNIT, l.on); add(NUM, ...Object.values(obj(l.place))); }
