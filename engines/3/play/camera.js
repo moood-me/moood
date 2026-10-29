@@ -387,7 +387,12 @@ export function createCamera(world, state, host) {
       tgt.tall = world.people?.height(id) ?? EYE;
     } else {
       const m = world.markOf(el, R.name);
-      if (named && !m) return HOLD;
+      if (named && !m) {
+        // (a name it has never marked — its painting has no such point, its animate has marked none so far: said, the
+        // camera holding where it framed, or the scene's own; one not painted yet is waited for)
+        if (el.isPainted && !el.marked.has(R.name)) host.warn(`camera_target: "${ref}" — "${id}" marks no point "${R.name}" (its painting's e.at names none, nor has its animate marked one): nothing to frame — the camera holds where it was framing, or stays the scene's own`);
+        return HOLD;
+      }
       if (m) { world.pointOf(ref, P); marked = true; }
       else { midP.x = (el.box[0] + el.box[2]) / 2; midP.y = (el.box[1] + el.box[3]) / 2; world.sheetPoint(el, R.copy, midP, world.yaw, P); }
       // (a plane has no height: what is framed at its point is as tall as one standing there)
@@ -432,22 +437,22 @@ export function createCamera(world, state, host) {
     Ov[0] = o[0] + Dv[0] * PASS.FROM; Ov[1] = o[1] + Dv[1] * PASS.FROM; Ov[2] = o[2] + Dv[2] * PASS.FROM;
     return world.raycast(Ov, Dv, L - PASS.FROM - 0.01, skip, yaw ?? Math.atan2(Dv[0], -Dv[2]));
   }
-  // whether an eye at o (a world point) is in a person's body — any one here, the target too: within their capsules
-  // (PEOPLE's, as they stand now) or as near them as the near plane — where the lens would cut into them
+  // whose body an eye at o (a world point) is in — any one here, the target too: within their capsules (PEOPLE's, as
+  // they stand now) or as near them as the near plane — where the lens would cut into them (that person; null: none)
   const Sp = new Float64Array(4);
   function inBody(o) {
     const P = world.people;
-    if (!P) return false;
+    if (!P) return null;
     for (const el of world.persons) {
       if (!P.sphere(el.id, Sp) || Math.hypot(o[0] - Sp[0], o[1] - Sp[1], o[2] - Sp[2]) > Sp[3] + NEAR) continue;
       const K = P.capsules(el.id), C = K.data;
       for (let i = 0; i < K.n * 7; i += 7) {
         const sx = C[i + 3] - C[i], sy = C[i + 4] - C[i + 1], sz = C[i + 5] - C[i + 2], ss = sx * sx + sy * sy + sz * sz;
         const u = ss > 1e-12 ? clamp(((o[0] - C[i]) * sx + (o[1] - C[i + 1]) * sy + (o[2] - C[i + 2]) * sz) / ss, 0, 1) : 0;
-        if (Math.hypot(o[0] - C[i] - sx * u, o[1] - C[i + 1] - sy * u, o[2] - C[i + 2] - sz * u) <= C[i + 6] + NEAR) return true;
+        if (Math.hypot(o[0] - C[i] - sx * u, o[1] - C[i + 1] - sy * u, o[2] - C[i + 2] - sz * u) <= C[i + 6] + NEAR) return el;
       }
     }
-    return false;
+    return null;
   }
   // the operator's eye framing a target from (ux, uz) of the frame: its height over the start's level — the eye's height
   // over what is under it, raised as high as what the target stands on is over the land or the water under the target
@@ -624,7 +629,8 @@ export function createCamera(world, state, host) {
   // line over its recording's extent (an open lattice or a thin rail as a whole rectangle of it), a veil not at all
   // (mist, smoke, light added: world.raycast — veils laid over one another each by itself), a form by its sphere,
   // a person by their capsules; a moved layer is judged where it rests; what comes in the way later in the shot is not
-  // seen. (sighted: the shot last looked at, and whether it has been)
+  // seen. Ahead, a lens settled inside someone's body (inBody) — framing a person or a thing — is said instead, the
+  // same once a shot. (sighted: the shot last looked at, and whether it has been)
   const sighted = { cut: -1, id: null, shot: null, done: true }, seenP = V3(), sightAt = V3(), hiders = new Array(SEEN_POINTS.length).fill(null), LAND = {};
   // (the viewer moving the camera, or off the scene's own — what is shown is not the film's framing)
   const aside = () => pointers.size > 0 || keys.size > 0 || !!glide
@@ -638,7 +644,15 @@ export function createCamera(world, state, host) {
     w.done = true;
     // (the target as this step's framing found it)
     const el = tgt.el;
-    if (!el || el.kind !== 'person' || !world.people) return;
+    if (!el) return;
+    // (ahead the operator steps round nothing: a lens settled inside someone — another, or a person framed in their own
+    // body — sees none of the target, a person or a thing: said, and nothing more looked at)
+    const inside = s.round ? null : inBody(camera.eye);
+    if (inside) {
+      host.warn(`at ${t.toFixed(1)} s, camera_target "${id}"${el.spec.name ? ` (${el.spec.name})` : ''} is framed from inside ${inside === el ? 'their own body' : `the body of ${called(inside)}`}: the operator does not step round what is in the way — choose the camera yourself (camera_x, camera_z, camera_h, camera_yaw, camera_frame), or move what is in the way`);
+      return;
+    }
+    if (el.kind !== 'person' || !world.people) return;
     skipOf(el);
     let all = 0, hid = 0;
     for (let i = 0; i < SEEN_POINTS.length; i++) {
