@@ -7,5 +7,6 @@
   "ja": { "name": "日本語", "locale": "ja_JP" },
   "be": { "name": "Беларуская", "locale": "be_BY" },
   "fr": { "name": "Français", "locale": "fr_FR" },
-  "zh-hant": { "name": "繁體中文", "locale": "zh_TW" }
+  "zh-hant": { "name": "繁體中文", "locale": "zh_TW" },
+  "ko": { "name": "한국어", "locale": "ko_KR" }
 }
