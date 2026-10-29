@@ -116,9 +116,11 @@ moood's check (`npm i -g @moood/check`: `moood-check <clone> --write` lays out t
   lasts, in English; `short`, translated); a line in a manner of its own — `bespoke.say('who', 'Text', { how: 'with
   envy and delight' })`, heard after the lasting one (English, not translated, a literal too). What a line says is all
   its voice says: how to say it is `how`, never words in the line; a moment's sound or pause is an inline tag in it, in English — `<sigh>`, `<short pause>`, `<laughs>` —
-  heard, not shown, kept as written in every translation. A line
-  kept to be said later — `tr.line('who', 'Text', { how })` (aloud; `how` — its own manner, if any) or
-  `tr.thought(…)`, then `bespoke.say('who', line)` — its manner kept with it. A phrase is one text with
+  heard, not shown, kept as written in every translation. A game's line heard in words other than the ones shown — in
+  a language other than the play's — `bespoke.say('who', 'Text', { spoken: '…' })`: `Text` is shown, translated as any
+  line (the subtitle); its voice says `spoken` as written, inline tags and all, never translated (a literal too). A line
+  kept to be said later — `tr.line('who', 'Text', { how, spoken })` (aloud; `how` — its own manner, `spoken` — its
+  words heard, if any) or `tr.thought(…)`, then `bespoke.say('who', line)` — its manner and words kept with it. A phrase is one text with
   its values as {names} — never put together of pieces. `tr`, `say`, `think` are the language's: never a name of
   your own code.
 - in JSON: what is read (scene.json `title`, `description`, `caption`, captions; world.json, game.json their texts).
