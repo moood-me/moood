@@ -26,7 +26,7 @@ test('what is wrong: a code and values, said in English and in Russian', async (
   edit(join(d, 'lamp/scenes/lamp/lang/ru.json'), l => ({ strings: l.strings.filter(e => e.text !== 'It is lit.') }));
   edit(join(d, 'lamp/scenes/lamp/scene.json'), s => ({ ...s, engine: 2, music: { prompts: [{ text: 'a lamp humming', weight: 1 }], bpm: 300, density: 0.5, scale: 'H_MAJOR' } }));
   const { problems } = await check(folder(d)), of = code => problems.find(p => p.code === code);
-  assert.deepEqual(of('languages-unknown'), { at: 'evening/game.json', code: 'languages-unknown', values: { languages: 'xx', known: 'en, ru' } });
+  assert.deepEqual(of('languages-unknown'), { at: 'evening/game.json', code: 'languages-unknown', values: { languages: 'xx', known: 'en, ru, be' } });
   assert.deepEqual(of('world-not-there').values, { field: 'world', ref: '"../nowhere"', file: 'nowhere/world.json' });
   assert.equal(of('untranslated').values.text, 'It is lit.');
   assert.deepEqual(of('music-range'), { at: 'lamp/scenes/lamp/scene.json', code: 'music-range', values: { field: 'bpm', value: 300, least: 60, most: 200 } });
