@@ -3161,9 +3161,19 @@ crossfade comes at a loop's seam, seconds in); a long loop is a
   says `water` lying over it (a sea, a lake: the eye never goes under the water), a `walk` plane over those (a deck, a
   bridge, as people stand on it) — `world.standAt`; the start's land or water (`world.surfaceAt(0, 0)`) is its level
   0. The operator stands as high over the land or the water under it as its target is over the land or the water
-  under the target (a deck, a boat, an elephant's back: level with it), and over what is under it at least. The
-  engine does not guess water from `reflect` (a polished floor, a table top reflect too); the author marks it
-  (`engines/3/play/camera.js` `floor`, `surface`, `raised`).
+  under the target (a deck, a boat, an elephant's back: level with it), and over what is under it at least
+  (`eyeFor`). Its pose holds that height over the level 0, not over what is under it: its glide goes straight in
+  height as in place — from the quay onto a bridge's road it passes level over the river, never down to the water
+  and up the road's edge — and is never under the land or the water where it is (`filmed`: what is under it there is
+  taken off, the step adds back what is under the eye where it ends up — camera_x, camera_z aside still go over the
+  ground). The engine does not guess water from `reflect` (a polished floor, a table top reflect too); the author
+  marks it (`engines/3/play/camera.js` `floor`, `surface`, `raised`, `eyeFor`).
+- **The operator's bearing** (looking round): a person is filmed from before their face — the ways round
+  (`clearView`) are tried from the bearing their face looks along (their root's +z now; posed by a shot's values, the
+  facing PEOPLE gives with their root: PP5 `pointFor`), a thing's from the viewer's bearing; the first clear one,
+  nearest that, within the area; none in the area — the viewer's bearing. The lines of sight start where the eye will
+  be at each spot (`eyeFor` there: over water, over a deck). Ahead (walk, panorama, picture) it has no bearings: it
+  films from the viewer's side, as the language says — a face turned from the start is its back.
 - **Safari, iPhones**: nothing of ours shuts them out; whether Safari's WebGPU in a worker carries the engine is
   unchecked and not promised.
 - **Games**: none plays on «Вокруг света v3», and none is moved to engine 3 in this piece; the games on the
