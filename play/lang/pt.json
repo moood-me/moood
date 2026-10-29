@@ -1,0 +1,23 @@
+{"strings": [
+  {"text":"Turn your phone","translation":"Vire o celular","where":"landscape.js"},
+  {"text":"The game is played across.","translation":"O jogo é jogado na horizontal.","where":"landscape.js"},
+  {"text":"The whole play from the start","translation":"A partida toda desde o começo","where":"play.js"},
+  {"text":"Continue on the new commit","translation":"Continuar no novo commit","where":"play.js"},
+  {"text":"Pause","translation":"Pausar","where":"play.js"},
+  {"text":"Fast forward (Space)","translation":"Avançar (Espaço)","where":"play.js"},
+  {"text":"Chapters","translation":"Capítulos","where":"play.js"},
+  {"text":"Volume","translation":"Volume","where":"play.js"},
+  {"text":"The whole screen","translation":"Tela cheia","where":"play.js"},
+  {"text":"No game is asked for (?game=).","translation":"Nenhum jogo foi pedido (?game=).","where":"play.js"},
+  {"text":"Begin the whole play again?","translation":"Começar a partida toda de novo?","where":"play.js"},
+  {"text":"Continue the play on the new commit? What the game kept goes on with it, but it may not fit the new code, and something may break — then begin the play again (↺). There is no going back.","translation":"Continuar a partida no novo commit? O que o jogo guardou segue junto, mas pode não combinar com o novo código, e algo pode quebrar — aí comece a partida de novo (↺). Não dá para voltar atrás.","where":"play.js"},
+  {"text":"The play could not continue on the new commit: {why}","translation":"A partida não pôde continuar no novo commit: {why}","where":"play.js"},
+  {"text":"Go on","translation":"Continuar","where":"play.js"},
+  {"text":"The play could not be opened: {why}","translation":"A partida não pôde ser aberta: {why}","where":"play.js"},
+  {"text":"no voice: {why}","translation":"sem voz: {why}","where":"runtime.js"},
+  {"text":"no music: {why}","translation":"sem música: {why}","where":"runtime.js"},
+  {"text":"mini-game: {why}","translation":"minijogo: {why}","where":"runtime.js"},
+  {"text":"“{text}” — {who}","translation":"“{text}” — {who}","where":"runtime.js"},
+  {"text":"not kept: {why}","translation":"não guardado: {why}","where":"runtime.js"},
+  {"text":"the game broke: {why}","translation":"o jogo quebrou: {why}","where":"runtime.js"}
+]}
