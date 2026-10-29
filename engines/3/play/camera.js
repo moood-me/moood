@@ -17,8 +17,9 @@
 // surface over that, a walk plane over those — never under the water). Where one may go, the operator and the camera_*
 // keys all work in that frame; only the lens, and what asks the world (a ray, a target's point), pass
 // between it and the world. Three of them: the viewer's own (target, and cam easing to it), the operator's (op.pose:
-// the scene's start pose moved to frame a target), and the one shown (shown: cam + the lean + the operator + the
-// camera_* keys).
+// the scene's start pose moved to frame a target — its h over the eye's level 0, not over what is under it: its glide
+// goes level over a river between a quay and a bridge's road), and the one shown (shown: cam + the lean + the operator
+// + the camera_* keys).
 //   Viewer: drag — step aside and turn the head up and down (looking round: turn it about), keeping what was taken hold
 // of under the finger (along a panorama, his way aside and camera_x together within its span; the scene's move of
 // camera_x carries his way aside along — below, `carry`); the wheel and a pinch walk toward what is under the pointer
@@ -64,7 +65,7 @@ const headAt = shot => {
   return p[1] + (q[1] - p[1]) * (shot - p[0]) / (q[0] - p[0]);
 };
 // a clear view (looking round): lines of sight to what of the target the frame holds, the ways round tried (bearings
-// either side, then nearer), how much hidden is too much
+// either side of a person's face, of the viewer's for a thing, then nearer), how much hidden is too much
 const SIGHTS = 5, HIDDEN = 1 / SIGHTS, BEARING = Math.PI / 12, NEARER = [1, 0.8, 0.64, 0.5];
 // a person the shot frames, seen from the camera: their points looked at (the head twice: a shot of a person is for
 // it), how much of them hidden is said
@@ -256,9 +257,13 @@ export function createCamera(world, state, host) {
     const ax = Math.sin(F.turn), az = -Math.cos(F.turn), c = V3(), Mm = M.m;
     let far = 0, drop = 0, ground = null;
     for (const el of world.elements) {
-      if (el.kind !== 'plane' || el.flags.unseen || ((el.copies ? el.copies[0].tilt : null) ?? el.spec.plane.tilt) || Math.abs(el.spot.elevation) >= 0.2) continue;
+      if (el.kind !== 'plane' || el.flags.unseen) continue;
+      // (the ground: a plane lying level at the ground's height in the world — as it is placed through what carries it,
+      // its world matrix, not its own elevation and tilt, which are its carrier's)
+      const n = 12 * el.node;
+      if (Math.hypot(Mm[n + 6], Mm[n + 8]) > 1e-6 * Math.abs(Mm[n + 7]) || Math.abs(Mm[n + 10]) >= 0.2) continue;
       // (its far edge: the farthest of its corners ahead of the eye — and how far under the eye it lies)
-      const [l, t, r, b] = el.box, n = 12 * el.node;
+      const [l, t, r, b] = el.box;
       for (const [x, y] of [[l, t], [r, t], [r, b], [l, b]]) {
         c[0] = Mm[n] * x - Mm[n + 3] * y + Mm[n + 9]; c[1] = Mm[n + 1] * x - Mm[n + 4] * y + Mm[n + 10]; c[2] = Mm[n + 2] * x - Mm[n + 5] * y + Mm[n + 11];
         const d = (c[0] - o[0]) * ax + (c[2] - o[2]) * az;
@@ -364,8 +369,10 @@ export function createCamera(world, state, host) {
   // to them will set them, PEOPLE's answer, standing where their root is then — riding, where what carries them is
   // then —; a person those values move nothing of, nor anything that carries them: as they are now; a thing: its point
   // of now carried with its node)
-  const P = V3(), Mt = new Float64Array(12), rootThen = V3(), box4 = new Float32Array(4), midP = { x: 0, y: 0, part: -1, layer: -1 };
-  const tgt = { X: 0, Y: 0, Z: 0, base: 0, tall: 2, marked: false, known: false, el: null };
+  const P = V3(), Mt = new Float64Array(12), rootThen = new Float64Array(4), box4 = new Float32Array(4), midP = { x: 0, y: 0, part: -1, layer: -1 };
+  // (face: a person's — the bearing a lens looks along to see their face, from before them (radians, the frame's, as
+  // the operator's bearings); null: a thing)
+  const tgt = { X: 0, Y: 0, Z: 0, base: 0, tall: 2, marked: false, known: false, el: null, face: null };
   // (a point it names that it does not mark now: the camera holds where it framed it)
   const HOLD = { hold: true };
   function targetOf(ref, get) {
@@ -384,7 +391,12 @@ export function createCamera(world, state, host) {
       tgt.tall = world.people?.height(id) ?? EYE;
     } else {
       const m = world.markOf(el, R.name);
-      if (named && !m) return HOLD;
+      if (named && !m) {
+        // (a name it has never marked — its painting has no such point, its animate has marked none so far: said, the
+        // camera holding where it framed, or the scene's own; one not painted yet is waited for)
+        if (el.isPainted && !el.marked.has(R.name)) host.warn(`camera_target: "${ref}" — "${id}" marks no point "${R.name}" (its painting's e.at names none, nor has its animate marked one): nothing to frame — the camera holds where it was framing, or stays the scene's own`);
+        return HOLD;
+      }
       if (m) { world.pointOf(ref, P); marked = true; }
       else { midP.x = (el.box[0] + el.box[2]) / 2; midP.y = (el.box[1] + el.box[3]) / 2; world.sheetPoint(el, R.copy, midP, world.yaw, P); }
       // (a plane has no height: what is framed at its point is as tall as one standing there)
@@ -397,8 +409,14 @@ export function createCamera(world, state, host) {
     else if (get !== state.value && el.kind !== 'person' && !el.copies) baseY = world.carriedWith(el, P, get, Mt)[10];
     // (a plane's point: what stands there stands on it)
     if (el.kind === 'plane') baseY = P[1];
+    // (which way a person faces — posed by the values: as they will; else their root's +z now —, in the frame)
+    let face = null;
+    if (el.kind === 'person') {
+      const o = 12 * el.node, wx = posed ? Math.sin(rootThen[3]) : M.m[o + 6], wd = posed ? Math.cos(rootThen[3]) : -M.m[o + 8];
+      if (wx || wd) face = Math.atan2(-(wx * F.c - wd * F.s), -(wx * F.s + wd * F.c));
+    }
     toFrame(P, P);
-    tgt.X = P[0]; tgt.Y = P[1]; tgt.Z = P[2]; tgt.base = baseY - F.y; tgt.marked = marked; tgt.el = el;
+    tgt.X = P[0]; tgt.Y = P[1]; tgt.Z = P[2]; tgt.base = baseY - F.y; tgt.marked = marked; tgt.el = el; tgt.face = face;
     tgt.known = el.kind === 'person' || el.isPainted || !el.spec.paints;
     return tgt;
   }
@@ -423,9 +441,37 @@ export function createCamera(world, state, host) {
     Ov[0] = o[0] + Dv[0] * PASS.FROM; Ov[1] = o[1] + Dv[1] * PASS.FROM; Ov[2] = o[2] + Dv[2] * PASS.FROM;
     return world.raycast(Ov, Dv, L - PASS.FROM - 0.01, skip, yaw ?? Math.atan2(Dv[0], -Dv[2]));
   }
-  // the operator's way round for this shot (looking round): { turn — radians round the target from the bearing the shot
-  // asks for, near — the share of its distance }, by lines of sight (between)
-  function clearView(T, X, Z, D, c, h) {
+  // whose body an eye at o (a world point) is in — any one here, the target too: within their capsules (PEOPLE's, as
+  // they stand now) or as near them as the near plane — where the lens would cut into them (that person; null: none)
+  const Sp = new Float64Array(4);
+  function inBody(o) {
+    const P = world.people;
+    if (!P) return null;
+    for (const el of world.persons) {
+      if (!P.sphere(el.id, Sp) || Math.hypot(o[0] - Sp[0], o[1] - Sp[1], o[2] - Sp[2]) > Sp[3] + NEAR) continue;
+      const K = P.capsules(el.id), C = K.data;
+      for (let i = 0; i < K.n * 7; i += 7) {
+        const sx = C[i + 3] - C[i], sy = C[i + 4] - C[i + 1], sz = C[i + 5] - C[i + 2], ss = sx * sx + sy * sy + sz * sz;
+        const u = ss > 1e-12 ? clamp(((o[0] - C[i]) * sx + (o[1] - C[i + 1]) * sy + (o[2] - C[i + 2]) * sz) / ss, 0, 1) : 0;
+        if (Math.hypot(o[0] - C[i] - sx * u, o[1] - C[i + 1] - sy * u, o[2] - C[i + 2] - sz * u) <= C[i + 6] + NEAR) return el;
+      }
+    }
+    return null;
+  }
+  // the operator's eye framing a target from (ux, uz) of the frame: its height over the start's level — the eye's height
+  // over what is under it, raised as high as what the target stands on is over the land or the water under the target
+  // (up: a deck, the back it rides, a boat) — over the land or the water under the camera; over what is under it, at
+  // least (a walk plane it stands on too) —, and, closer than full height (near), up to the target's point Y
+  function eyeFor(ux, uz, up, Y, near) {
+    const under = floor(ux, uz), lift = Math.max(0, surface(ux, uz) + up - under);
+    return under + s.h + lift + (Y - under - s.h - lift) * near;
+  }
+  // the operator's way round for this shot (looking round): { turn — radians round the target from the bearing toward
+  // it from where the viewer is, near — the share of its distance }, by lines of sight (between) from the eye as high
+  // as it will be there (eyeFor; dh: what the viewer's height and camera_h add). A person is filmed from before their
+  // face: the ways round are tried from the bearing their face looks along (T.face), a thing's from the viewer's. A way
+  // whose eye is in someone's body (inBody — the target's too) is no way: it sees nothing
+  function clearView(T, X, Z, D, c, up, near0, dh) {
     const el = T.el;
     skipOf(el);
     // what of it the frame holds: its height (its box round its anchor, y down; a plane's point: as tall as one standing
@@ -433,14 +479,16 @@ export function createCamera(world, state, host) {
     const box = (el.kind === 'person' && world.people?.box(el.id, box4) && box4) || el.box, base = T.base, plane = el.kind === 'plane';
     const lo = Math.max(plane ? base : base - box[3], T.Y - D / 2), hi = Math.min(plane ? base + T.tall : base - box[1], T.Y + D / 2);
     const bearing = Math.atan2(X - c.x, Z - c.z), room = limitsOf().room;
+    const from = T.face == null ? 0 : ((((T.face - bearing) % TAU) + 3 * Math.PI) % TAU) - Math.PI;
     let best = null;
     for (const near of NEARER) for (let i = 0; i <= 12; i++) for (const sgn of i ? [1, -1] : [1]) {
-      const turn = sgn * i * BEARING, a = bearing + turn, Dk = Math.max(PASS.TO, D * near);
+      const turn = from + sgn * i * BEARING, a = bearing + turn, Dk = Math.max(PASS.TO, D * near);
       const cx = X - Dk * Math.sin(a), cz = Z - Dk * Math.cos(a);
       if (room && (cx < room[0] || cx > room[1] || cz < room[2] || cz > room[3])) continue;
+      const h = eyeFor(cx, cz, up, T.Y, near0) + dh;
+      if (inBody(toWorld(cx, h, cz, Cv))) continue;
       let hidden = 0;
       for (let k = 0; k < SIGHTS; k++) {
-        toWorld(cx, h, cz, Cv);
         toWorld(X, lo + (hi - lo) * (k + 0.5) / SIGHTS, Z, Tv);
         if (between(Cv, Tv, null)) hidden++;
         // (already too hidden, and no less than the best way so far: the rest of its lines not cast)
@@ -478,9 +526,7 @@ export function createCamera(world, state, host) {
     const offA = Math.atan((fx - 0.5) * A), near = clamp((shot - SHOTS.full) / (SHOTS.medium - SHOTS.full), 0, 1), up = raised(T);
     o.lead.x = o.v[0] * ahead; o.lead.z = o.v[2] * ahead; o.lead.vx = o.v[0]; o.lead.vz = o.v[2];
     const p = o.aimed;
-    // where it stands, then how high: the eye's height over what is under it, raised as high as what the target stands
-    // on is over the land or the water under the target (a deck, the back it rides, a boat: `up`), and, closer than full height, up to its
-    // point — as an operator does; its height over what is under the camera (added to the camera after: step)
+    // where it stands, then how high (eyeFor) — as an operator does
     let Dk = D, a = 0;
     if (s.round) {
       // (chosen as the shot begins — a cut, another target, another size — and kept for it; anew till the target is
@@ -491,19 +537,18 @@ export function createCamera(world, state, host) {
         const asked = (Number(get('camera_x')) || 0) || (Number(get('camera_z')) || 0) || (Number(get('camera_h')) || 0) || (Number(get('camera_yaw')) || 0);
         const w2 = o.view ||= { cut: 0, id: null, shot: 0, known: false, paintings: 0, turn: 0, near: 1 };
         w2.cut = state.cutAt; w2.id = id; w2.shot = shot; w2.known = T.known; w2.paintings = world.paintings;
-        if (asked) { w2.turn = 0; w2.near = 1; } else { const cv = clearView(T, X, Z, D, c, c.h + up + (T.Y - s.h - up) * near + (Number(get('camera_h')) || 0)); w2.turn = cv.turn; w2.near = cv.near; }
+        if (asked) { w2.turn = 0; w2.near = 1; } else { const cv = clearView(T, X, Z, D, c, up, near, c.h - s.h + (Number(get('camera_h')) || 0)); w2.turn = cv.turn; w2.near = cv.near; }
         if (again) o.fresh = true;
       }
       a = yaw + (o.view ? o.view.turn : 0); Dk = Math.max(PASS.TO, D * (o.view ? o.view.near : 1));
       o.D = Dk;
       p.x = X - Dk * Math.sin(a); p.z = Z - Dk * Math.cos(a);
     } else { p.x = X - (fx - 0.5) * A * D; p.z = Z - D; }
-    // (as high as the target is raised, over the land or the water under the camera; over what is under it, at least —
-    // a walk plane it stands on too: `lift` over that)
+    // (its height over the start's level, not over what is under it: gliding there, the eye goes as straight in height
+    // as in place — over a river between the quay and a bridge's road it stays level, not down to the water: filmed)
     const ux = s.round ? p.x : c.x - startPose.x + p.x, uz = s.round ? p.z : c.z - startPose.z + p.z;
-    const under = floor(ux, uz), lift = Math.max(0, surface(ux, uz) + up - under);
-    const ph = s.h + lift + (T.Y - under - s.h - lift) * near;
-    const h = c.h + ph - s.h + under + (Number(get('camera_h')) || 0);
+    const ph = eyeFor(ux, uz, up, T.Y, near);
+    const h = c.h + ph - s.h + (Number(get('camera_h')) || 0);
     p.h = ph;
     if (s.round) { p.look = yh + (h - T.Y) / (Dk * Math.cos(offA)) - fy; p.yaw = a - offA; } else { p.look = yh + (h - T.Y) / D - fy; p.yaw = 0; }
     o.known = T.known;
@@ -514,7 +559,10 @@ export function createCamera(world, state, host) {
   function filmed(c, p, turned, get) {
     if (p) {
       if (s.round) { c.x = p.x; c.z = p.z; } else { c.x += p.x - startPose.x; c.z += p.z - startPose.z; }
-      c.look += p.look - startPose.look; c.h += p.h - startPose.h; c.yaw += p.yaw - startPose.yaw;
+      // (its height is over the start's level — never under the land or the water where it is —, the viewer's over
+      // what is under the eye: what is under it here is taken off, the step adds it back where the eye ends up)
+      c.h += Math.max(p.h, surface(c.x, c.z)) - startPose.h - floor(c.x, c.z);
+      c.look += p.look - startPose.look; c.yaw += p.yaw - startPose.yaw;
     }
     // (camera_x to its right, camera_z ahead — as the film turns it, the operator's way included; the viewer looking
     // aside swings no offset round)
@@ -539,6 +587,8 @@ export function createCamera(world, state, host) {
     const aimed = id != null && s.mode !== 'platform' && !!framing(o, String(id), c, dt, get, whole);
     copy(ownPose, startPose);
     if (s.round) { ownPose.x = c.x; ownPose.z = c.z; }
+    // (the scene's own camera: the eye's height over what is under the viewer, over the start's level as the operator's)
+    ownPose.h += floor(c.x, c.z);
     const goal = aimed ? o.aimed : ownPose;
     copy(o.end, goal);
     if (aimed || o.pose) {
@@ -583,7 +633,8 @@ export function createCamera(world, state, host) {
   // line over its recording's extent (an open lattice or a thin rail as a whole rectangle of it), a veil not at all
   // (mist, smoke, light added: world.raycast — veils laid over one another each by itself), a form by its sphere,
   // a person by their capsules; a moved layer is judged where it rests; what comes in the way later in the shot is not
-  // seen. (sighted: the shot last looked at, and whether it has been)
+  // seen. Ahead, a lens settled inside someone's body (inBody) — framing a person or a thing — is said instead, the
+  // same once a shot. (sighted: the shot last looked at, and whether it has been)
   const sighted = { cut: -1, id: null, shot: null, done: true }, seenP = V3(), sightAt = V3(), hiders = new Array(SEEN_POINTS.length).fill(null), LAND = {};
   // (the viewer moving the camera, or off the scene's own — what is shown is not the film's framing)
   const aside = () => pointers.size > 0 || keys.size > 0 || !!glide
@@ -597,7 +648,15 @@ export function createCamera(world, state, host) {
     w.done = true;
     // (the target as this step's framing found it)
     const el = tgt.el;
-    if (!el || el.kind !== 'person' || !world.people) return;
+    if (!el) return;
+    // (ahead the operator steps round nothing: a lens settled inside someone — another, or a person framed in their own
+    // body — sees none of the target, a person or a thing: said, and nothing more looked at)
+    const inside = s.round ? null : inBody(camera.eye);
+    if (inside) {
+      host.warn(`at ${t.toFixed(1)} s, camera_target "${id}"${el.spec.name ? ` (${el.spec.name})` : ''} is framed from inside ${inside === el ? 'their own body' : `the body of ${called(inside)}`}: the operator does not step round what is in the way — choose the camera yourself (camera_x, camera_z, camera_h, camera_yaw, camera_frame), or move what is in the way`);
+      return;
+    }
+    if (el.kind !== 'person' || !world.people) return;
     skipOf(el);
     let all = 0, hid = 0;
     for (let i = 0; i < SEEN_POINTS.length; i++) {
@@ -1023,6 +1082,8 @@ export function createCamera(world, state, host) {
     const aimed = id != null && s.mode !== 'platform' && !!framing(o, String(id), c, 0, aheadGet, false, false);
     copy(ownPose, startPose);
     if (s.round) { ownPose.x = c.x; ownPose.z = c.z; }
+    // (the scene's own camera: the eye's height over what is under the viewer, over the start's level as the operator's)
+    ownPose.h += floor(c.x, c.z);
     const goal = aimed ? o.aimed : ownPose, q = copy(poseAhead, op.pose), u = op.vel, g = glideOf(aheadGet);
     if (g < 0.01) return copy(q, goal);
     const w = 5 / g, e = Math.exp(-w * h);

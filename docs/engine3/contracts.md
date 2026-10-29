@@ -489,7 +489,7 @@ across, −3…4 down).
 ### 4.4 Counters and the stand (RN8)
 
 `R.counters = { frames, drawn, held, idle, pixels, draws, triangles, placed, lit, blended, shapes: Int32Array(SHAPES+1),
-mirrored, particles, people, quads, listed, asked, persons }` — objects rewritten in place. `R.lacks = { wait,
+mirrored, particles, people, quads, listed, asked, persons, shown }` — objects rewritten in place (`persons`: the world's; `shown`: those shown in the call, `people.shown()`). `R.lacks = { wait,
 sheets, pages, mirrors, cells, land }`. `thread.js` puts `world.opened` in its row as `opened`. `R.timing` — `{ [name]: { js, gpu } }` for the stages `place, view, lights,
 land, mirrors, shadows, ahead, particles, people, cull, cull mirrors, cull shadows, cull ahead, ask, ask mirrors,
 ask shadows, ask ahead, weigh, judge, request, outcome, write, submit` then `PASSES`; −1 not run; `null` unless
@@ -1052,7 +1052,7 @@ A drawn frame (`R.frame`): views, lights, shadows, mirrors, particles placed →
 | `ground(id, p) → metres` | `world.groundFor` (what carries them, else the land as stood on, or a `walk` plane) |
 | `inside(by, p) → bool` | `world.insideAt`: one standing at p (x, _, z), carried by element `by` (null: none), is in a room — `by` is `inside`, or the `walk` plane under p (the one `footing` stands them on) is. PEOPLE asks it each step after the player's update for one not marked `inside`; one carried by another person is as that one is (carriers are stepped first). The person's `PERSON.INSIDE` flag follows it (the uniform is written where it changed) |
 
-**The eye's ground** (`world/world.js` → `engines/3/play/camera.js`): `world.surfaceAt(across, distance)` → metres — the land (`groundAt`) or a plane that says `water` lying higher over it there (level: one too steep to stand on is skipped, as with `walk`); `world.standAt(across, distance)` → that, or a `walk` plane lying higher still. Not riding, the camera's eye is its height over `standAt` under it, taken over `surfaceAt` at the start (the start's land or water is the eye's level 0); the operator's eye is as high over `surfaceAt` under the camera as the target's base is over `surfaceAt` under the target, and over `standAt` under the camera at least. Riding (`camera_on`), the face of what is ridden, as before. A few calls a frame; a pass over the `water` and `walk` planes, nothing allocated.
+**The eye's ground** (`world/world.js` → `engines/3/play/camera.js`): `world.surfaceAt(across, distance)` → metres — the land (`groundAt`) or a plane that says `water` lying higher over it there (level: one too steep to stand on is skipped, as with `walk`); `world.standAt(across, distance)` → that, or a `walk` plane lying higher still. Not riding, the camera's eye is its height over `standAt` under it, taken over `surfaceAt` at the start (the start's land or water is the eye's level 0); the operator's eye is as high over `surfaceAt` under the camera as the target's base is over `surfaceAt` under the target, and over `standAt` under the camera at least; the operator's pose keeps that height over the eye's level 0 (it glides straight in height; never under `surfaceAt` where it is), the viewer's own over `standAt` under the eye. Riding (`camera_on`), the face of what is ridden, as before. A few calls a frame; a pass over the `water` and `walk` planes, nothing allocated.
 | `point(ref, out, get?) → bool` | `world.pointOf` (with `get`: as those values would have things — pointFor) |
 | `frame(id, out, get?) → bool` | `world.frameOf`: carry frame (12 numbers), now or as `get` has it |
 | `moves(id) → string[]` | `world.movedBy`: the keys that move an element (its place's, what carries it) |
@@ -1069,14 +1069,14 @@ slices). A cast's fault in a first look rejects (named with the person). Sets `g
 | Id | Call | Returns / does | Caller |
 |---|---|---|---|
 | PP2 | `reads(values) → Set<id>` | elements whose points people read (`_on`, `_look`, `_reach`; not persons); same Set unless one of those values is another object | `step.js` (c) |
-| PP3 | `frame(t, values, shot)` | wear/with asked or taken, everyone posed (pose, root, points, box, sphere, capsules); `shot` ≠ last → set as a cut sets them; no bones, no GPU | `step.js` (d) |
+| PP3 | `frame(t, values, shot)` | wear/with asked or taken, everyone here posed (pose, root, points, box, sphere, capsules) — one not here is not stepped at all and comes back as a cut sets them; `shot` ≠ last → set as a cut sets them; no bones, no GPU | `step.js` (d) |
 | PP3 | `root(id, out12) → bool` | root world matrix (3 × 4, as a node row); false if not here / not posed | `step.js` |
 | PP3 | `settle(id)` | set as a cut at their next step | `director.js` |
 | PP4 | `prepare(values) → bool` | builds and holds the looks/parts `<id>_wear` / `_with` name; true when all built. Keyed by the `values` object | `shots.js` each tick a shot is live |
 | PP4 | `unprepare(values)`, `ended()` | lets go what `prepare` held; `ended` drops the acts `pointFor` made | `shots.js` when a shot ends |
 | PP4 | `building() → bool` | a background build in flight (`f.wait`) | `step.js`, `thread.js` |
 | PP5 | `point(id, name, out) → bool` | point now (`name` null → `head`); false not here / not posed | `world.pointFor`, `inspect.js` |
-| PP5 | `pointFor(values, id, name, out, root?) → bool` | the point as a cut to `values` sets them, on PEOPLE's own player — what carries them read under the values (`frame`/`point` with `get`; one whose arms they are on posed so first); `root` ← where their root stands then; false when the values move nothing of them: none of their keys, their place's, those of what they stand `on`, nor what their `_on` puts them on (an element's `moves`, a person moved so) | `camera.js` |
+| PP5 | `pointFor(values, id, name, out, root?) → bool` | the point as a cut to `values` sets them, on PEOPLE's own player — what carries them read under the values (`frame`/`point` with `get`; one whose arms they are on posed so first); `root` (4 numbers) ← where their root stands then and their facing then (radians, as a player's); false when the values move nothing of them: none of their keys, their place's, those of what they stand `on`, nor what their `_on` puts them on (an element's `moves`, a person moved so) | `camera.js` |
 | PP5 | `box(id, out4) → bool`, `height(id) → metres | null` | | `camera.js`, `inspect.js` |
 | PP5 | `pick(origin, way) → { id, at } | null` | nearest capsule hit; one kept object | `space.js` (IN6) |
 | PP5 | `mark(id, bits)` | `FLAG.OFFERED` / `FLAG.SELECTED` into the person's uniform | `world.mark` (IN3) |
@@ -1085,17 +1085,19 @@ slices). A cast's fault in a first look rejects (named with the person). Sets `g
 | PP6 | `save() → { [id]: { made, player, shot } }`, `restore(data)` | no cloth, springs, faces; a person whose `person` changed starts afresh | `director.js` |
 | PP6 | `dispose()` | looks, blocks, `inks` let go | `thread.js` |
 
-Person state keys: `<id>_do, _turn, _look, _reach, _with, _wear, _gait, _steps, _on, _here, _still, _mood`.
+Person state keys: `<id>_do, _turn, _look, _reach, _with, _wear, _gait, _steps, _on, _here, _still, _mood, _reflected`.
 
 **RENDER's calls (PP7–PP11)**
 
 | Id | Call | Returns / does |
 |---|---|---|
+| PP7 | `shown() → int` | how many the last `show` showed (here and in a view) — `R.counters.shown` | `renderer.js` |
 | PP7 | `show(seen) → bool` | once per `R.frame`, after views are placed. `seen(sphere4) → bool` is RENDER's. For each person here and posed: shown or not; for the shown: posed first if a look/part came since the last step, bones (at rest when first shown, after more than one step since the last show, after a cut/settle, when what carries them changed, or after `LATE` 0.25 s of their clock), uniform, ink; one bones write. True if anyone became shown/hidden, a shown person's version changed, or a shown person is OFFERED |
 | PP8 | `version(id) → int` | +1 whenever what is drawn of them changed (shown/hidden included) |
 | PP8 | `sphere(id, out4) → bool` | x, y, z, radius (world); false not here / not posed |
 | PP8 | `capsules(id) → { n, data: Float64Array(7n) } | null` | ax, ay, az, bx, by, bz, r (world) |
-| PP10 | `draw(pass, kind, inView, id, mirrored, counters) → bool` | `kind` `'main' | 'depth'`; `inView(sphere)`; `id` one person or null; sets groups 2 and 3, pipelines, buffers, `drawIndexed`; adds to `counters.draws`, `counters.triangles`. True if anyone drawn |
+| PP8 | `reflected(id) → bool` | `<id>_reflected !== false` as the last step read it (a change: `version` + 1); `render/mirrors.js` `stale` counts only those reflected |
+| PP10 | `draw(pass, kind, inView, id, mirrored, counters) → bool` | `kind` `'main' | 'depth'`; `inView(sphere)`; `id` one person or null; sets groups 2 and 3, pipelines, buffers, `drawIndexed`; adds to `counters.draws`, `counters.triangles`. `mirrored`: who is not `reflected` is left out (every mirror's image — planes and panes; shadows, the main view untouched). True if anyone drawn |
 | PP11 | `inks: GPUBuffer` | uniform, 256 × vec4f: slot's ink (linear rgb, spare); slot = place in `list` + 1 (0 unused) |
 
 **PP9 pipelines** (`people/person.wgsl.js`)
@@ -1155,7 +1157,7 @@ Loaded by `thread.js` only when `host.flags.stand` is set (`?stand`, `?stand=det
 | `cycle sent\|evicted\|denied\|bias\|own\|again\|wanted\|named\|has\|insert\|room` | `sheets.cycle` | the cycle's pages (SH13; `named`, `has`, `insert`, `room` in units, 16 a slot) |
 | `step director\|world\|animates\|people\|camera\|lights` | `row.step` (detail) | ms; −1 not detail / no step |
 | `tick pace\|step\|show\|render\|after`, `tick stand` | `row.tick` (detail); `tick stand` written by the stand | ms; −1 |
-| `R frames … persons` (17: frames, drawn, held, idle, pixels, draws, triangles, placed, lit, mirrored, blended, particles, people, quads, listed, asked, persons) | `R.counters` | |
+| `R frames … shown` (18: frames, drawn, held, idle, pixels, draws, triangles, placed, lit, mirrored, blended, particles, people, quads, listed, asked, persons, shown) | `R.counters` | |
 | `R shape <k>` | `R.counters.shapes[k]` | lit points by RENDER's SHAPE number |
 | `R.wideNames…` (detail only) | `R.wide` | asks by kind/slot (`ms, quads, nodes, places, names` — `names`: `name()` calls, a page named twice counts twice; the distinct pages are `cycle named`), views, culls (render/survey.js) |
 
@@ -1184,7 +1186,8 @@ Thresholds (engine 3 checks all but `steady repaints`, `steady uploads (px)`, an
 | worker JS median / p99 (ms) | 3 / 6 | callbacks that drew |
 | GPU p95 (ms) | 8 | told, not judged (`limit: null`, `why`) |
 | GC pause worst (ms) | 2 | the scene thread's (`gc.worker`) |
-| allocated a frame (bytes) | 1024 | heap profile, `engines/3/` scripts only, over film s × 60 |
+| allocated a frame (bytes) | 1024 | heap profile, `engines/3/` scripts only, over film s × 60 — the profiled run's film after a 10 s warm-up (`WARM_UP`) |
+| allocated a frame, warm-up (bytes) | — | told, not judged: the same over the warm-up (`allocated.warmUp`) |
 | main thread long tasks / a frame (ms) | 0 / 1 | the page's |
 | open (ms) | 2000 | told, not judged; by marks |
 | open long tasks | 0 | |
@@ -1238,8 +1241,8 @@ give it); every new scene is engine 3's.
 | light / a look | `ambient ambientColor tint tintStrength vignette grain haze hazeColor hazeGlow brightness saturation inside bounce shafts wind` + `looks` (light) / `lights` (look) |
 | lights[] | `id on place color strength reach flicker glow from through soft size daylight of at across distance elevation x cone` |
 | a light's cone | `bearing height width soft` (`spec.js WORDS.cone`); read by `light.js`: bearing (0), height (0, −90…90), width 1…170 (30), soft 0…1 (0.25); a cone on a far light, a through light or a window's daylight is warned and not taken |
-| element | `id name x y across distance elevation bearing facing tilt rotation plane width depth height box code animate redraw place on onLand copies sky insert iris person particles unseen glows inside translucent reflect glass lit walk water drape flicker solid seen shadow clip behind inFront shader uniforms script color` |
-| place / copy | place: `across distance elevation x facing tilt rotation bearing`; copy: `across distance elevation facing tilt rotation scale flip tint glow seed` (`facing` a card's copy's, `rotation` a plane's: the other warned, not taken) |
+| element | `id name x y across distance elevation bearing facing tilt roll rotation plane width depth height box code animate redraw place on onLand copies sky insert iris person particles unseen glows inside translucent reflect glass lit walk water drape flicker solid seen shadow clip behind inFront shader uniforms script color` |
+| place / copy | place: `across distance elevation x facing tilt roll rotation bearing`; copy: `across distance elevation facing tilt roll rotation scale flip tint glow seed` (`facing`, `roll` a card's copy's, `rotation` a plane's: the other warned, not taken) |
 | shadow / reflect / glass / clip | `light onto strength soft` / `strength fade blur rough ripple` / `strength blur` / `inside outside` |
 | particles | `world/emitters.js` `PARTICLE_FIELDS` (BASE's keys + `kind`); kinds snow, blizzard, rain, drops, sparks, embers, fire, smoke, puff, dust, splashes, fireflies, petals, leaves, bubbles |
 | a layer's options | `sheets/easel.js LAYER_OPTS`: `pivot wind drift flicker shimmer blend depth box`; blend `normal add multiply` (`screen` warned, drawn normal) |

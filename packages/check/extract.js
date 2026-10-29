@@ -1,9 +1,10 @@
 // What a file says to a person: the texts of its code (tr, tr.n, tr.c, say, think — their literals), of a widget's
 // markup (its text), of a JSON file's fields that are read or heard (FIELDS). Each found is an entry —
-//   {text, plural?, context?, who?, voice?, how?, where}
+//   {text, plural?, context?, who?, voice?, how?, spoken?, where}
 // (who: a line said — say/think; voice: how it is heard, when the code says it: a scene's say(who, text, {voice,
 // how}); how: a game's line's own manner — its say(who, text, {how}), think's, tr.line's, tr.thought's: its voice is
-// its person's) — and what is wrong is a problem: a text that is not a literal (nothing could find it), a name of the
+// its person's; spoken: what a game's line's voice says instead of it — say(who, text, {spoken}), as written, never
+// translated) — and what is wrong is a problem: a text that is not a literal (nothing could find it), a name of the
 // language's own (tr, say, think) made the code's own (problems/problems.js).
 import * as acorn from 'acorn';
 import * as walk from 'acorn-walk';
@@ -60,8 +61,8 @@ export function fromCode(code, file, own = true, game = false) {
   const wrong = (node, code, values) => problems.push(problem(`${file}:${node.loc.start.line}`, code, values));
   const add = (node, e) => entries.push({ ...e, where: file, line: node.loc.start.line });
   // a line's voice, as it is asked for (the options it is said with): a scene's — {voice, how}; a game's — {how}, the
-  // line's own manner (its voice is its person's: people.json); literals, written whole; who no longer (the voice says
-  // it is someone; the manner, how)
+  // line's own manner (its voice is its person's: people.json), and {spoken}, the words its voice says instead of it;
+  // literals, written whole; who no longer (the voice says it is someone; the manner, how)
   const voiceOf = (arg, node, name) => {
     const o = arg?.type === 'ObjectExpression' ? arg : null;
     const voice = o && Object.fromEntries(o.properties.filter(p => p.type === 'Property' && ['voice', 'how'].includes(p.key?.name))
@@ -70,7 +71,11 @@ export function fromCode(code, file, own = true, game = false) {
     if (o?.properties.some(p => p.type === 'Property' && p.key?.name === 'who')) wrong(node, 'voice-who', { name });
     if (o?.properties.some(p => p.type === 'SpreadElement')) wrong(node, 'voice-spread', { name });
     if (game && voice && 'voice' in voice) wrong(node, 'voice-game', { name });
-    if (game) return voice?.how ? { how: voice.how } : {};
+    if (game) {
+      const said = o?.properties.find(p => p.type === 'Property' && p.key?.name === 'spoken'), spoken = said && literal(said.value);
+      if (said && spoken == null) wrong(node, 'spoken-not-literal', { name });
+      return { ...(voice?.how ? { how: voice.how } : {}), ...(spoken != null ? { spoken } : {}) };
+    }
     return voice?.voice ? { voice } : {};
   };
   walk.ancestor(ast, {
@@ -120,8 +125,8 @@ export function fromCode(code, file, own = true, game = false) {
           wrong(node, 'line-whose', { name });
         } else if (text == null && args[1] && bareText(args[1])) {
           wrong(node, 'line-bare', { name });
-        } else if (game && text == null && args[2]?.type === 'ObjectExpression' && args[2].properties.some(p => p.type === 'Property' && p.key?.name === 'how')) {
-          // (a line kept is said as it was kept: its own manner with it)
+        } else if (game && text == null && args[2]?.type === 'ObjectExpression' && args[2].properties.some(p => p.type === 'Property' && ['how', 'spoken'].includes(p.key?.name))) {
+          // (a line kept is said as it was kept: its own manner and spoken words with it)
           wrong(node, 'line-kept-how', { name });
         }
       }

@@ -14,7 +14,9 @@
 //     it is seen — a jump into the middle of what the game does there: the old engine catches up on one clock with the
 //     game (scenestate.js catchUp); engine 3 takes the values and cuts in its instant mode (bespoke.instant) as it
 //     opens, before anything of it is painted — all the scene does then ends at once, as it would end (the waits and what was heard need no time there) — and
-//     shows the scene in one cut. Meanwhile the game is told nothing (tell, arrived, line, cut, signal). fade: false
+//     shows the scene in one cut. Meanwhile the game is told nothing (tell, arrived, line, cut, signal): a piece whose
+//     end the game waits for (a beat that tells it is over) is set after the show, never in `then` — set there, it ends
+//     unheard (engine 3 says so in the scene's warnings). fade: false
 //     (the default) — the scene comes in one cut, never from black; true (1.4 s) or seconds — through black: the one
 //     before fades out, the new one in once it is drawn. An engine-3 scene shown after another lives on — its film,
 //     its people, its lines, as it would go — while the new one is made, and goes when that one is whole (a game shows
@@ -63,16 +65,19 @@
 //     {} — nothing. Only an engine 1 scene: on engine 3 a choice is the language of mini-games' (bespoke.minigame,
 //     plate: false)
 //   bespoke.on('act', fn(element, action)) — the player did it (the element: {id, name…})
-//   bespoke.say(who, text, {at, how}) — a line someone of the game's people (bespoke/people.json: {who: {voice, how,
+//   bespoke.say(who, text, {at, how, spoken}) — a line someone of the game's people (bespoke/people.json: {who: {voice, how,
 //     short}} — voice: the voice's name (the host's, docs/host.md: speak); how: the manner it lasts, in English; short:
 //     what the player reads them as) says in the scene (speech.js), in the play's language: over the element `at`
 //     ('who#name' — over a point it names, e.at(x, y, name); by default who), or 'narrator' — low in the middle; heard
 //     in their voice if they have one — its inline tags (<sigh>, <short pause>) heard, not shown; how — this line's own
-//     manner, in English, after the one they last in (voices.js). bespoke.think(who, text, {at, how}) — what they say
+//     manner, in English, after the one they last in (voices.js); spoken — what the voice says instead of the line (a
+//     literal, as written — never translated: words in a language other than the play's), the line shown as their
+//     subtitle, in the play's language. bespoke.think(who, text, {at, how, spoken}) — what they say
 //     without words, mind to mind: their voice, a whisper inside the head; shown as “text” — Short (by default low in
 //     the middle). → when it has been said (heard, if voiced): {heard — whether its voice was heard, text — what was
 //     shown}. A line is written where it is said, a literal (check finds it), or kept where it is written (tr.line,
-//     tr.thought — its own manner kept with it: said as it is, with no how of its own here).
+//     tr.thought — its own manner and spoken words kept with it: said as it is, with no how or spoken of its own
+//     here).
 //     bespoke.hush() — what is still to be said is dropped
 //   bespoke.on('tell', fn(text, about, scene)) — the scene's scripts tell that something happened (scene: the folder of the
 //     scene that told it — while a scene is made beside the one shown, that one goes on telling its own)
@@ -333,19 +338,20 @@ export async function start({ game, play, lang, scenes, people, load, saved, kee
   };
   const line = (who, text) => gameTr.said(who, text);
   // said: {heard — its voice heard (speech.js tells it as it begins), text — what was shown}; text — written here (how:
-  // its own manner), or kept (tr.line, tr.thought: {text, how})
+  // its own manner; spoken: what its voice says instead of it, as written), or kept (tr.line, tr.thought: {text, how,
+  // spoken})
   // (a line as it is heard — voices.js; a thought shown in the play's words)
-  async function utter(at, who, said, text, how) {
+  async function utter(at, who, said, text, how, spoken) {
     if (typeof text !== 'string') {
-      if (how) throw new Error(`a kept line (tr.line, tr.thought) keeps its own manner: ${said} it with none`);
-      ({ text, how } = text);
+      if (how || spoken != null) throw new Error(`a kept line (tr.line, tr.thought) keeps its own manner and spoken words: ${said} it with none`);
+      ({ text, how, spoken } = text);
     }
-    const p = person(who), l = line(who, text);
+    const p = person(who), l = line(who, text), words = spoken ?? l;
     const shown = MooodSpeech.shown(said === 'think' ? tr('“{text}” — {who}', { text: l, who: gameTr(p.short) }) : l);
     let on = false;
     const hear = e => { if (e.detail.on && e.detail.text === shown) on = true; };
     addEventListener('moood:speech', hear);
-    try { await MooodSpeech.say(at, l, { ...heard(p, said, l, how), shown }); } finally { removeEventListener('moood:speech', hear); }
+    try { await MooodSpeech.say(at, words, { ...heard(p, said, words, how), shown }); } finally { removeEventListener('moood:speech', hear); }
     return { heard: on, text: shown };
   }
 
@@ -386,8 +392,8 @@ export async function start({ game, play, lang, scenes, people, load, saved, kee
     },
     lang,
     data: name => json(`lang/${lang === MooodI18n.PSEUDO ? MooodI18n.source : lang}/${name}.json`),
-    say: (who, text, { at = who, how = '' } = {}) => utter(at, who, 'say', text, how),
-    think: (who, text, { at = 'narrator', how = '' } = {}) => utter(at, who, 'think', text, how),
+    say: (who, text, { at = who, how = '', spoken = null } = {}) => utter(at, who, 'say', text, how, spoken),
+    think: (who, text, { at = 'narrator', how = '', spoken = null } = {}) => utter(at, who, 'think', text, how, spoken),
     hush: () => MooodSpeech.hush(),
     get: key => MooodState.get(key),
     set: (key, value, seconds) => MooodState.set(key, value, seconds, undefined, { who: 'the game' }),

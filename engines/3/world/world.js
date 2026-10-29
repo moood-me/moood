@@ -120,7 +120,7 @@ export function createWorld(C, env) {
     if (E.shadow) for (const id of E.shadow.onto) el.cast |= recvBit.get(id);
     for (let c = 0; c < n; c++) {
       const cp = E.copies ? E.copies[c] : null;
-      el.faces[c] = (E.kind === 'card' || E.kind === 'unseen') && (cp ? cp.facing == null && cp.tilt == null && E.facing == null && E.tilt == null : E.flags.faceEye) ? 1 : 0;
+      el.faces[c] = (E.kind === 'card' || E.kind === 'unseen') && (cp ? cp.facing == null && cp.tilt == null && cp.roll == null && E.facing == null && E.tilt == null && E.roll == null : E.flags.faceEye) ? 1 : 0;
     }
     elements.push(el);
     if (E.id != null && !byId.has(E.id)) byId.set(E.id, el);
@@ -135,7 +135,7 @@ export function createWorld(C, env) {
     let tilts = false;
     for (let p = el.parent; p; p = p.parent) {
       p.below.push(el); if (el.kind === 'person') p.riders.push(el);
-      tilts ||= !!((p.spec.plane ? p.spec.plane.tilt : p.spec.tilt) || p.spec.place?.tilt);
+      tilts ||= !!((p.spec.plane ? p.spec.plane.tilt : p.spec.tilt || p.spec.roll) || p.spec.place?.tilt || p.spec.place?.roll);
     }
     if (el.faces[0] && tilts && !el.copies && byId.get(C.camera.on) !== el) { el.leans = true; el.faces[0] = 0; el.flags = { ...el.flags, faceEye: false }; }
   }
@@ -304,8 +304,10 @@ export function createWorld(C, env) {
       return m34.compose(across, elevation, -distance, (tilt - 90) * DEG, rot * DEG, 0, scale, out, oo);
     }
     if (E.kind !== 'person' && !el.faces[c] && !el.leans) {
-      const facing = (cp ? cp.facing : val(get, Pl?.facing)) ?? E.facing ?? 180, tilt = (cp ? cp.tilt : val(get, Pl?.tilt)) ?? E.tilt ?? 0;
-      return m34.compose(across, elevation, -distance, -tilt * DEG, (180 - facing) * DEG, 0, scale, out, oo);
+      // (roll: turned in its own face, its right edge rising — before its tilt and its facing)
+      const facing = (cp ? cp.facing : val(get, Pl?.facing)) ?? E.facing ?? 180, tilt = (cp ? cp.tilt : val(get, Pl?.tilt)) ?? E.tilt ?? 0,
+        roll = (cp ? cp.roll : val(get, Pl?.roll)) ?? E.roll ?? 0;
+      return m34.compose(across, elevation, -distance, -tilt * DEG, (180 - facing) * DEG, roll * DEG, scale, out, oo);
     }
     return m34.compose(across, elevation, -distance, 0, 0, 0, scale, out, oo);
   }

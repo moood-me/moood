@@ -50,7 +50,7 @@
 const OWN = ['at', 'ran', 'state', 'every', 'late', 'js', 'cost', 'shot', 'moving', 'makes', 'keys', 'placed', 'ready', 'ready bias', 'late by', 'submitted', 'opened', 'story'];
 // (R.lacks' numbers, sheets.cycle's, the step's parts, the tick's, R.counters' by RN8's names)
 const LACKS = ['pages', 'mirrors', 'cells', 'land'], CYCLE = ['sent', 'evicted', 'denied', 'bias', 'own', 'again', 'wanted', 'named', 'has', 'insert', 'room'], STEP = ['director', 'world', 'animates', 'people', 'camera', 'lights'], TICK = ['pace', 'step', 'show', 'render', 'after'];
-const COUNTERS = ['frames', 'drawn', 'held', 'idle', 'pixels', 'draws', 'triangles', 'placed', 'lit', 'mirrored', 'blended', 'particles', 'people', 'quads', 'listed', 'asked', 'persons'];
+const COUNTERS = ['frames', 'drawn', 'held', 'idle', 'pixels', 'draws', 'triangles', 'placed', 'lit', 'mirrored', 'blended', 'particles', 'people', 'quads', 'listed', 'asked', 'persons', 'shown'];
 // (WAITING: inputs waiting for their frame at once, at most; an input kept: at, ms, ticks, drawn; a cut: shot, at, ms,
 // ticks, drawn, placed, sent)
 const MAX = 1 << 15, WAITING = 256, INPUT = 4, CUT = 7;

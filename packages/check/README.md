@@ -13,7 +13,9 @@ a line someone says — `say`, `think`) or in a read JSON field (scene.json `tit
 `source`; `bespoke/people.json` `*.short`), and translated into each language it is in (English is the source). A
 line's manner (`how`: a person's in people.json, a line's own in `say`, `think`, `tr.line`, `tr.thought`) is a
 direction to its voice, in English, a literal — never shown, never translated; `--json`'s lines carry it as the page
-asks for it (the person's, then the line's: `play/voices.js`).
+asks for it (the person's, then the line's: `play/voices.js`). A game's line's `spoken` (in `say`, `think`, `tr.line`,
+`tr.thought`) is what its voice says instead of it — a literal, never translated: the same words heard in every
+language, the line shown in it.
 
     npm i -g @moood/check
     moood-check <repo> --write   # each language's file laid out anew from what the code says (translations kept)
@@ -31,8 +33,8 @@ one. An article is translated whole, by hand: `article.json` (`title`, `date`, `
 What it finds wrong in the code: a text that is not a literal (`tr(x)`; a bare text in a line, `say('who', a ? 'x' : 'y')`
 — each written whole, or marked where it is written: `tr.line`, `tr.thought`), `tr` made a value or a tag (`T = tr`,
 `f(tr)`, ``tr`…` ``), `tr`, `say`, `think` declared or set by the code, a line's voice not in literals (a scene's
-`{voice, how}`; a game's line its own manner only, `{how}` — of `say`, `think`, `tr.line`, `tr.thought`; a kept line said
-with one; `who` is not heard). In a game's people (`bespoke/people.json`: `{who: {voice, how, short}}`) anything else; in a
+`{voice, how}`; a game's line its own manner and spoken words only, `{how, spoken}` — of `say`, `think`, `tr.line`,
+`tr.thought`; a kept line said with either; `who` is not heard). In a game's people (`bespoke/people.json`: `{who: {voice, how, short}}`) anything else; in a
 line's translation, other inline tags than the line's (`<sigh>`, `<short pause>` — heard as written, in English). A
 scene's `"engine"` other than 3 or none (engine 1) — engine 2 is gone. In a scene's music, what a host making it with
 Lyria does not take (`engines/1/music.js`: `MooodMusic.LIMITS` — `bpm` 60–200, `density` and `brightness` 0–1, one of

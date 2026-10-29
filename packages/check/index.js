@@ -99,7 +99,7 @@ function music(spec, at) {
 }
 
 // A repository read through its source (repository.js) → {problems: [{at, code, values}] (problems/problems.js), scopes: [{name, kind, languages, entries,
-// said}]} — said: the lines heard (who, text, said: 'say' | 'think', voice? — a scene's, how? — a game's line's own); write — each language's file laid out
+// said}]} — said: the lines heard (who, text, said: 'say' | 'think', voice? — a scene's, how?, spoken? — a game's line's own); write — each language's file laid out
 // anew (a source that writes: a folder)
 export async function check(source, { write = false } = {}) {
   const all = await scopes(source), problems = [...all.problems], out = [];
@@ -115,7 +115,7 @@ export async function check(source, { write = false } = {}) {
     const targets = s.languages.filter(l => l !== SOURCE);
     const found = unique(s.entries);
     // (the lines heard: each way it is heard once — a text said aloud and thought is one to translate, two to voice)
-    const heard = new Map(s.entries.filter(e => e.said).map(e => [JSON.stringify([e.who, e.text, e.said, e.voice ?? null, e.how ?? '']), e]));
+    const heard = new Map(s.entries.filter(e => e.said).map(e => [JSON.stringify([e.who, e.text, e.said, e.voice ?? null, e.how ?? '', e.spoken ?? null]), e]));
     out.push({ name: s.name, kind: s.kind, languages: s.languages, entries: [...found.values()], said: [...heard.values()] });
     for (const lang of targets) {
       const path = s.file(lang), had = await readLang(source, path, problems);

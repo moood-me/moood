@@ -236,7 +236,7 @@ export function createMirrors(gpu, sheets, lib) {
       if (movesItself(world, own, q)) moves = true;
       if (Q.flags[q] & FLAG.CLIPPED) I.clipped = true;
     }
-    if (people) for (let k = 0; k < people.list.length; k++) { const p = people.list[k]; if (people.sphere(p.id, S4) && sees(view.e, S4)) sig = (((sig * 31 + p.index) | 0) * 31 + people.version(p.id)) | 0; }
+    if (people) for (let k = 0; k < people.list.length; k++) { const p = people.list[k]; if (people.reflected(p.id) && people.sphere(p.id, S4) && sees(view.e, S4)) sig = (((sig * 31 + p.index) | 0) * 31 + people.version(p.id)) | 0; }
     I.moved = !I.has || I.size[0] !== I.drawnSize[0] || I.size[1] !== I.drawnSize[1] || I.rough !== I.drawnRough || !sameCamera(I.camera, I.drawn);
     I.due = I.moved || moved || moves || sig !== I.sig;
     I.nextSig = sig;

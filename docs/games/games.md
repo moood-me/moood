@@ -111,7 +111,9 @@ in it.
   chapter, its steps, the mini-games of each — to go straight to any. Gone to, a step is a replay from there — in a
   chapter the main run has played, from its state kept at that step, as "Replay from here" (else as if nothing was
   chosen before it: a kept replay never loses the main run's choices); a mini-game — its step played up to it unseen and without time (the scene catching up
-  in its instant mode: `bespoke.show` with `then`), then on, seen.
+  in its instant mode: `bespoke.show` with `then`), then on, seen. A jump tells the game nothing — what the scene
+  tells or signals in it is never heard (said in the scene's warnings): the piece the step waits on (a beat whose end
+  it hears) is set after the show, not in `then`.
 - The author's ⏭ is the player's.
 
 ## 7. Scenes, cuts and the fade

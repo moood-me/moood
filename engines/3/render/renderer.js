@@ -125,10 +125,11 @@ export async function createRenderer(gpu, sheets, host) {
   // RN8. Of the last call, all its views together: draws, triangles, lit points — by shape too (by SHAPE's numbers,
   // and after them the SCREEN shape's) and those drawn in mirrors' passes —, quads among what blends, the particles
   // of the emitters drawn (each one's whole count while anything of it may be in the air), the people's triangles;
-  // and what the call worked on: the world's quads and persons, the quads listed by the cull of the frame's view, its
+  // and what the call worked on: the world's quads and persons and the persons shown (here and in any of its views:
+  // drawn), the quads listed by the cull of the frame's view, its
   // mirrors' and its shadow cells' views together, the quads the asks worked out (a quad worked out for three views:
   // three)
-  const counters = { frames: 0, drawn: 0, held: 0, idle: 0, pixels: 0, draws: 0, triangles: 0, placed: 0, lit: 0, blended: 0, shapes: new Int32Array(SHAPES + 1), mirrored: 0, particles: 0, people: 0, quads: 0, listed: 0, asked: 0, persons: 0 };
+  const counters = { frames: 0, drawn: 0, held: 0, idle: 0, pixels: 0, draws: 0, triangles: 0, placed: 0, lit: 0, blended: 0, shapes: new Int32Array(SHAPES + 1), mirrored: 0, particles: 0, people: 0, quads: 0, listed: 0, asked: 0, persons: 0, shown: 0 };
   let mirrored = 0, peopleTriangles = 0;
   // what the call's frame still lacked (RN8; the numbers R.missing() words): pages of its own views, mirrors' and
   // shadow cells' views lacking pages, the land's tiles
@@ -632,7 +633,7 @@ export async function createRenderer(gpu, sheets, host) {
       mirrored = 0; peopleTriangles = 0; counters.asked = 0;
       const worked = sheets.asking.worked;
       timing.begin(); survey.begin();
-      if (!world) { counters.placed = counters.quads = counters.listed = counters.persons = 0; tally(false); if (f.whole) { counters.held++; return 0; } counters.idle++; return 1; }
+      if (!world) { counters.placed = counters.quads = counters.listed = counters.persons = counters.shown = 0; tally(false); if (f.whole) { counters.held++; return 0; } counters.idle++; return 1; }
       const next = f.next;
       const sizedNow = resized;
       if (resized) targets();
@@ -688,6 +689,7 @@ export async function createRenderer(gpu, sheets, host) {
       // d. the people shown (their versions are this frame's from here)
       timing.mark('people');
       const peopleChanged = people ? people.show(seen) : false;
+      counters.shown = people ? people.shown() : 0;
       shadows.blobs(frameView, O);
       // e. cull and order
       timing.mark('cull');
