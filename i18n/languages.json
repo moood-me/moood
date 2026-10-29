@@ -8,5 +8,6 @@
   "be": { "name": "Беларуская", "locale": "be_BY" },
   "fr": { "name": "Français", "locale": "fr_FR" },
   "zh-hant": { "name": "繁體中文", "locale": "zh_TW" },
-  "pt": { "name": "Português (Brasil)", "locale": "pt_BR" }
+  "pt": { "name": "Português (Brasil)", "locale": "pt_BR" },
+  "pl": { "name": "Polski", "locale": "pl_PL" }
 }

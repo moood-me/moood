@@ -1,0 +1,17 @@
+{"strings": [
+  {"text":"“{text}” is not translated ({file}).","translation":"„{text}” nie jest przetłumaczone ({file}).","where":"home.js"},
+  {"text":"{file} is not right: check says what is wrong.","translation":"{file} – coś jest nie tak: co dokładnie, powie check.","where":"home.js"},
+  {"text":"Its world {ref} is in another repository: lay it beside the game and name it by its path.","translation":"Jej świat {ref} jest w innym repozytorium: połóż go obok gry i wskaż go ścieżką.","where":"home.js"},
+  {"text":"There is no “{name}” here.","translation":"Nie ma tu „{name}”.","where":"home.js"},
+  {"text":"It cannot be shown ({code}).","translation":"Nie da się tego pokazać ({code}).","where":"home.js"},
+  {"text":"Not in this language. It is in:","translation":"Nie w tym języku. Jest w:","where":"home.js"},
+  {"text":"the main scene","translation":"scena główna","where":"home.js"},
+  {"text":"No scenes yet.","translation":"Na razie brak scen.","where":"home.js"},
+  {"text":"Played on the world {world}","translation":"Rozgrywa się w świecie {world}","where":"home.js"},
+  {"text":"Play","translation":"Graj","where":"home.js"},
+  {"text":"moood — the local player","translation":"moood – lokalny odtwarzacz","where":"home.js"},
+  {"text":"No worlds or games in this folder: a world is a folder with world.json, a game one with game.json, at any depth.","translation":"W tym folderze nie ma ani światów, ani gier: świat to folder z world.json, gra – z game.json, na dowolnej głębokości.","where":"home.js"},
+  {"text":"Worlds","translation":"Światy","where":"home.js"},
+  {"text":"Games","translation":"Gry","where":"home.js"},
+  {"text":"What check finds wrong","translation":"Co jest nie tak według check","where":"home.js"}
+]}
