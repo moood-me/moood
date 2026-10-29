@@ -113,7 +113,7 @@ takes them from a workshop: here is what it asks it (`W` — the studio's addres
 |---|---|
 | `POST W/workshop/speech.key` `{args: {text, voice, how}}` | `{key, kept}` — the line's key (as `speak` takes it, above), and whether it is voiced |
 | `POST W/workshop/speech.speak` `{args: {text, voice, how}}`, a person's token | `{key}` — voiced now if it was not, under that person's quota there (it may wait seconds) |
-| `GET W/workshop/speech/<key>` | the voice (`audio/wav`; ranges) |
+| `GET W/workshop/speech/<key>` | the voice: Opus in WebM (`audio/webm`; ranges) |
 | `POST W/workshop/music.key` `{args: {music: {prompts, config}}}` | `{key, whole, making}` — the track's key, whether it is recorded whole, or being recorded |
 | `POST W/workshop/music.track` `{args: {music}}`, a person's token | `{key}` — its recording begun if it is neither, under that person's quota there |
 | `GET W/workshop/music/<key>` | its recording as `GET H music` streams it (above) |
