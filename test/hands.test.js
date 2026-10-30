@@ -1,7 +1,8 @@
-// A hand of its own (engines/3/people/hand.js: a style's `palm`, with its fingers): drawn once — the palm skinned to
-// the hand's joint, the fingers along their joints —, nothing of it worked out a frame; the fingers at ease written in
-// place of the motion's without making anything; as big as the figure's skeleton, as broad as the figure; the styles
-// without it as they were. In node: SOMA's skeleton read from engine 1's folder (no GPU).
+// A hand of its own (engines/3/people/hand.js: a style's `fingers` — a palm with the fingers on it — or `mitten`):
+// drawn once — the palm (the mitten) skinned to the hand's joint, the fingers along their joints —, nothing of it
+// worked out a frame; the fingers at ease written in place of the motion's without making anything; as big as the
+// figure's skeleton, as broad as the figure; either hand made in every style, on every body. In node: SOMA's skeleton
+// read from engine 1's folder (no GPU).
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
@@ -40,18 +41,28 @@ const sizes = body => {
   return { breadth, finger: H.fingers[2].profile[0][1] };
 };
 
-test('a palmed style has its fingers at ease; one without a palm, or rigid, has none', () => {
-  const M = model('storybook', 'man');
-  assert.ok(M.hand && M.hand.joints.length === 38 && M.hand.q.length === 38 * 4, 'both hands: 4 × 4 fingers and 3 of the thumb, each');
-  for (const style of ['soft', 'shadow', 'flat', 'toy', 'graphic', 'geometry']) assert.equal(model(style, 'man').hand, null, style);
+test('fingers come with a palm and their turns at ease, in any style; a mitten is all on the hand joint', () => {
+  for (const style of ['storybook', 'shadow']) {
+    const M = model(style, 'man');
+    assert.ok(M.hand && M.hand.joints.length === 38 && M.hand.q.length === 38 * 4, `${style}: both hands, 4 × 4 fingers and 3 of the thumb`);
+  }
+  for (const style of ['soft', 'flat']) assert.equal(model(style, 'man').hand, null, `${style}: a mitten`);
+  for (const style of ['toy', 'graphic', 'geometry']) assert.equal(model(style, 'man').hand, null, style);
+  // (every style, every body, either hand: made without a word said)
+  const all = { shapes: { styles: Object.fromEntries(['soft', 'toy', 'shadow', 'graphic', 'geometry', 'flat'].flatMap(st => [
+    [`${st}_m`, { from: st, name: st, mitten: true, fingers: false }], [`${st}_f`, { from: st, name: st, fingers: true }]])) } };
+  for (const style of Object.keys(all.shapes.styles)) for (const who of ['man', 'woman', 'child', 'toddler', 'smith'])
+    createModel(look({ style, who }, all), { rig, warn: t => assert.fail(`${style} ${who}: ${t}`) });
 });
 
 test('the hand is drawn once: nothing of it a frame', () => {
-  const M = model('storybook', 'woman'), I = M.state(), P = poseOf();
-  pose(rig, M.fit, bindLocals(rig), Float32Array.from(rig.rest.subarray(0, 3)), P);
-  M.pose(I, P, [0, 0, 0, 0, 1 / 60, 0, 0], false, []);
-  assert.equal(ARENA.i, 0, 'the figure was not drawn again: its palm skinned, its fingers jointed');
-  assert.equal(M.body.dyn.p.length, 0);
+  for (const style of ['storybook', 'soft']) {
+    const M = model(style, 'woman'), I = M.state(), P = poseOf();
+    pose(rig, M.fit, bindLocals(rig), Float32Array.from(rig.rest.subarray(0, 3)), P);
+    M.pose(I, P, [0, 0, 0, 0, 1 / 60, 0, 0], false, []);
+    assert.equal(ARENA.i, 0, `${style}: the figure was not drawn again — its palm (a mitten) skinned, its fingers jointed`);
+    assert.equal(M.body.dyn.p.length, 0);
+  }
 });
 
 test('the player puts the fingers at ease in place of the motion\'s, making nothing', () => {

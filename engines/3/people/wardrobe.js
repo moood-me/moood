@@ -52,8 +52,9 @@ export const V = Object.freeze({ add, sub, mul, dot, cross, mix, unit, level, me
 
 // a style: its shapes and proportions — the head's size and shape (an egg's three half-widths; headSquare > 2:
 // squarer), the neck's length, the legs', the limbs' thickness; the trunk's sections (hips to shoulders: their width
-// and depth), how square; the arms' and the legs' profiles (ARMS, LEGS: hands and feet), fingers of their own (with
-// palm: on a palm of its own, close together, tapering, at ease — hand.js; else each finger a wire from the wrist); how
+// and depth), how square; the arms' and the legs' profiles (ARMS, LEGS: hands and feet); a hand of its own (hand.js):
+// fingers — a palm and the fingers on it, close together, tapering, at ease; mitten — the palm, the four fingers one
+// piece, the thumb another (fingers over a mitten; neither: the profile's hand, a rigid style's a ball); how
 // round (a tube's sides; facets: flat faces); garments' folds (how many round, how deep at the hem) and a ragged
 // hem (how much of the length its tatters hang); rigid: each bone of a limb a straight bar of its own (a bent knee
 // the corner of two), the hands balls, the feet shoes; straight: garments' sides straight lines from their top to
@@ -65,7 +66,7 @@ export const STYLES = {
     trunk: { w: [0.78, 0.84, 0.66, 0.8, 0.9], d: [0.8, 0.82, 0.7, 0.76, 0.68] }, arms: 'palm', fingers: true, feet: 'point', paint: 'rim', line: 1.4,
     folds: { n: 7, depth: 0.09 }, ragged: 0.07, ground: 'fog', drape: true },
   soft: { name: 'soft', head: 1.38, egg: [1.08, 1, 1.02], neck: 0.35, legs: 0.84, limb: 1.05, sides: 22, square: 2,
-    trunk: { w: [0.98, 1.04, 0.98, 1.02, 0.92], d: [1.08, 1.1, 1.1, 1.08, 0.98] }, arms: 'mitten', palm: true, feet: 'bean', paint: 'toned', line: 2.2, tinted: true,
+    trunk: { w: [0.98, 1.04, 0.98, 1.02, 0.92], d: [1.08, 1.1, 1.1, 1.08, 0.98] }, arms: 'mitten', mitten: true, feet: 'bean', paint: 'toned', line: 2.2, tinted: true,
     folds: { n: 5, depth: 0.04 }, face: 'simple', ground: 'paper', drape: true },
   graphic: { name: 'graphic', head: 1.06, egg: [0.9, 1.08, 0.94], headSquare: 2.6, neck: 0.8, legs: 1.06, limb: 0.74, sides: 16, square: 2.8,
     trunk: { w: [0.82, 0.88, 0.7, 1.06, 1.24], d: [0.78, 0.8, 0.7, 0.76, 0.62] }, arms: 'leaf', feet: 'point', paint: 'flat', line: 1.6, ground: 'day', drape: true },
@@ -75,7 +76,7 @@ export const STYLES = {
   geometry: { name: 'geometry', head: 1, egg: [0.9, 1.1, 0.98], neck: 0.9, legs: 1.02, limb: 0.9, sides: 6, facets: true, square: 2.4,
     trunk: { w: [0.9, 0.95, 0.82, 0.98, 1.04], d: [0.9, 0.9, 0.84, 0.9, 0.8] }, arms: 'leaf', feet: 'wedge', paint: 'toned', line: 1.2, ground: 'paper', drape: true },
   flat: { name: 'flat geometry', head: 1.1, egg: [0.94, 1.04, 0.98], neck: 0.55, legs: 1.06, limb: 0.9, sides: 20, square: 2.8,
-    trunk: { w: [1, 1, 1.16, 1.03, 0.96], d: [0.82, 0.82, 0.88, 0.8, 0.9] }, arms: 'bar', feet: 'shoe', rigid: true, straight: true, drape: true, sleeves: 0.88,
+    trunk: { w: [1, 1, 1.16, 1.03, 0.96], d: [0.82, 0.82, 0.88, 0.8, 0.9] }, arms: 'bar', mitten: true, feet: 'shoe', rigid: true, straight: true, drape: true, sleeves: 0.88,
     paint: 'lit', line: 1, face: 'dot', ground: 'sunset' },
 };
 // the arms' and the legs' profiles: along the joints (0 the shoulder or the hip, 1 the elbow or the knee, 2 the wrist or

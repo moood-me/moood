@@ -20,17 +20,20 @@ import { AT } from './rig.js';
 const FINGERS = ['Index', 'Middle', 'Ring', 'Pinky'];
 // each finger at ease: its way aside from the palm's (degrees, toward the thumb), its curl at each of its three knuckles
 // (degrees, toward the palm: a hand at rest curls more toward its outer fingers), its thickness (of the middle finger's),
-// how far along its last bone its tube goes (its round end drawing the rest; the little finger's, nearly all: it reaches
-// the ring finger's last joint)
+// how far along its last bone its tube goes (a fingertip rounds it off there: a finger as long as the palm, or a
+// little less, from the knuckle; the little finger's to about the ring finger's last joint)
 const EASE = {
-  Index: { aside: -1, curl: [16, 26, 12], r: 0.98, tip: 0.6 },
-  Middle: { aside: 0, curl: [18, 28, 13], r: 1, tip: 0.6 },
-  Ring: { aside: 1, curl: [20, 30, 14], r: 0.95, tip: 0.6 },
-  Pinky: { aside: 2, curl: [15, 22, 10], r: 0.84, tip: 0.9 },
+  Index: { aside: -1, curl: [16, 26, 12], r: 0.98, tip: 0.25 },
+  Middle: { aside: 0, curl: [18, 28, 13], r: 1, tip: 0.25 },
+  Ring: { aside: 1, curl: [20, 30, 14], r: 0.95, tip: 0.25 },
+  Pinky: { aside: 2, curl: [15, 22, 10], r: 0.84, tip: 0.5 },
 };
 // the thumb at ease: each of its three bones' way (degrees from the palm's: toward the index finger's side, toward the
 // palm), its thickness at its root (the ball of the thumb) and along it, of the middle finger's
-const THUMB = { ways: [[30, 20], [2, 26], [-14, 34]], r: [1.5, 1.15, 1.05, 0.9] };
+const THUMB = { ways: [[30, 20], [2, 26], [-14, 34]], r: [1.5, 1.15, 1.02], tip: 0.35 };
+// a finger's end: the tube round over its last bit (along the last stretch, a share of the thickness there) — a
+// fingertip, not a point
+const DOME = [[0, 1], [0.5, 0.84], [0.85, 0.54], [1, 0.28]];
 const FINGER_R = 0.009;   // a man's middle finger's half-width at its knuckle (metres)
 const TOUCH = 1.02;       // how far apart the knuckles are: of the two fingers' half-widths together (side by side)
 const PALM = 0.089;       // a man's palm: from the wrist to the knuckles (SOMA's, metres)
@@ -72,10 +75,12 @@ export function handOf(rig, P, side, { sigma, wrist }) {
   const way = (aside, curl) => unit(add(add(mul(a, Math.cos(aside * RAD) * Math.cos(curl * RAD)), mul(e, Math.sin(aside * RAD) * Math.cos(curl * RAD))), mul(p, Math.sin(curl * RAD))));
   // each joint's turn at ease (in the person's space, the hand turned as on the bind): its bone — to its child — turned
   // from where the bind has it to its way
-  const G = new Map(), order = [];
+  // (and where each joint's child is then, on the bind: its bone's length along its way from where the joint is)
+  const G = new Map(), order = [], placed = new Map();
   const aim = (name, child, d) => {
-    const j = AT[`${side}${name}`], b = unit(sub(at(child), at(name)));
-    G.set(j, qmul(fromTo(b, d), bindQ(j))); order.push(j);
+    const j = AT[`${side}${name}`], b = sub(at(child), at(name)), from = placed.get(name) ?? at(name);
+    G.set(j, qmul(fromTo(unit(b), d), bindQ(j))); order.push(j);
+    placed.set(child, add(from, mul(d, len(b))));
   };
   // the knuckles side by side across the palm (SOMA's are unevenly apart), as far apart as the fingers are thick — as
   // the hand is broad (sigma) —, as far along and as high as SOMA's: where each finger's bone in the palm points
@@ -128,10 +133,44 @@ export function handOf(rig, P, side, { sigma, wrist }) {
   // the fingers: from the knuckle to the tip (the finger's last bone, most of it: its end rounds the rest), thick at the
   // root, tapering; the thumb from its root in the palm's heel
   const J = n => AT[`${side}Hand${n}`];
+  // (a profile: its half-width at each joint, then over the last stretch to the tip, rounded)
+  const tipped = rs => [...rs.map((r, i) => [i, r]), ...DOME.slice(1).map(([u, k]) => [rs.length - 1 + u, rs[rs.length - 1] * k])];
   const fingers = [
-    { joints: [J('Thumb1'), J('Thumb2'), J('Thumb3'), J('ThumbEnd')], tip: 0.62, profile: THUMB.r.map((k, i) => [i, rM * k]) },
+    { joints: [J('Thumb1'), J('Thumb2'), J('Thumb3'), J('ThumbEnd')], tip: THUMB.tip, profile: tipped(THUMB.r.map(k => rM * k)) },
     ...FINGERS.map(f => ({ joints: [J(`${f}2`), J(`${f}3`), J(`${f}4`), J(`${f}End`)], tip: EASE[f].tip,
-      profile: [[0, rf(f) * 1.02], [1, rf(f) * 0.92], [2, rf(f) * 0.85], [3, rf(f) * 0.78]] })),
+      profile: tipped([1.02, 0.92, 0.85].map(k => rf(f) * k)) })),
   ];
-  return { pose: { joints: Int32Array.from(order), q }, palm: { rings, first, last }, fingers };
+  // the mitten: one piece from the wrist through the palm (its sections) and on along the four fingers' middle line at
+  // ease, as wide as they lie side by side, as thick as a finger, a little narrower toward the tip, rounded there; the
+  // thumb a piece of its own along its bones at ease. In the hand joint's own frame, as the palm: all of it goes with
+  // that joint
+  const loft = (line, w, d, n, toward) => line.map((c, i) => {
+    const end = line.length - 1, t = unit(sub(line[Math.min(end, i + 1)], line[Math.max(0, i - 1)])), x = unit(sub(toward, mul(t, dot(toward, t)))), y = cross(t, x);
+    return Array.from({ length: n }, (_, k) => {
+      const th = k / n * Math.PI * 2, cs = Math.cos(th), sn = Math.sin(th);
+      return local(add(c, add(mul(x, w[i] * Math.sign(cs) * Math.abs(cs) ** 0.9), mul(y, d[i] * Math.sign(sn) * Math.abs(sn) ** 0.9))));
+    });
+  });
+  // (a line through points, each corner eased: a point a third of the way to either side of each)
+  const between = (u, v, k) => add(u, mul(sub(v, u), k));
+  const eased = pts => pts.flatMap((v, i) => (i === 0 || i === pts.length - 1 ? [v] : [between(pts[i - 1], v, 0.7), v, between(v, pts[i + 1], 0.3)]));
+  const level = n => FINGERS.map(f => placed.get(`Hand${f}${n}`)), mean = vs => mul(vs.reduce(add), 1 / vs.length);
+  const block = [2, 3, 4, 'End'].map(n => mean(level(n))), wide = [2, 3, 4, 'End'].map(n => dot(sub(level(n)[0], level(n)[3]), e) / 2 + rM * 0.95);
+  const tipWay = unit(sub(block[3], block[2])), toTip = rM * 0.9;
+  const fline = eased([...block.slice(0, 3), sub(block[3], mul(tipWay, toTip))]), fn = fline.length;
+  const heel = STATIONS.slice(0, -1).map(u => add(add(W, mul(a, u * length)), mul(e, mid * smooth(0, 0.8, u))));
+  const line = [...heel, ...fline], w = [...STATIONS.slice(0, -1).map(widthAt), ...fline.map((_, i) => wide[0] + (wide[3] * 0.9 - wide[0]) * smooth(0, 1, i / (fn - 1)))];
+  const d = [...STATIONS.slice(0, -1).map(thickAt), ...fline.map((_, i) => rM * (1.1 - 0.2 * i / (fn - 1)))];
+  const body = loft(line, w, d, AROUND, e), lw = w[w.length - 1], ld = d[d.length - 1], tipAt = line[line.length - 1];
+  for (const f of [0.5, 0.85]) {
+    const c = Math.sqrt(1 - f * f), at2 = add(tipAt, mul(tipWay, toTip * f));
+    body.push(loft([sub(at2, tipWay), at2, add(at2, tipWay)], [0, lw * (0.4 + 0.6 * c), 0], [0, ld * c, 0], AROUND, e)[1]);
+  }
+  const Th = ['HandThumb1', 'HandThumb2', 'HandThumb3', 'HandThumbEnd'].map(n => placed.get(n) ?? at(n)), thumbWay = unit(sub(Th[3], Th[2]));
+  const tline = eased([Th[0], Th[1], Th[2], sub(Th[3], mul(thumbWay, rM * 0.85))]), tn = tline.length, tr = tline.map((_, i) => rM * (1.45 - 0.55 * i / (tn - 1)));
+  const mitten = {
+    body: { rings: body, first: local(sub(W, mul(a, 0.12 * length))), last: local(add(tipAt, mul(tipWay, toTip))) },
+    thumb: { rings: loft(tline, tr, tr.map(r => r * 0.92), 10, p), first: local(sub(Th[0], mul(unit(sub(Th[1], Th[0])), tr[0] * 0.6))), last: local(add(tline[tn - 1], mul(thumbWay, tr[tn - 1]))) },
+  };
+  return { pose: { joints: Int32Array.from(order), q }, palm: { rings, first, last }, fingers, mitten };
 }
