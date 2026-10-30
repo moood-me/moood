@@ -5,6 +5,11 @@
 // say(…) knows nothing of is said as it is.
 export const problem = (at, code, values = {}) => ({ at, code, values });
 
+// Each code's level: an error (what is wrong — every code but these) or advice (what works as it is, better written
+// otherwise — said, and nothing is refused for it: check keeps it apart from the problems, its own list)
+export const ADVICE = new Set(['hands-old']);
+export const isAdvice = ({ code }) => ADVICE.has(code);
+
 export function say({ code, values: v }, tr) {
   switch (code) {
     // where worlds, games and articles lie; what they say of themselves
@@ -29,7 +34,7 @@ export function say({ code, values: v }, tr) {
     // the engine a scene is for
     case 'engine': return tr('"engine" {engine} — there is engine 3 (every new scene), and engine 1 (a scene that says none)', v);
     case 'engine-gone': return tr('"engine" 2 — engine 2 is gone: the scene is written anew for engine 3 ("engine": 3)', v);
-    // a cast's old words for a style's hands
+    // a cast's old words for a style's hands (advice: the engine still reads them)
     case 'hands-old': return tr('{word} — an old word: write hands: "{hands}"', v);
     // a scene's music, as a host makes it (engines/1/music.js: what Lyria takes)
     case 'music-prompts': return tr('"music" — {count} descriptions that sound: {most} at most', v);
