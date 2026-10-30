@@ -1,12 +1,14 @@
 // The play paused — its ⏸, the phone turned upright, an engine 3 scene standing (the page hidden, out of sight): the
 // scene's music fades out, then its sound stands; going on, it sounds again and fades back in to the volume set
-// (engines/1/music.js on a page of stand-ins: its AudioContext, the stage's Moood.onPause, a play's clock).
+// — and the page's other sounds (a game's own: volume.js output) with it, in the same fade (engines/1/music.js and
+// volume.js on a page of stand-ins: their AudioContexts, the stage's Moood.onPause, a play's clock).
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import vm from 'node:vm';
 
 const CODE = readFileSync(new URL('../engines/1/music.js', import.meta.url), 'utf8');
+const VOLUME = readFileSync(new URL('../engines/1/volume.js', import.meta.url), 'utf8');
 
 // an AudioParam: set values and linear ramps, as the music's pause uses them
 class Param {
@@ -31,10 +33,10 @@ class Param {
 // property of globalThis), a play's clock (its timers stand while the play is paused; __mooodTimers: the browser's
 // own); the time moved by hand
 function page() {
-  const pausing = [], timers = [];
-  let ms = 0, ctx = null;
+  const pausing = [], timers = [], contexts = [];
+  let ms = 0;
   class AudioContext {
-    constructor() { ctx = this; this.state = 'suspended'; this.currentTime = 0; this.destination = {}; this.gains = []; }
+    constructor() { contexts.push(this); this.state = 'suspended'; this.currentTime = 0; this.destination = {}; this.gains = []; }
     async resume() { this.state = 'running'; }
     async suspend() { this.state = 'suspended'; }
     createGain() { const g = { gain: new Param(this, 1), connect() {}, disconnect() {} }; this.gains.push(g); return g; }
@@ -47,11 +49,16 @@ function page() {
     },
     setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, clearInterval() {},
     addEventListener() {}, removeEventListener() {},
-    MooodI18n: { part: () => s => s }, MooodVolume: { get: () => 0.4, on() {} },
+    MooodI18n: { part: () => s => s },
+    localStorage: { getItem: () => null, setItem() {} },
+    MutationObserver: class { observe() {} },
+    document: { readyState: 'complete', documentElement: {}, querySelectorAll: () => [], addEventListener() {} },
     pausing,
   });
   vm.runInContext('globalThis.window = globalThis; const Moood = { onPause: fn => { pausing.push(fn); } };', g);
+  vm.runInContext(`${VOLUME}\nglobalThis.MooodVolume = MooodVolume;`, g);
   vm.runInContext(CODE, g);
+  const ctx = () => contexts[0]; // (the music's: made as it is begun)
   const settle = async () => { for (let i = 0; i < 5; i++) await new Promise(r => setImmediate(r)); };
   return {
     music: g.MooodMusic, settle,
@@ -61,13 +68,15 @@ function page() {
     async wait(seconds) {
       for (let i = 0; i < Math.round(seconds * 100); i++) {
         ms += 10;
-        if (ctx.state === 'running') ctx.currentTime += 0.01;
+        for (const c of contexts) if (c.state === 'running') c.currentTime += 0.01;
         for (const t of timers) if (t.fn && t.at <= ms) { const fn = t.fn; t.fn = null; fn(); }
         await settle();
       }
     },
-    get state() { return ctx?.state; },
-    get level() { return ctx.gains[0].gain.value; }, // (the music's output: its first gain)
+    get state() { return ctx()?.state; },
+    get level() { return ctx().gains[0].gain.value; }, // (the music's output: its first gain)
+    // a game's sounds: its own context, through the "sounds" output
+    sounds() { const c = new AudioContext(), out = g.MooodVolume.output(c); return { ctx: c, out }; },
   };
 }
 async function playing() {
@@ -92,6 +101,22 @@ test('paused: the music fades out, then its sound stands; going on, it sounds an
   assert.equal(p.state, 'running');
   await p.wait(1);
   near(p.level, 0.4);
+});
+
+test('the game\'s sounds wait with the music: one fade out, both standing, one fade back in', async () => {
+  const p = await playing(), s = p.sounds();
+  await p.settle();
+  assert.equal(s.ctx.state, 'running'); near(s.out.gain.value, 0.4);
+  p.music.pause(true);
+  await p.wait(0.4);
+  near(s.out.gain.value, p.level); assert.ok(p.level > 0.1 && p.level < 0.3, `fading: ${p.level}`);
+  await p.wait(0.6);
+  assert.equal(s.ctx.state, 'suspended'); assert.equal(p.state, 'suspended'); near(s.out.gain.value, 0);
+  p.stands(false); // (going on: the stage's — an engine 3 scene — as the ⏸'s)
+  await p.wait(0.4);
+  assert.equal(s.ctx.state, 'running'); near(s.out.gain.value, p.level);
+  await p.wait(0.6);
+  near(s.out.gain.value, 0.4); near(p.level, 0.4);
 });
 
 test('an engine 3 scene standing (the stage\'s Moood.onPause) holds the music the same way', async () => {

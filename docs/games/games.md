@@ -129,6 +129,11 @@ in it.
   its music with it till the new one is shown; what it tells meanwhile comes to the game with its own scene's folder
   (`on('line', (data, scene) => …)`, `on('tell', (text, about, scene) => …)`). The page's scene (`bespoke.spec`, its
   state) is the new one once it is shown; a show that fails throws, and the scene before stays.
+- **The game's background goes with the scene**: say it with the show — `bespoke.show(scene, {background: {sea: 0.4}})`
+  — and the page changes it at that scene's cut, as and when its music crossfades (one fade out, one fade in); the
+  scene before keeps its own till then. Within a scene, `bespoke.background(levels)` changes it at once, over the same
+  crossfade. A jump (`then`) declares the background its steps arrived at with the show that ends it. Never set beds
+  before or after a show yourself: what was heard as «in, out, in» at a scene change was exactly that (`README.md`).
 - **A cut through black**: `bespoke.cut(values, {fade: seconds})`. A plain cut whose picture is not ready makes the
   scene's story wait (a moment, under the page's sign if it lasts) while the last picture lives — no black is needed
   to hide anything.

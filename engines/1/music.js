@@ -18,13 +18,16 @@
 // listen(key, signal) → of its stream (GET music: a Response) — a refusal an Error in the page's language, its code
 // with it (scene/host.js); silent(why) — the music could not be heard (why: in the page's language); show(music) — the
 // open scene's (or none); pause(on) — the play paused (the music fades out over HUSH seconds, and its sound stands
-// till the play goes on — fading back in to the volume set); asked(music) — a scene's music as the host is asked for it (the
+// till the play goes on — fading back in to the volume set —, the page's other sounds with it: MooodVolume.hold); FADE,
+// IN — the seconds one music crossfades into another, and one comes in where none sounded (a game's background changes
+// so, at the same moment: play/runtime.js); asked(music) — a scene's music as the host is asked for it (the
 // body of POST music: {prompts, config}), or null — none sounds: what a host that makes the music ahead makes; LIMITS —
 // what a host making it with Lyria takes (beyond it, a request refused: check says it of a scene). A classic script:
 // it sets globalThis.MooodMusic (a page's script; a module's import — check and the host's side read asked() and
 // LIMITS so).
 globalThis.MooodMusic = (() => {
-  const RATE = 48000, LEAD = 0.25, FADE = 4, AHEAD = 8; // seconds of audio queued ahead; of a crossfade; of a recording decoded ahead
+  // seconds of audio queued ahead; of a crossfade; of a music coming in where none sounded; of a recording decoded ahead
+  const RATE = 48000, LEAD = 0.25, FADE = 4, IN = 0.3, AHEAD = 8;
   const TRIES = 3, AGAIN = 5; // a music asked for again while nothing more is heard, and seconds between
   const HUSH = 0.8; // seconds the music fades out as the play is paused (then its sound stands), and back in as it goes on
   const OPUS = { codec: 'opus', sampleRate: RATE, numberOfChannels: 2 };
@@ -181,7 +184,7 @@ globalThis.MooodMusic = (() => {
     }
     if (d) {
       d.gain.gain.setValueAtTime(0, t);
-      d.gain.gain.linearRampToValueAtTime(1, t + (was ? fade : 0.3));
+      d.gain.gain.linearRampToValueAtTime(1, t + (was ? fade : IN));
     }
   }
 
@@ -267,8 +270,9 @@ globalThis.MooodMusic = (() => {
   // the play paused — or an engine 3 scene standing (the play paused, nobody watching it, a layer of the page over it):
   // the music fades out and stands where it is, and goes on when it isn't, fading back in (it is the sound's clock that
   // stands, not what plays; going on, it ends an engine 3 scene's standing too — of one the stage left for another
-  // engine's while the play was paused)
-  function pause(on) { held = !!on; hush(); }
+  // engine's while the play was paused). The page's other sounds — a game's own, the language of mini-games' (their
+  // "sounds" outputs: volume.js) — wait with it in the same fade: this is the one place the page's sound is held
+  function pause(on) { held = !!on; MooodVolume.hold(held, HUSH); hush(); }
   // the music as it is held or not: the output faded to 0 over HUSH seconds, then the sound's clock stood — by the
   // browser's own timer (a play's clock stands with the play: ../1/clock.js); or the clock going on and the output
   // faded back in to the volume set. A change meanwhile takes the fade over from where it is (going on during a fade
@@ -287,5 +291,5 @@ globalThis.MooodMusic = (() => {
     else ctx.resume().catch(() => {});
   }
 
-  return { init, show, pause, asked, LIMITS };
+  return { init, show, pause, asked, LIMITS, FADE, IN };
 })();

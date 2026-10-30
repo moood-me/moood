@@ -19,13 +19,26 @@ language of mini-games — how, and how to choose a mechanic that is the charact
 
 A game's own sounds (Web Audio in `bespoke/`) obey the listener's third slider, "sounds" (beside music and voices;
 `engines/1/volume.js`): the game puts `MooodVolume.output(ctx)` — a gain of its `AudioContext` that follows the
-slider — between its sounds and `ctx.destination`, and never reads the slider itself. Its context is then the page's
-to run, and the sounds wait with the play as the scene's music does: while the play is paused, while its scene stands
-(nobody watching it) and while a scene is being made ready (from `bespoke.show` till it is shown — the play's start,
-between scenes) they fade out and their audio's clock stands — what the game asks meanwhile begins as the play goes on,
-fading back in; it sounds as soon as the browser lets sound begin (at the first touch). So the game never suspends or
-resumes its context, and needs no pause of its own for them. Lines of speech go through `MooodSpeech` and obey
-"voices". The play's pause, ⏭ and menu are the page's, the same for every game: a game draws no ⏸, ⏭ or ☰ of its own
+slider — between its sounds and `ctx.destination`, and never reads the slider itself. Sounds are the game's; music
+is the scene's (its `scene.json` `music`, begun by the page at the scene's cut).
+
+- **The background** — what lasts under a scene (the sea, the wind, a clock) — the game *declares*, never switches:
+  `bespoke.show(scene, {background: {sea: 0.4, clock: 0.15}})` — its beds and their levels from that scene on (every
+  other bed of its silent, `{}` none), or `bespoke.background(levels)` — from now on. The page sounds it where the
+  picture changes: at the show's cut, at the moment the scene's music crossfades and over the same seconds — one fade
+  out, one fade in, together; at the play's start it comes in as the music does. Declared with no show under way (a
+  change within a scene), it changes at once, over the same crossfade. A scene without music still has the declared
+  background. The game's code makes the sounds: `bespoke.onBackground(fn)` — `fn(levels, seconds)` takes each bed it
+  names to its level and every other to silence over `seconds`; the game never times its background itself.
+- **One-off sounds** — hooves, a bell, a waltz played in the world, a mini-game's — the game starts when it likes, as
+  it says its lines.
+- **All of them wait with the music**: the play paused, the phone turned upright, the page hidden, the scene standing
+  (nobody watching it) — the music and every sound fade out together in the music's fade and their audio's clock
+  stands; going on, they fade back in together (`engines/1/music.js` pause holds `MooodVolume` — one place). The
+  context is the page's to run: it sounds as soon as the browser lets sound begin (at the first touch); the game never
+  suspends or resumes it and needs no pause of its own for its sounds.
+
+Lines of speech go through `MooodSpeech` and obey "voices". The play's pause, ⏭ and menu are the page's, the same for every game: a game draws no ⏸, ⏭ or ☰ of its own
 — it stops what else is its own on `bespoke.onPause(fn)`, gives `bespoke.forward(fn)`
 what ⏭ does where the player may forward (the page speeds a line heard up first; `null` — no ⏭), and
 `bespoke.menu(open)` what ☰ opens — the map of the play, for every player (`games.md`). `bespoke/` may hold files other than code — a recording (MP3), a picture — served as

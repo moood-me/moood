@@ -1,5 +1,5 @@
-// The game's own sounds wait with the play as its music does (engines/1/volume.js: output, hold — told by
-// play/runtime.js: the play paused, its scene standing or being made ready): held, each output fades out, then its
+// The game's own sounds wait with the play as its music does (engines/1/volume.js: output, hold — told by the music,
+// music.js pause, in its fade: the play paused, its scene standing): held, each output fades out, then its
 // AudioContext stands; going on, it runs again and fades back in to the "sounds" volume. A page of stand-ins: the
 // contexts, the browser's own timers (__mooodTimers: a play's clock stands while it is paused), the time moved by hand.
 import assert from 'node:assert/strict';
@@ -73,12 +73,12 @@ test('held: the sounds fade out, then their clock stands; going on, they run and
   const p = page(), s = p.sounds();
   await p.settle();
   assert.equal(s.ctx.state, 'running'); near(s.out.gain.value, 0.4);
-  p.volume.hold(true);
+  p.volume.hold(true, 0.8);
   await p.wait(0.4);
   assert.equal(s.ctx.state, 'running'); assert.ok(s.out.gain.value > 0.1 && s.out.gain.value < 0.3, `fading: ${s.out.gain.value}`);
   await p.wait(0.6);
   assert.equal(s.ctx.state, 'suspended'); near(s.out.gain.value, 0);
-  p.volume.hold(false);
+  p.volume.hold(false, 0.8);
   await p.settle();
   assert.equal(s.ctx.state, 'running');
   await p.wait(1);
@@ -88,25 +88,25 @@ test('held: the sounds fade out, then their clock stands; going on, they run and
 test('going on while they fade out: their clock never stands, they fade back in from where they were', async () => {
   const p = page(), s = p.sounds();
   await p.settle();
-  p.volume.hold(true);
+  p.volume.hold(true, 0.8);
   await p.wait(0.4);
   const was = s.out.gain.value;
-  p.volume.hold(false);
+  p.volume.hold(false, 0.8);
   await p.wait(0.05);
   assert.ok(Math.abs(s.out.gain.value - was) < 0.05, `from ${was}: ${s.out.gain.value}`);
   await p.wait(1.5);
   assert.equal(s.ctx.state, 'running'); near(s.out.gain.value, 0.4);
 });
 
-test('sounds begun while held (a scene being made ready): silent, standing — and a touch does not start them', async () => {
+test('sounds begun while held (the play paused): silent, standing — and a touch does not start them', async () => {
   const p = page();
-  p.volume.hold(true);
+  p.volume.hold(true, 0.8);
   const s = p.sounds();
   await p.settle();
   p.touch();
   await p.wait(1);
   assert.equal(s.ctx.state, 'suspended'); near(s.out.gain.value, 0);
-  p.volume.hold(false);
+  p.volume.hold(false, 0.8);
   await p.wait(1);
   assert.equal(s.ctx.state, 'running'); near(s.out.gain.value, 0.4);
 });

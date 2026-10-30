@@ -8,7 +8,7 @@
 //     by the game's translations (bespoke/lang/<lang>/strings.json); bespoke.data(name) → a promise of its data in it
 //     (bespoke/lang/<lang>/<name>.json: what is made of the language itself — a hymn's syllables under its notes)
 //   bespoke.scenes — the world's scenes, as they were when the play began: [{folder, title}]
-//   bespoke.show(scene, {state, fade, captions, then}) — a scene full-screen (by its folder), its state
+//   bespoke.show(scene, {state, fade, captions, then, background}) — a scene full-screen (by its folder), its state
 //     set on top of where it starts; then — where the game has got to in it: what it did there since (in order:
 //     [[key, value] | ['cut', {values}] | ['wait', seconds] | ['heard', text, seconds?], …]), worked out without time before
 //     it is seen — a jump into the middle of what the game does there: the old engine catches up on one clock with the
@@ -21,7 +21,8 @@
 //     before fades out, the new one in once it is drawn. An engine-3 scene shown after another lives on — its film,
 //     its people, its lines, as it would go — while the new one is made, and goes when that one is whole (a game shows
 //     the next scene where its beat is over). Its own timed captions shown unless captions: false (the game tells it in
-//     its own words); its music (music.js) crossfades in from the one before's as the new scene is shown. The page's
+//     its own words); its music (music.js) crossfades in from the one before's as the new scene is shown — and the
+//     game's background with it, if it changes (background: the game's from this scene on — bespoke.background). The page's
 //     scene (bespoke.spec, its state, what its things offer) is the new one from that moment; a show that fails throws,
 //     and the scene before stays the page's and the scene's. → the scene shown
 //   bespoke.fade(level, seconds) — the black over the scene (the stage's: no value of the scene, in none of its
@@ -119,14 +120,22 @@
 //     language's sounds to hear one by one (list, play, tone: a board of them). skip() → whether a mini-game was
 //     going — it is told 'skip' (the language has no ⏭ of its own: the game calls this from the page's ⏭ —
 //     bespoke.forward — when it lets the mini-game be skipped; a game without forward, from its own ⏭)
+//   bespoke.background(levels) — the game's background from now on: its beds of sound, {bed: level (0…1)} (every other
+//     bed of its silent; {} — none), as data — the game's code makes them (onBackground). Sounded where the picture
+//     changes: at the cut of a show under way, as its music crossfades (show's `background` says it with the show);
+//     with none under way, at once. Each change crossfades over the music's own crossfade (music.js FADE; IN where
+//     none sounded — the play's start), whether the scene has music or not; the game never times it itself
+//   bespoke.onBackground(fn) — how the game sounds its background: fn(levels, seconds) at that moment — each bed it
+//     names to its level, every other to silence, over `seconds`
 //   bespoke.pause(on) — the play paused (true) or going on: its time stands (the game's timers, the scene's painting
-//     and film: clock.js), the voice heard, the music and the game's own sounds wait, the page's animations stand (an
-//     engine 3 scene stands for other reasons too — nobody watching it, a layer of the site over it —, its voices, music
-//     and sounds with it: they go on when none of the reasons holds); bespoke.paused — whether it is. The pause is the page's: its ⏸, the same for
-//     every game — a game draws none of its own
-//   bespoke.onPause(fn) — fn(paused) as the play is paused or goes on: what the game stops itself — not its own sounds:
-//     through MooodVolume.output they wait with the play as its music does (paused, its scene standing or being made
-//     ready), fading out and back in
+//     and film: clock.js), the voice heard waits, the music and all the page's sounds — the game's own, the mini-games'
+//     — fade out together and stand, the page's animations stand (an engine 3 scene stands for other reasons too —
+//     nobody watching it, the page hidden, a layer of the site over it —, its voices, music and sounds with it: they go
+//     on, fading back in, when none of the reasons holds; music.js pause, the one place); bespoke.paused — whether it
+//     is. The pause is the page's: its ⏸, the same for every game — a game draws none of its own
+//   bespoke.onPause(fn) — fn(paused) as the play is paused or goes on: what the game stops itself — not its sounds:
+//     through MooodVolume.output they wait with the music — its background and the one-off sounds it starts when it
+//     likes, as lines (a bell, hooves, a waltz in the world)
 //   bespoke.menu(open) — what the page's ☰ opens: the game's own menu (its chapters, where the play stands), drawn as the
 //     game likes; open() each time ☰ is pressed. None (null, or never given) — no ☰. A game draws no ☰ of its own
 //   bespoke.forward(fn) — the page's ⏭ (and Space, but in a field typed into), shown while fn is given: pressed, a line
@@ -137,6 +146,7 @@
 //     where the player has been, a mini-game it lets go); a game that never gives it has none of the page's
 import { createMinigames } from './minigame/index.js';
 import { createTricks } from './minigame/tricks.js';
+import { createBackground } from './background.js';
 import { words } from '../i18n/words.js';
 import { heard } from './voices.js';
 
@@ -213,14 +223,18 @@ export async function start({ game, play, lang, scenes, people, load, saved, kee
   let quiet = 0;  // (the show jumping now: the game told nothing of its scene meanwhile)
   let showing = 0;  // (the show asked last: one asked before it, still on its way, shows nothing)
   const FADE = 1.4; // (s: a scene's fade through black, unless the game says how long)
-  // (the game's own sounds wait while a scene is made ready — from asked till shown —, as its music begins once it is:
-  // sounds())
-  async function show(ref, how) {
-    opening++; sounds();
-    try { return await open(ref, how); } finally { opening--; sounds(); }
+  // The game's background (its beds of sound: background.js) sounds where the picture changes — at a show's cut, as its
+  // music crossfades (take), over the music's own crossfade (music.js FADE; IN where none sounded: the play's start),
+  // whether the scene has music or not; declared with no show under way, at once. A show that ends without its cut
+  // (failed) sounds it then
+  const background = createBackground({ fades: was => (was ? MooodMusic.FADE : MooodMusic.IN), trouble: e => trouble(String(e.message || e)) });
+  async function show(ref, { background: levels, ...how } = {}) {
+    const mine = ++showing;
+    background.awaits(mine, levels);
+    try { return await open(ref, mine, how); } finally { background.cut(mine); }
   }
-  async function open(ref, { state = {}, fade = false, captions = true, then = null } = {}) {
-    const s = find(ref), mine = ++showing;
+  async function open(ref, mine, { state = {}, fade = false, captions = true, then = null }) {
+    const s = find(ref);
     if (!s) throw new Error(`the world has no scene "${ref}"`);
     const v = await versionOf(s);
     const over = fade === true ? FADE : Math.max(0, Number(fade) || 0), three = v.spec?.engine === 3;
@@ -242,6 +256,8 @@ export async function start({ game, play, lang, scenes, people, load, saved, kee
       noted?.say('play.scene', { scene: s.folder, before: shownAt ? Math.round(performance.now() - shownAt) : null, jump: !!then?.length });
       shownAt = performance.now();
       MooodMusic.show(v.spec?.music);
+      // (the game's background with it, if this show's cut is the one it waits for)
+      background.cut(mine);
     };
     // (engine 3 jumps as it opens; engine 1 catches up)
     const jump = !!then?.length;
@@ -449,11 +465,8 @@ export async function start({ game, play, lang, scenes, people, load, saved, kee
       window.__mooodTime.pause(paused);
       // (an engine 3 scene: its voices and its music stand and go on with the scene itself — the stage's onPause, which
       // the play's pause is one reason of)
+      // (the music holds the page's other sounds with it — the game's own, the mini-games': music.js pause)
       if (stage.state.engine !== 3) { MooodSpeech.pause(paused); MooodMusic.pause(paused); }
-      // (going on over another engine's scene: a standing of the engine 3 scene the stage left meanwhile is over, as the
-      // music's is)
-      if (!paused && stage.state.engine !== 3) standing = false;
-      sounds();
       minigames.pause(paused);
       if (paused) stood = document.getAnimations().filter(a => a.playState === 'running').map(a => (a.pause(), a));
       else { for (const a of stood) a.play(); stood = []; }
@@ -461,6 +474,8 @@ export async function start({ game, play, lang, scenes, people, load, saved, kee
     },
     get paused() { return paused; },
     onPause: fn => { pausing.push(fn); },
+    background: levels => background.declare(levels),
+    onBackground: fn => background.on(fn),
     menu: open => menu(typeof open === 'function' ? open : null),
     forward(fn) {
       ahead = typeof fn === 'function' ? fn : null;
@@ -468,13 +483,6 @@ export async function start({ game, play, lang, scenes, people, load, saved, kee
     },
   };
   let paused = false, stood = []; // (the page's animations the pause stopped)
-  // The game's own sounds (MooodVolume.output: the "sounds" slider) wait as the scene's music does — held while the play
-  // is paused, while its engine 3 scene stands (the stage's onPause: nobody watching it, a layer of the site over it, a
-  // picture held under the sign) and while a scene is being made ready (show): faded out, their audio's clock standing;
-  // going on, faded back in (volume.js hold). The game stops nothing of them itself
-  let standing = false, opening = 0;
-  const sounds = () => MooodVolume.hold(paused || standing || opening > 0);
-  stage.onPause(on => { standing = !!on; sounds(); });
   const pausing = []; // (the game's: told as the play is paused or goes on)
 
   // the page's ⏭ (bespoke.forward): the line heard hurried, else the game's fn; Space — the same, while it is shown (a
