@@ -175,7 +175,7 @@ export async function createPeople(persons, { cast, anchor, ground, inside, poin
   const dress = (H, E) => {
     const was = H.entry, M = E.W.G.model;
     H.entry = E; H.dressed = E.key;
-    H.player.rig = soma; H.player.fit = M.fit; H.player.size = M.height / 1.76;
+    H.player.rig = soma; H.player.fit = M.fit; H.player.size = M.height / 1.76; H.player.hand = M.hand;
     H.own = M.look.parts ? [...M.look.parts] : [];
     H.carrying = true; H.painted = -1; H.inked = false; H.live = false; H.unposed = true; H.version++;
     if (was && was !== E && !was.holds) dropped(H, was);

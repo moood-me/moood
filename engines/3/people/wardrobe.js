@@ -52,7 +52,8 @@ export const V = Object.freeze({ add, sub, mul, dot, cross, mix, unit, level, me
 
 // a style: its shapes and proportions — the head's size and shape (an egg's three half-widths; headSquare > 2:
 // squarer), the neck's length, the legs', the limbs' thickness; the trunk's sections (hips to shoulders: their width
-// and depth), how square; the arms' and the legs' profiles (ARMS, LEGS: hands and feet), fingers of their own; how
+// and depth), how square; the arms' and the legs' profiles (ARMS, LEGS: hands and feet), fingers of their own (with
+// palm: on a palm of its own, close together, tapering, at ease — hand.js; else each finger a wire from the wrist); how
 // round (a tube's sides; facets: flat faces); garments' folds (how many round, how deep at the hem) and a ragged
 // hem (how much of the length its tatters hang); rigid: each bone of a limb a straight bar of its own (a bent knee
 // the corner of two), the hands balls, the feet shoes; straight: garments' sides straight lines from their top to
@@ -64,7 +65,7 @@ export const STYLES = {
     trunk: { w: [0.78, 0.84, 0.66, 0.8, 0.9], d: [0.8, 0.82, 0.7, 0.76, 0.68] }, arms: 'palm', fingers: true, feet: 'point', paint: 'rim', line: 1.4,
     folds: { n: 7, depth: 0.09 }, ragged: 0.07, ground: 'fog', drape: true },
   soft: { name: 'soft', head: 1.38, egg: [1.08, 1, 1.02], neck: 0.35, legs: 0.84, limb: 1.05, sides: 22, square: 2,
-    trunk: { w: [0.98, 1.04, 0.98, 1.02, 0.92], d: [1.08, 1.1, 1.1, 1.08, 0.98] }, arms: 'mitten', feet: 'bean', paint: 'toned', line: 2.2, tinted: true,
+    trunk: { w: [0.98, 1.04, 0.98, 1.02, 0.92], d: [1.08, 1.1, 1.1, 1.08, 0.98] }, arms: 'mitten', palm: true, feet: 'bean', paint: 'toned', line: 2.2, tinted: true,
     folds: { n: 5, depth: 0.04 }, face: 'simple', ground: 'paper', drape: true },
   graphic: { name: 'graphic', head: 1.06, egg: [0.9, 1.08, 0.94], headSquare: 2.6, neck: 0.8, legs: 1.06, limb: 0.74, sides: 16, square: 2.8,
     trunk: { w: [0.82, 0.88, 0.7, 1.06, 1.24], d: [0.78, 0.8, 0.7, 0.76, 0.62] }, arms: 'leaf', feet: 'point', paint: 'flat', line: 1.6, ground: 'day', drape: true },
