@@ -1,6 +1,6 @@
 {
   "name": "@moood/check",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A moood repository checked: its worlds, games and articles (any number, at any depth), what they say of themselves and of each other, and every text a person reads or hears written as tr()/say()/think() with a literal and translated into each language they say they are in; check --write lays out the languages' files.",
   "license": "MIT",
   "repository": {
