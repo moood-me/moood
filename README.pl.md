@@ -10,6 +10,8 @@ To repozytorium jest otwartą częścią moood: silniki, które uruchamiają sce
 `check` do tekstów i tłumaczeń, lokalny odtwarzacz — oraz dokumentacja dla tych, którzy tworzą światy i gry. Pisz własne;
 chętnie zobaczymy je na moood.
 
+![Jak to wszystko się łączy](docs/images/how-it-fits.pl.svg)
+
 ## Tworzenie światów i gier
 
 Twoje światy i gry żyją w twoim własnym repozytorium git — w dowolnej liczbie i w dowolnych folderach: folder z

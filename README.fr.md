@@ -11,6 +11,8 @@ Ce dépôt est la partie ouverte de moood : les moteurs qui font tourner les sc�
 langage des mini-jeux, `check` pour les textes et les traductions, un lecteur local — et la documentation de ceux qui
 créent des mondes et des jeux. Écrivez les vôtres ; nous serons heureux de les voir sur moood.
 
+![Comment tout s’articule](docs/images/how-it-fits.fr.svg)
+
 ## Créer des mondes et des jeux
 
 Vos mondes et vos jeux vivent dans votre propre dépôt git — autant que vous voulez, dans les dossiers que vous voulez :

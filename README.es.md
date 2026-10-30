@@ -11,6 +11,8 @@ Este repositorio es la parte abierta de moood: los motores que ejecutan las esce
 el lenguaje de los minijuegos, `check` para textos y traducciones, un reproductor local — y la documentación para
 quienes crean mundos y juegos. Escribe los tuyos; nos alegrará verlos en moood.
 
+![Cómo encaja todo](docs/images/how-it-fits.es.svg)
+
 ## Crear mundos y juegos
 
 Tus mundos y juegos viven en tu propio repositorio git — los que quieras, en las carpetas que quieras: una carpeta con

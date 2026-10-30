@@ -11,6 +11,8 @@ Dieses Repository ist der offene Teil von moood: die Engines, die Szenen abspiel
 ausführt, die Sprache der Minispiele, `check` für Texte und Übersetzungen, ein lokaler Player — und die Dokumentation
 für alle, die Welten und Spiele machen. Schreibe deine eigenen; wir würden uns freuen, sie auf moood zu sehen.
 
+![Wie alles zusammenhängt](docs/images/how-it-fits.de.svg)
+
 ## Welten und Spiele machen
 
 Deine Welten und Spiele liegen in deinem eigenen Git-Repository — beliebig viele, in beliebigen Ordnern: Ein Ordner mit

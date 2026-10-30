@@ -1,0 +1,109 @@
+<svg lang="ko" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1220 720" width="1220" height="720" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a93a3"/>
+    </marker>
+  </defs>
+  <rect width="1220" height="720" rx="16" fill="#f7f7f5"/>
+
+  <!-- works -->
+  <rect x="40" y="40" width="300" height="120" rx="12" fill="#ffffff" stroke="#c9ced6"/>
+  <text x="190" y="76" text-anchor="middle" font-size="21" font-weight="600" fill="#1d2433">works-001…008</text>
+  <text x="190" y="100" text-anchor="middle" font-size="14" fill="#5d6675">공개 · 예시</text>
+  <text x="190" y="128" text-anchor="middle" font-size="15" fill="#1d2433">우리의 월드, 게임, 시나리오</text>
+  <text x="190" y="148" text-anchor="middle" font-size="15" fill="#1d2433">그리고 만든 과정</text>
+  <line x1="190" y1="160" x2="190" y2="226" stroke="#8a93a3" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+  <text x="200" y="198" font-size="13" fill="#5d6675">도움이 되는 것을 가져감</text>
+
+  <!-- you and your agent -->
+  <rect x="40" y="230" width="300" height="130" rx="12" fill="#ffffff" stroke="#c9ced6"/>
+  <text x="190" y="268" text-anchor="middle" font-size="21" font-weight="600" fill="#1d2433">당신과 AI 에이전트</text>
+  <text x="190" y="296" text-anchor="middle" font-size="15" fill="#5d6675">Claude Code, ChatGPT, Gemini…</text>
+  <text x="190" y="322" text-anchor="middle" font-size="15" fill="#5d6675">장면과 게임을 작성</text>
+  <line x1="190" y1="360" x2="190" y2="436" stroke="#8a93a3" stroke-width="2" marker-end="url(#a)"/>
+  <text x="200" y="404" font-size="13" fill="#5d6675">작성</text>
+
+  <!-- your repository -->
+  <rect x="40" y="440" width="300" height="160" rx="12" fill="#ffffff" stroke="#c9ced6"/>
+  <text x="190" y="478" text-anchor="middle" font-size="21" font-weight="600" fill="#1d2433">당신의 저장소</text>
+  <text x="190" y="504" text-anchor="middle" font-size="15" fill="#5d6675">git · 당신의 GitHub · 공동 작가</text>
+  <text x="190" y="542" text-anchor="middle" font-size="17" fill="#1d2433">월드 · 게임 · 글</text>
+  <text x="190" y="568" text-anchor="middle" font-size="14" fill="#5d6675">장면, 그 코드, 시나리오,</text>
+  <text x="190" y="588" text-anchor="middle" font-size="14" fill="#5d6675">대사, 번역</text>
+
+  <!-- moood, open -->
+  <rect x="430" y="40" width="330" height="330" rx="12" fill="#eef3fb" stroke="#9fb6db"/>
+  <text x="595" y="80" text-anchor="middle" font-size="24" font-weight="700" fill="#1d2433">moood</text>
+  <text x="595" y="105" text-anchor="middle" font-size="15" fill="#4b6a9b">공개 · MIT</text>
+  <g font-size="16" fill="#1d2433">
+    <text x="458" y="144">• 장면 엔진</text>
+    <text x="458" y="172">• 장면 페이지</text>
+    <text x="458" y="200">• 게임 페이지와 런타임</text>
+    <text x="458" y="228">• 미니게임 언어</text>
+    <text x="458" y="256">• 검사 도구 check</text>
+    <text x="458" y="284">• 내 컴퓨터의 플레이어</text>
+    <text x="458" y="312">• 사람과 에이전트를 위한 문서</text>
+  </g>
+  <text x="595" y="350" text-anchor="middle" font-size="14" fill="#4b6a9b">github.com/moood-me/moood</text>
+  <line x1="344" y1="280" x2="426" y2="230" stroke="#8a93a3" stroke-width="2" marker-end="url(#a)"/>
+  <text x="378" y="236" text-anchor="middle" font-size="13" fill="#5d6675">사용</text>
+
+  <!-- where it is played -->
+  <rect x="860" y="40" width="320" height="105" rx="12" fill="#ffffff" stroke="#c9ced6"/>
+  <text x="1020" y="76" text-anchor="middle" font-size="19" font-weight="600" fill="#1d2433">내 컴퓨터에서</text>
+  <text x="1020" y="102" text-anchor="middle" font-size="14" fill="#5d6675">폴더 위에서 도는 Docker 플레이어:</text>
+  <text x="1020" y="124" text-anchor="middle" font-size="14" fill="#5d6675">저장하면 바로 보임</text>
+
+  <rect x="860" y="165" width="320" height="105" rx="12" fill="#ffffff" stroke="#c9ced6"/>
+  <text x="1020" y="201" text-anchor="middle" font-size="19" font-weight="600" fill="#1d2433">당신의 사이트나 앱</text>
+  <text x="1020" y="227" text-anchor="middle" font-size="14" fill="#5d6675">moood 페이지는 요청에 응답하는</text>
+  <text x="1020" y="249" text-anchor="middle" font-size="14" fill="#5d6675">곳이라면 어디서든 보여줄 수 있음</text>
+
+  <line x1="764" y1="92" x2="856" y2="92" stroke="#8a93a3" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="764" y1="217" x2="856" y2="217" stroke="#8a93a3" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- the studio with its services -->
+  <rect x="430" y="420" width="750" height="260" rx="14" fill="#fbf6ec" stroke="#e1cfa6"/>
+  <text x="455" y="456" fill="#1d2433"><tspan font-size="20" font-weight="600">moood 스튜디오</tspan><tspan dx="12" font-size="13" fill="#8a6d2f">초대제</tspan></text>
+  
+  <text x="455" y="482" font-size="14" fill="#5d6675">당신의 저장소와 브랜치, 어느 커밋에서나 게임, 검사, 게시</text>
+  <text x="1155" y="456" text-anchor="end" font-size="15" font-weight="600" fill="#8a6d2f">→ moood.me</text>
+  <g text-anchor="middle" fill="#1d2433">
+    <rect x="455" y="510" width="110" height="110" rx="10" fill="#ffffff" stroke="#e1cfa6"/>
+    <text x="510" y="552" font-weight="600" font-size="16">렌더</text>
+    <text x="510" y="578" font-size="12" fill="#5d6675">그림,</text>
+    <text x="510" y="596" font-size="12" fill="#5d6675">프레임, 영상</text>
+
+    <rect x="577" y="510" width="110" height="110" rx="10" fill="#ffffff" stroke="#e1cfa6"/>
+    <text x="632" y="552" font-weight="600" font-size="16">측정</text>
+    <text x="632" y="578" font-size="12" fill="#5d6675">휴대폰에서</text>
+    <text x="632" y="596" font-size="12" fill="#5d6675">한 프레임 비용</text>
+
+    <rect x="699" y="510" width="110" height="110" rx="10" fill="#ffffff" stroke="#e1cfa6"/>
+    <text x="754" y="552" font-weight="600" font-size="16">음성</text>
+    <text x="754" y="578" font-size="12" fill="#5d6675">대사의</text>
+    <text x="754" y="596" font-size="12" fill="#5d6675">목소리</text>
+
+    <rect x="821" y="510" width="110" height="110" rx="10" fill="#ffffff" stroke="#e1cfa6"/>
+    <text x="876" y="552" font-weight="600" font-size="16">음악</text>
+    <text x="876" y="578" font-size="12" fill="#5d6675">장면마다</text>
+    <text x="876" y="596" font-size="12" fill="#5d6675">고유한 음악</text>
+
+    <rect x="943" y="510" width="110" height="110" rx="10" fill="#ffffff" stroke="#e1cfa6"/>
+    <text x="998" y="552" font-weight="600" font-size="16">모션</text>
+    <text x="998" y="578" font-size="12" fill="#5d6675">사람의 동작을</text>
+    <text x="998" y="596" font-size="12" fill="#5d6675">말로</text>
+
+    <rect x="1065" y="510" width="96" height="110" rx="10" fill="#ffffff" stroke="#e1cfa6"/>
+    <text x="1113" y="552" font-weight="600" font-size="15">아티스트</text>
+    <text x="1113" y="578" font-size="12" fill="#5d6675">장면을</text>
+    <text x="1113" y="596" font-size="12" fill="#5d6675">고침</text>
+  </g>
+  <text x="455" y="656" font-size="13" fill="#8a6d2f">스튜디오의 엔진과 게임 페이지도 moood의 것 그대로</text>
+
+  <line x1="344" y1="330" x2="426" y2="470" stroke="#8a93a3" stroke-width="2" marker-end="url(#a)"/>
+  <text x="388" y="436" text-anchor="end" font-size="13" fill="#5d6675">MCP · API</text>
+  <line x1="344" y1="560" x2="426" y2="560" stroke="#8a93a3" stroke-width="2" marker-end="url(#a)"/>
+  <text x="385" y="550" text-anchor="middle" font-size="13" fill="#5d6675">git</text>
+  <line x1="595" y1="374" x2="595" y2="416" stroke="#8a93a3" stroke-width="2" marker-end="url(#a)"/>
+</svg>

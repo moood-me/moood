@@ -1,0 +1,109 @@
+<svg lang="pl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1220 720" width="1220" height="720" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a93a3"/>
+    </marker>
+  </defs>
+  <rect width="1220" height="720" rx="16" fill="#f7f7f5"/>
+
+  <!-- works -->
+  <rect x="40" y="40" width="300" height="120" rx="12" fill="#ffffff" stroke="#c9ced6"/>
+  <text x="190" y="76" text-anchor="middle" font-size="21" font-weight="600" fill="#1d2433">works-001…008</text>
+  <text x="190" y="100" text-anchor="middle" font-size="14" fill="#5d6675">otwarte · przykłady</text>
+  <text x="190" y="128" text-anchor="middle" font-size="15" fill="#1d2433">nasze światy, gry, scenariusze</text>
+  <text x="190" y="148" text-anchor="middle" font-size="15" fill="#1d2433">i jak powstawały</text>
+  <line x1="190" y1="160" x2="190" y2="226" stroke="#8a93a3" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#a)"/>
+  <text x="200" y="198" font-size="13" fill="#5d6675">bierze, co się przyda</text>
+
+  <!-- you and your agent -->
+  <rect x="40" y="230" width="300" height="130" rx="12" fill="#ffffff" stroke="#c9ced6"/>
+  <text x="190" y="268" text-anchor="middle" font-size="21" font-weight="600" fill="#1d2433">Ty i twój agent AI</text>
+  <text x="190" y="296" text-anchor="middle" font-size="15" fill="#5d6675">Claude Code, ChatGPT, Gemini…</text>
+  <text x="190" y="322" text-anchor="middle" font-size="15" fill="#5d6675">piszecie sceny i grę</text>
+  <line x1="190" y1="360" x2="190" y2="436" stroke="#8a93a3" stroke-width="2" marker-end="url(#a)"/>
+  <text x="200" y="404" font-size="13" fill="#5d6675">pisze</text>
+
+  <!-- your repository -->
+  <rect x="40" y="440" width="300" height="160" rx="12" fill="#ffffff" stroke="#c9ced6"/>
+  <text x="190" y="478" text-anchor="middle" font-size="21" font-weight="600" fill="#1d2433">Twoje repozytorium</text>
+  <text x="190" y="504" text-anchor="middle" font-size="15" fill="#5d6675">git · twój GitHub · współautorzy</text>
+  <text x="190" y="542" text-anchor="middle" font-size="17" fill="#1d2433">światy · gry · artykuły</text>
+  <text x="190" y="568" text-anchor="middle" font-size="14" fill="#5d6675">sceny, ich kod, scenariusz,</text>
+  <text x="190" y="588" text-anchor="middle" font-size="14" fill="#5d6675">kwestie, tłumaczenia</text>
+
+  <!-- moood, open -->
+  <rect x="430" y="40" width="330" height="330" rx="12" fill="#eef3fb" stroke="#9fb6db"/>
+  <text x="595" y="80" text-anchor="middle" font-size="24" font-weight="700" fill="#1d2433">moood</text>
+  <text x="595" y="105" text-anchor="middle" font-size="15" fill="#4b6a9b">otwarte · MIT</text>
+  <g font-size="16" fill="#1d2433">
+    <text x="458" y="144">• silniki scen</text>
+    <text x="458" y="172">• strona sceny</text>
+    <text x="458" y="200">• strona gry i jej runtime</text>
+    <text x="458" y="228">• język minigier</text>
+    <text x="458" y="256">• sprawdzanie check</text>
+    <text x="458" y="284">• odtwarzacz na twoim komputerze</text>
+    <text x="458" y="312">• dokumentacja dla ludzi i agentów</text>
+  </g>
+  <text x="595" y="350" text-anchor="middle" font-size="14" fill="#4b6a9b">github.com/moood-me/moood</text>
+  <line x1="344" y1="280" x2="426" y2="230" stroke="#8a93a3" stroke-width="2" marker-end="url(#a)"/>
+  <text x="378" y="236" text-anchor="middle" font-size="13" fill="#5d6675">używa</text>
+
+  <!-- where it is played -->
+  <rect x="860" y="40" width="320" height="105" rx="12" fill="#ffffff" stroke="#c9ced6"/>
+  <text x="1020" y="76" text-anchor="middle" font-size="19" font-weight="600" fill="#1d2433">U siebie</text>
+  <text x="1020" y="102" text-anchor="middle" font-size="14" fill="#5d6675">odtwarzacz w Dockerze nad twoim folderem:</text>
+  <text x="1020" y="124" text-anchor="middle" font-size="14" fill="#5d6675">zapisujesz — i już widać</text>
+
+  <rect x="860" y="165" width="320" height="105" rx="12" fill="#ffffff" stroke="#c9ced6"/>
+  <text x="1020" y="201" text-anchor="middle" font-size="19" font-weight="600" fill="#1d2433">Twoja strona lub aplikacja</text>
+  <text x="1020" y="227" text-anchor="middle" font-size="14" fill="#5d6675">strony moood pokaże każdy,</text>
+  <text x="1020" y="249" text-anchor="middle" font-size="14" fill="#5d6675">kto odpowiada na ich zapytania</text>
+
+  <line x1="764" y1="92" x2="856" y2="92" stroke="#8a93a3" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="764" y1="217" x2="856" y2="217" stroke="#8a93a3" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- the studio with its services -->
+  <rect x="430" y="420" width="750" height="260" rx="14" fill="#fbf6ec" stroke="#e1cfa6"/>
+  <text x="455" y="456" fill="#1d2433"><tspan font-size="20" font-weight="600">Studio moood</tspan><tspan dx="12" font-size="13" fill="#8a6d2f">na zaproszenie</tspan></text>
+  
+  <text x="455" y="482" font-size="14" fill="#5d6675">twoje repozytoria i gałęzie, gra na dowolnym commicie, sprawdzenia, publikacja</text>
+  <text x="1155" y="456" text-anchor="end" font-size="15" font-weight="600" fill="#8a6d2f">→ moood.me</text>
+  <g text-anchor="middle" fill="#1d2433">
+    <rect x="455" y="510" width="110" height="110" rx="10" fill="#ffffff" stroke="#e1cfa6"/>
+    <text x="510" y="552" font-weight="600" font-size="16">Render</text>
+    <text x="510" y="578" font-size="12" fill="#5d6675">obrazy,</text>
+    <text x="510" y="596" font-size="12" fill="#5d6675">klatki, wideo</text>
+
+    <rect x="577" y="510" width="110" height="110" rx="10" fill="#ffffff" stroke="#e1cfa6"/>
+    <text x="632" y="552" font-weight="600" font-size="16">Pomiary</text>
+    <text x="632" y="578" font-size="12" fill="#5d6675">koszt klatki</text>
+    <text x="632" y="596" font-size="12" fill="#5d6675">na telefonie</text>
+
+    <rect x="699" y="510" width="110" height="110" rx="10" fill="#ffffff" stroke="#e1cfa6"/>
+    <text x="754" y="552" font-weight="600" font-size="16">Mowa</text>
+    <text x="754" y="578" font-size="12" fill="#5d6675">głosy</text>
+    <text x="754" y="596" font-size="12" fill="#5d6675">kwestii</text>
+
+    <rect x="821" y="510" width="110" height="110" rx="10" fill="#ffffff" stroke="#e1cfa6"/>
+    <text x="876" y="552" font-weight="600" font-size="16">Muzyka</text>
+    <text x="876" y="578" font-size="12" fill="#5d6675">każda scena</text>
+    <text x="876" y="596" font-size="12" fill="#5d6675">ma własną</text>
+
+    <rect x="943" y="510" width="110" height="110" rx="10" fill="#ffffff" stroke="#e1cfa6"/>
+    <text x="998" y="552" font-weight="600" font-size="16">Ruchy</text>
+    <text x="998" y="578" font-size="12" fill="#5d6675">ludzi —</text>
+    <text x="998" y="596" font-size="12" fill="#5d6675">ze słów</text>
+
+    <rect x="1065" y="510" width="96" height="110" rx="10" fill="#ffffff" stroke="#e1cfa6"/>
+    <text x="1113" y="552" font-weight="600" font-size="15">Artysta</text>
+    <text x="1113" y="578" font-size="12" fill="#5d6675">poprawia</text>
+    <text x="1113" y="596" font-size="12" fill="#5d6675">scenę</text>
+  </g>
+  <text x="455" y="656" font-size="13" fill="#8a6d2f">silniki i strony gry w studiu są te same, z moood</text>
+
+  <line x1="344" y1="330" x2="426" y2="470" stroke="#8a93a3" stroke-width="2" marker-end="url(#a)"/>
+  <text x="388" y="436" text-anchor="end" font-size="13" fill="#5d6675">MCP · API</text>
+  <line x1="344" y1="560" x2="426" y2="560" stroke="#8a93a3" stroke-width="2" marker-end="url(#a)"/>
+  <text x="385" y="550" text-anchor="middle" font-size="13" fill="#5d6675">git</text>
+  <line x1="595" y1="374" x2="595" y2="416" stroke="#8a93a3" stroke-width="2" marker-end="url(#a)"/>
+</svg>

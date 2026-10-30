@@ -10,6 +10,8 @@ This repository is the open part of moood: the engines that run scenes, the runt
 of mini-games, `check` for texts and translations, a local player — and the docs for those who make worlds and
 games. Write your own; we'd be glad to see them on moood.
 
+![How moood fits together](docs/images/how-it-fits.en.svg)
+
 ## Making worlds and games
 
 Your worlds and games live in your own git repository — any number of them, in any folders: a folder with

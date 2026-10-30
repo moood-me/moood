@@ -10,6 +10,8 @@ Este repositório é a parte aberta do moood: os motores que executam as cenas, 
 dos minijogos, o `check` para textos e traduções, um player local — e a documentação para quem cria mundos e jogos.
 Escreva os seus; vamos adorar vê-los no moood.
 
+![Como tudo se encaixa](docs/images/how-it-fits.pt.svg)
+
 ## Criando mundos e jogos
 
 Os seus mundos e jogos ficam no seu próprio repositório git — quantos você quiser, nas pastas que quiser: uma pasta com
