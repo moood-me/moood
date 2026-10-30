@@ -75,6 +75,7 @@ function page() {
     },
     get state() { return ctx()?.state; },
     get level() { return ctx().gains[0].gain.value; }, // (the music's output: its first gain)
+    get game() { return ctx().gains[1].gain.value; }, // (the game's level of it: bespoke.music — its second gain)
     // a game's sounds: its own context, through the "sounds" output
     sounds() { const c = new AudioContext(), out = g.MooodVolume.output(c); return { ctx: c, out }; },
   };
@@ -150,4 +151,56 @@ test('paused as the music begins: it begins standing, silent, and sounds as the 
   p.stands(false);
   await p.wait(1);
   assert.equal(p.state, 'running'); near(p.level, 0.4);
+});
+
+// a game hushing the scene's music (bespoke.music → MooodMusic.level): its own gain, under the volume and the pause
+test("the game's level: 1 at first; moved to 0 over the seconds said, the volume kept as it is", async () => {
+  const p = await playing();
+  near(p.game, 1);
+  p.music.level(0, 1);
+  await p.wait(0.5);
+  near(p.game, 0.5); near(p.level, 0.4);
+  await p.wait(0.6);
+  near(p.game, 0); near(p.level, 0.4);
+  p.music.level(1, 0); // (0 seconds: at once)
+  await p.wait(0.01);
+  near(p.game, 1);
+});
+
+test("without seconds, over the music's crossfade; out of range, kept within 0…1", async () => {
+  const p = await playing();
+  p.music.level(0);
+  await p.wait(p.music.FADE / 2);
+  near(p.game, 0.5);
+  await p.wait(p.music.FADE / 2 + 0.1);
+  near(p.game, 0);
+  p.music.level(7, 0);
+  await p.wait(0.01);
+  near(p.game, 1);
+});
+
+test('said before the music has begun: it begins at that level', async () => {
+  const p = page();
+  p.music.level(0.25, 2);
+  p.music.init({ track: async () => 'k', listen: () => new Promise(() => {}), silent: () => {} });
+  await p.settle();
+  await p.wait(0.1);
+  near(p.game, 0.25);
+});
+
+test("a pause meanwhile holds the move where it is; going on, it goes on — and the pause's fade is its own", async () => {
+  const p = await playing();
+  p.music.level(0, 4);
+  await p.wait(1);
+  p.music.pause(true);
+  await p.wait(1); // (the music's fade out, then its sound stands)
+  assert.equal(p.state, 'suspended'); near(p.level, 0);
+  const held = p.game;
+  assert.ok(held > 0.4 && held < 0.6, `moved on during the fade out only: ${held}`);
+  await p.wait(2);
+  near(p.game, held);
+  p.music.pause(false);
+  await p.settle();
+  await p.wait(2.5);
+  near(p.game, 0); near(p.level, 0.4);
 });

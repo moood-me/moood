@@ -25,6 +25,11 @@
 //     game's background with it, if it changes (background: the game's from this scene on — bespoke.background). The page's
 //     scene (bespoke.spec, its state, what its things offer) is the new one from that moment; a show that fails throws,
 //     and the scene before stays the page's and the scene's. → the scene shown
+//   bespoke.music(level, seconds) — how loud the game wants the scene's music from now on: 0 silent … 1 as the scene
+//     has it (the default), moved there over `seconds` (the music's crossfade, music.js FADE, by default; 0 — at once);
+//     it holds for the scenes after too, their music crossfading in at that level, till the game says another (a house
+//     falling silent at midnight: music(0, 1), with its background {}; music(1) — back). Under the listener's volume
+//     and the play's pause, which go on as they are (music.js level)
 //   bespoke.fade(level, seconds) — the black over the scene (the stage's: no value of the scene, in none of its
 //     pictures), 0 clear … 1 black, moved there over seconds: a dim under a letter, black at the end; → a promise, done
 //     when it is there. Scenes never fade themselves (an engine-3 scene has no `fade` key)
@@ -430,6 +435,7 @@ export async function start({ game, play, lang, scenes, people, load, saved, kee
       await stage.fade(0, over);
     },
     fade: (level, seconds) => stage.fade(level, seconds),
+    music: (level, seconds) => MooodMusic.level(level, seconds),
     prepare: (values, seconds) => MooodState.prepare(values, seconds),
     unprepare: id => MooodState.unprepare(id),
     on(ev, a, b) {

@@ -134,6 +134,12 @@ in it.
   scene before keeps its own till then. Within a scene, `bespoke.background(levels)` changes it at once, over the same
   crossfade. A jump (`then`) declares the background its steps arrived at with the show that ends it. Never set beds
   before or after a show yourself: what was heard as «in, out, in» at a scene change was exactly that (`README.md`).
+- **The scene's music, hushed by the game**: `bespoke.music(level, seconds)` — how loud the scene's music is from now
+  on, 0 silent … 1 as the scene has it (the default), moved there over `seconds` (the music's crossfade, 4 s, by
+  default; 0 — at once). It holds for the next scenes too — their music crossfades in at that level — till the game
+  says another: a house falling silent at midnight is `bespoke.background({})` with `bespoke.music(0, 1)`, and later
+  `bespoke.music(1)` brings it back. The listener's volume and the play's pause stay over it as they are. A scene
+  never hushes its own music (its spec's `music` is what it sounds); the game does.
 - **A cut through black**: `bespoke.cut(values, {fade: seconds})`. A plain cut whose picture is not ready makes the
   scene's story wait (a moment, under the page's sign if it lasts) while the last picture lives — no black is needed
   to hide anything.
