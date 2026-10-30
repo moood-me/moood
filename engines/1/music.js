@@ -18,7 +18,11 @@
 // listen(key, signal) → of its stream (GET music: a Response) — a refusal an Error in the page's language, its code
 // with it (scene/host.js); silent(why) — the music could not be heard (why: in the page's language); show(music) — the
 // open scene's (or none); pause(on) — the play paused (the music fades out over HUSH seconds, and its sound stands
-// till the play goes on — fading back in to the volume set —, the page's other sounds with it: MooodVolume.hold); FADE,
+// till the play goes on — fading back in to the volume set —, the page's other sounds with it: MooodVolume.hold);
+// level(v, seconds) — how loud the game wants the open scene's music: 0 silent … 1 as the scene has it, moved there
+// over `seconds` (FADE by default; 0 at once) — a moment inside the scene (a house falling silent at midnight:
+// level(0, 1)); the next scene shown (show) is heard at 1 again — its new music crossfading in at 1, the same music
+// coming back to 1 over FADE —; under the listener's volume and the pause's fade, which go on as they are; FADE,
 // IN — the seconds one music crossfades into another, and one comes in where none sounded (a game's background changes
 // so, at the same moment: play/runtime.js); asked(music) — a scene's music as the host is asked for it (the
 // body of POST music: {prompts, config}), or null — none sounds: what a host that makes the music ahead makes; LIMITS —
@@ -38,6 +42,7 @@ globalThis.MooodMusic = (() => {
       'G_FLAT_MAJOR_E_FLAT_MINOR', 'G_MAJOR_E_MINOR', 'A_FLAT_MAJOR_F_MINOR', 'A_MAJOR_G_FLAT_MINOR', 'B_FLAT_MAJOR_G_MINOR', 'B_MAJOR_A_FLAT_MINOR'] };
   let track = null, listen = null, silent = null, music = null;  // (music: asked(the open scene's))
   let ctx = null, out = null;
+  let level = 1; // the game's level of the open scene's music (level): what its deck comes in to; 1 again at each show
   let playing = false, pushTimer = null;
   let deck = null; // what sounds now: { what, gain, nextT, stop() }
   let held = false; // the play paused, or an engine 3 scene standing (Moood.onPause): what starts meanwhile waits with it
@@ -184,7 +189,7 @@ globalThis.MooodMusic = (() => {
     }
     if (d) {
       d.gain.gain.setValueAtTime(0, t);
-      d.gain.gain.linearRampToValueAtTime(1, t + (was ? fade : IN));
+      d.gain.gain.linearRampToValueAtTime(level, t + (was ? fade : IN)); // (to the game's level: 1 but in a hush)
     }
   }
 
@@ -261,9 +266,12 @@ globalThis.MooodMusic = (() => {
     if (typeof Moood !== 'undefined') Moood.onPause(pause);
   }
 
-  // the open scene's music (from its spec), or none
+  // the open scene's music (from its spec), or none — heard at 1 (the game's level, level, was a moment of the scene
+  // before): the same music, going on, comes back to 1 over FADE; another crossfades in at 1 (push)
   function show(m) {
     music = asked(m);
+    level = 1;
+    if (deck && music && deck.what === JSON.stringify(music)) ramp(deck, 1, FADE);
     if (playing) pushSoon();
   }
 
@@ -291,5 +299,20 @@ globalThis.MooodMusic = (() => {
     else ctx.resume().catch(() => {});
   }
 
-  return { init, show, pause, asked, LIMITS, FADE, IN };
+  // the game's level of the open scene's music: its deck's gain moved there over `seconds` from where it is now (on
+  // the sound's clock: a pause meanwhile holds the move where it is, and it goes on with the play); the music not
+  // begun yet (or about to: a show's push), it comes in at that level. A deck giving way (swap) is not this scene's
+  function setLevel(v, seconds = FADE) {
+    level = Math.min(1, Math.max(0, Number(v) || 0));
+    if (deck) ramp(deck, level, seconds);
+  }
+  function ramp(d, v, seconds) {
+    const g = d.gain.gain, t = ctx.currentTime, now = g.value;
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(now, t);
+    const over = Math.max(0, Number(seconds) || 0);
+    if (over) g.linearRampToValueAtTime(v, t + over); else g.setValueAtTime(v, t);
+  }
+
+  return { init, show, pause, level: setLevel, asked, LIMITS, FADE, IN };
 })();

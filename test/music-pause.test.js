@@ -42,12 +42,15 @@ function page() {
     createGain() { const g = { gain: new Param(this, 1), connect() {}, disconnect() {} }; this.gains.push(g); return g; }
   }
   const g = vm.createContext({
-    AudioContext, console,
+    AudioContext, AbortController, console,
     __mooodTimers: {
       setTimeout: (fn, wait) => timers.push({ fn, at: ms + wait }),
       clearTimeout: id => { if (timers[id - 1]) timers[id - 1].fn = null; },
     },
-    setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, clearInterval() {},
+    // (the browser's timers too, on the same hand-moved time: a show's music pushed 200 ms after it)
+    setTimeout: (fn, wait) => timers.push({ fn, at: ms + wait }),
+    clearTimeout: id => { if (timers[id - 1]) timers[id - 1].fn = null; },
+    setInterval: () => 0, clearInterval() {},
     addEventListener() {}, removeEventListener() {},
     MooodI18n: { part: () => s => s },
     localStorage: { getItem: () => null, setItem() {} },
@@ -75,6 +78,7 @@ function page() {
     },
     get state() { return ctx()?.state; },
     get level() { return ctx().gains[0].gain.value; }, // (the music's output: its first gain)
+    deck: n => ctx().gains[n].gain.value, // (the n-th music heard: its deck's gain — the game's level, bespoke.music)
     // a game's sounds: its own context, through the "sounds" output
     sounds() { const c = new AudioContext(), out = g.MooodVolume.output(c); return { ctx: c, out }; },
   };
@@ -150,4 +154,86 @@ test('paused as the music begins: it begins standing, silent, and sounds as the 
   p.stands(false);
   await p.wait(1);
   assert.equal(p.state, 'running'); near(p.level, 0.4);
+});
+
+// a game hushing the scene's music (bespoke.music → MooodMusic.level): the open scene's deck, under the volume and the
+// pause; a show heard at 1 again
+const A = { prompts: [{ text: 'a waltz', weight: 1 }] }, B = { prompts: [{ text: 'a clock', weight: 1 }] };
+async function scored(before = () => {}) {
+  const p = page();
+  p.music.show(A);
+  before(p);
+  p.music.init({ track: async () => 'k', listen: () => new Promise(() => {}), silent: () => {} });
+  await p.settle();
+  await p.wait(1);
+  return p;
+}
+
+test("the game's level: moved to 0 over the seconds said, the volume kept; 0 seconds — at once", async () => {
+  const p = await scored();
+  near(p.deck(1), 1);
+  p.music.level(0, 1);
+  await p.wait(0.5);
+  near(p.deck(1), 0.5); near(p.level, 0.4);
+  await p.wait(0.6);
+  near(p.deck(1), 0); near(p.level, 0.4);
+  p.music.level(1, 0);
+  await p.wait(0.01);
+  near(p.deck(1), 1);
+});
+
+test("without seconds, over the music's crossfade; out of range, kept within 0…1", async () => {
+  const p = await scored();
+  p.music.level(0);
+  await p.wait(p.music.FADE / 2);
+  near(p.deck(1), 0.5);
+  await p.wait(p.music.FADE / 2 + 0.1);
+  near(p.deck(1), 0);
+  p.music.level(7, 0);
+  await p.wait(0.01);
+  near(p.deck(1), 1);
+});
+
+test('said before the music has begun: it comes in at that level', async () => {
+  const p = await scored(p => p.music.level(0.25, 2));
+  near(p.deck(1), 0.25);
+});
+
+test("a pause meanwhile holds the move where it is; going on, it goes on — and the pause's fade is its own", async () => {
+  const p = await scored();
+  p.music.level(0, 4);
+  await p.wait(1);
+  p.music.pause(true);
+  await p.wait(1); // (the music's fade out, then its sound stands)
+  assert.equal(p.state, 'suspended'); near(p.level, 0);
+  const held = p.deck(1);
+  assert.ok(held > 0.4 && held < 0.6, `moved on during the fade out only: ${held}`);
+  await p.wait(2);
+  near(p.deck(1), held);
+  p.music.pause(false);
+  await p.settle();
+  await p.wait(2.5);
+  near(p.deck(1), 0); near(p.level, 0.4);
+});
+
+test('the next scene shown is heard at 1: the same music comes back over the crossfade, another comes in at 1', async () => {
+  const p = await scored();
+  p.music.level(0, 0);
+  await p.wait(0.1);
+  p.music.show(A); // (the same music: going on)
+  await p.wait(p.music.FADE + 0.3);
+  near(p.deck(1), 1);
+  p.music.level(0, 0);
+  await p.wait(0.1);
+  p.music.show(B); // (another: the hushed one fades out from where it is, the new one in to 1)
+  await p.wait(p.music.FADE + 0.3);
+  near(p.deck(1), 0); near(p.deck(2), 1);
+});
+
+test('silent in the next scene too: level(0, 0) after its show — its music comes in at 0', async () => {
+  const p = await scored();
+  p.music.show(B);
+  p.music.level(0, 0); // (before the show's music is pushed)
+  await p.wait(p.music.FADE + 0.3);
+  near(p.deck(2), 0); near(p.deck(1), 0);
 });
