@@ -33,8 +33,11 @@
 //     share of the window's height — no target: state {held, u (pulled / tear)}, 'tear' once a pull reaches it. The way
 //     and the targets are seen only while it is pulled (§4.3, П39). set({u}) — where along the way it is (the game's)
 //   (radii and tolerances below are the language's px — they grow with the frame as the marks do: layer.js REF)
-//   trace({on, line: [refs], tolerance: 48}) — along the line, from its start; let go and go on from where it was:
-//     state {u, tracing}, 'off' — the finger left the line (its head flashes)
+//   trace({on, line: [refs], tolerance: 48, seconds}) — along the line, from its start; let go and go on from where it
+//     was: state {u, tracing, seconds (how long the ghost's stroke along the whole line takes now)}, 'off' — the finger
+//     left the line (its head flashes). seconds — the ghost draws the whole line in them, at an even pace (1 / seconds
+//     of the line a second: a game's own "too quick" reads the same number); none — a px a ms (a line over 2000 px in
+//     2 s), each piece 0.4 s at least, eased in and out of each
 //   turn({on, dir: 1 | −1, radius: 66}) — round the mark: state {turns (signed, the arrow's way +), most (the farthest
 //     the arrow's way)}, 'quarter' {n} — each new quarter (a click), 'against' — turned against the arrow (it flashes)
 //   rub({on, radius: 60, full: 0.85}) — over the spot: state {u (covered / full), at}; the spot shrinks with it
@@ -315,14 +318,22 @@ export const GESTURES = {
 
   // ── 4.4 trace ──
   trace(ctx, o) {
-    const { mark, layer, feel } = ctx, state = { u: 0, tracing: false };
+    const { mark, layer, feel } = ctx, state = { u: 0, tracing: false, seconds: 0 };
     const tol = () => (o.tolerance ?? 48) * layer.k();
     let pts = [], lens = [], L = 1, s = 0, last = null, tone = null;
+    // the ghost's ms over each piece of the line: the game's seconds shared by length; none — along the line at a pace
+    // one follows with the eye: a px a ms, a long line in some 2 s; each piece 0.4 s at least
+    const pieces = (sec = o.seconds) => pts.slice(1).map((_, i) => {
+      const l = lens[i + 1] - lens[i];
+      return sec ? (sec * 1000 * l) / L : Math.max(400, l / Math.max(1, L / 2000));
+    });
+    const timed = sec => { state.seconds = pieces(sec).reduce((a, b) => a + b, 0) / 1000; };
     const measure = () => {
       pts = o.line.map(r => layer.point(r)).filter(Boolean);
       lens = [0];
       for (let i = 1; i < pts.length; i++) lens.push(lens[i - 1] + dist(pts[i - 1], pts[i]));
       L = Math.max(1, lens[lens.length - 1] || 1);
+      timed();
     };
     const pointAt = d => {
       if (!pts.length) return null;
@@ -359,9 +370,8 @@ export const GESTURES = {
       demo() {
         if (pts.length < 2) return null;
         const a = pts[0], z = pts[pts.length - 1];
-        // (along the line at a pace one follows with the eye: a px a ms, a long line in some 2 s; each piece 0.4 s at least)
-        const pace = Math.max(1, L / 2000);
-        return [near(a, layer), { ...a, ms: APPROACH }, { ...a, down: true, ms: 120 }, { ...a, down: true, ms: DWELL }, ...pts.slice(1).map((p, i) => ({ ...p, down: true, ms: Math.max(400, (lens[i + 1] - lens[i]) / pace) })), { ...z, down: true, ms: 300 }, { ...z, ms: LIFT }];
+        const ms = pieces(), even = !!o.seconds;
+        return [near(a, layer), { ...a, ms: APPROACH }, { ...a, down: true, ms: 120 }, { ...a, down: true, ms: DWELL }, ...pts.slice(1).map((p, i) => ({ ...p, down: true, ms: ms[i], even })), { ...z, down: true, ms: 300 }, { ...z, ms: LIFT }];
       },
       down(p) { state.tracing = true; last = p; mark.do('press'); tone = feel.tone('motion'); },
       move(p) {
@@ -378,6 +388,7 @@ export const GESTURES = {
       },
       up() { stop(); mark.do('release'); },
       fault(reason) { const head = pointAt(s); if (reason === 'off' && head) layer.flash(head); },
+      set(n) { if ('seconds' in n) timed(n.seconds); },
       remove() { off(); base.remove(); done.remove(); tone?.stop(); mark.follow(null); },
     };
   },

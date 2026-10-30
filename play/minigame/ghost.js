@@ -4,8 +4,8 @@
 // It goes by the page's clock (it stands while the play is paused).
 //   const ghost = createGhost(root)
 //   ghost.show(parts) → a promise: done (true) or stopped (false). parts: [{moves, follow}, …] — one after another;
-//     moves: [{x, y, down, ms}, …] — from the first, each reached over its ms (the first: where it appears), down:
-//     pressed there; follow(p, down) — each frame of its part (the gesture shows its thing going with it),
+//     moves: [{x, y, down, ms, even}, …] — from the first, each reached over its ms (the first: where it appears), down:
+//     pressed there, even: reached at an even pace (else eased in and out); follow(p, down) — each frame of its part (the gesture shows its thing going with it),
 //     follow(null) — its part has ended, or the showing was stopped
 //   ghost.stop(); ghost.showing
 import { el } from './layer.js';
@@ -51,7 +51,7 @@ export function createGhost(root) {
           let i = keys.findIndex(k => k.t >= at);
           if (i < 0) i = keys.length - 1;
           const a = keys[Math.max(0, i - 1)], b = keys[i];
-          const u = b.t > a.t ? ease((at - a.t) / (b.t - a.t)) : 1;
+          const r = b.t > a.t ? (at - a.t) / (b.t - a.t) : 1, u = b.even ? r : ease(r);
           const x = a.x + (b.x - a.x) * u, y = a.y + (b.y - a.y) * u;
           // (pressed while it moves to a pressed key from a pressed one; the press itself at a key)
           const down = u >= 1 ? b.down : a.down && b.down;
