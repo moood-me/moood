@@ -14,6 +14,14 @@ class El {
   prepend(...n) { this.children.unshift(...n); }
   replaceChildren(...n) { this.children = n; }
   get lastChild() { return this.children.at(-1); }
+  // (what the calm bar uses, play/bar.js: its presses, its holds, its slides and fades — laid out nowhere, seen at once)
+  addEventListener() {}
+  contains(n) { return all(this).includes(n); }
+  setAttribute(k, v) { this[`@${k}`] = String(v); }
+  getAttribute(k) { return this[`@${k}`] ?? null; }
+  removeAttribute(k) { delete this[`@${k}`]; }
+  get offsetLeft() { return 0; }
+  animate() { return { cancel() {}, finished: Promise.resolve() }; }
 }
 const all = el => [el, ...el.children.flatMap(c => (c instanceof El ? all(c) : []))];
 const text = el => all(el).map(e => e.textContent ?? '').join(' ');
@@ -32,6 +40,7 @@ async function opened(answers, run) {
     },
     location: { href: `${ORIGIN}/uk/play/lamp`, origin: ORIGIN, search: '', reload: () => page.reloaded++ },
     matchMedia: () => ({ matches: false, addEventListener() {} }),
+    getComputedStyle: () => ({ transform: 'none', opacity: '1' }),
     confirm: () => true,
     EventSource: class { constructor(url) { this.url = url; this.on = {}; streams.push(this); } addEventListener(t, fn) { this.on[t] = fn; } close() { this.closed = true; } },
     fetch: async (url, o = {}) => {
