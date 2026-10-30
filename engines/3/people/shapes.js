@@ -14,10 +14,9 @@
 // drawn by rings of points of its own (F.rings) is moved here point by point. A face's expressions are morphs.
 // Nothing here is the GPU's: a model is numbers (figure.js makes its buffers), a person's own of it is numbers too.
 //   createModel(look, {rig, warn}) → a model {look, fit, rest, height, tall, facets, paint, ink, lines, palette, rows,
-//     body, hand, hung, face, part(name), partPoints(names), mark(mark, I, P, out), state(), movedOf(I, set), pose(…),
+//     body, hung, face, part(name), partPoints(names), mark(mark, I, P, out), state(), movedOf(I, set), pose(…),
 //     bones(…)}:
-//     body — {skin, tubes, dyn}: what is skinned, the tubes, what is moved point by point; hand — its fingers' turns
-//     at ease ({joints, q}: hand.js — the player puts them in place of the motion's), or null; hung — what hangs of the
+//     body — {skin, tubes, dyn}: what is skinned, the tubes, what is moved point by point; hung — what hangs of the
 //     garment (skinned to its controls), or null; face — {S, morphs, names} or null; part(name) — a part they come to
 //     have with them ({name, part, skin, tubes, dyn}; made the first time: not in a tick — null: there is none);
 //     palette — its colours ([r, g, b, tone]: 0 as drawn, 1 taking the light's shadow tone, 2 glowing, 3 in colours on
@@ -249,7 +248,6 @@ export function createModel(L, { rig, warn }) {
   // person's own of it) ──
   const cx = { P: bind, probe: 0, mode: 'build', rec: null, part: null, call: 0, where: null, cut: true, outer: null, worn: null, sheets: null, name: '', I: null }, ringsAt = new Map();
   const jP = j => { const i = AT[j] * 3, T2 = cx.P.T, v = spot(); v[0] = T2[i]; v[1] = T2[i + 1]; v[2] = T2[i + 2]; return v; };
-  const jAt = j => { const i = j * 3, T2 = cx.P.T, v = spot(); v[0] = T2[i]; v[1] = T2[i + 1]; v[2] = T2[i + 2]; return v; };
   const t3 = new Float64Array(3);
   const axis = (j, x, y, z) => {
     dir(rig, cx.P, AT[j], x, y, z, t3);
@@ -738,41 +736,32 @@ export function createModel(L, { rig, warn }) {
       // joint has a way of the T-pose: rig.js's dir, its first half)
       heel: footWay(n('Foot'), [rt('Foot')[0], sw * 0.78 / h, rt('Foot')[2] - 0.05 + sw / h], rt('Foot')), toe: footWay(n('Foot'), [rt('ToeEnd')[0], sw * 0.78 / h, rt('ToeEnd')[2] + 0.01 - sw / h], rt('Foot')) };
   });
-  // the hands (hand.js): with fingers — a palm of its own and the fingers on it, at ease; a mitten — the same palm, the
-  // four fingers one piece and the thumb another; as big as the skeleton has them, as broad as the figure is slight or
-  // stout. Either goes with the hand's joint (the fingers' tubes with theirs); the arm goes into the palm past the
-  // wrist (the bare arm's width there, whatever a sleeve does), tapering. Each one's points, the same lists each frame;
-  // the fingers' turns at ease, both hands' (a mitten's are all on the hand's joint: none)
+  // the hands (hand.js): with fingers — a hand's palm and the fingers on it; a mitten — the same hand, the four fingers
+  // held together as one piece; as big as the skeleton has them, as broad as the figure is slight or stout; drawn whole
+  // at ease on the hand's joint (the fingers' own joints do not move it). The arm goes into the palm past the wrist (the
+  // bare arm's width there, whatever a sleeve does), tapering; the palm takes it in as wide as it is there. Each solid's
+  // points, the same lists each frame
   const handed = st.fingers ? 'fingers' : st.mitten ? 'mitten' : null, wristR = thick(T.arms[st.arms], 2) * lk;
   const armIn = handed ? [...arm.filter(([w]) => w <= 2), [2.5, wristR * 0.85], [3, wristR * 0.7]] : arm;
   if (handed) for (let m = 0; m < members.length; m++) {
-    const Lm = members[m], H = Lm.hand = handOf(rig, bind, m ? 'Right' : 'Left', { sigma: Math.min(1.2, Math.max(0.8, Math.sqrt(b.thick * st.limb))), wrist: wristR });
-    Lm.handPts = H.fingers.map(f => f.joints.map(() => null));
-    Lm.solids = (handed === 'mitten' ? [H.mitten.body, H.mitten.thumb] : [H.palm]).map(S => ({ S, pts: S.rings.map(r => r.map(() => null)) }));
+    const Lm = members[m], H = handOf(rig, bind, m ? 'Right' : 'Left', { sigma: Math.min(1.2, Math.max(0.8, Math.sqrt(b.thick * st.limb))), wrist: wristR * (st.rigid ? 0.72 : 0.85) });
+    Lm.solids = H[handed].map(S => ({ S, pts: S.rings.map(r => r.map(() => null)) }));
   }
-  const handPose = handed === 'fingers' ? { joints: Int32Array.from(members.flatMap(Lm => [...Lm.hand.pose.joints])), q: Float32Array.from(members.flatMap(Lm => [...Lm.hand.pose.q])) } : null;
   // (a point in a joint's own frame, l — the hand's palm —, where the joint has it now)
   const onJoint = (j, l) => {
     const R1 = cx.P.R, T1 = cx.P.T, r = j * 9, t = j * 3, v = spot();
     for (let e = 0; e < 3; e++) v[e] = T1[t + e] + (R1[r + e * 3] * l[0] + R1[r + e * 3 + 1] * l[1] + R1[r + e * 3 + 2] * l[2]);
     return v;
   };
-  // a hand's solids: its palm (a mitten's two pieces) with the hand's joint — worked out only to be drawn: each
-  // frame they are where the joint has them, skinned —; its fingers along their joints, each tip most of the way along
-  // its last bone
+  // a hand's solids, with the hand's joint — worked out only to be drawn: each frame they are where the joint has them,
+  // skinned
   const handSolids = (Lm, now) => {
-    const H = Lm.hand, j = AT[Lm.Hand];
+    const j = AT[Lm.Hand];
     for (let s2 = 0; s2 < Lm.solids.length; s2++) {
       if (now && cx.part.calls[cx.call].rigid) { cx.call++; continue; }
       const { S, pts } = Lm.solids[s2];
       for (let r = 0; r < pts.length; r++) for (let i = 0; i < pts[r].length; i++) pts[r][i] = onJoint(j, S.rings[r][i]);
       rings(pts, col.skin, onJoint(j, S.first), onJoint(j, S.last));
-    }
-    if (handed === 'fingers') for (let q = 0; q < H.fingers.length; q++) {
-      const f = H.fingers[q], js = f.joints, pts = Lm.handPts[q], n = js.length - 1;
-      for (let i = 0; i < n; i++) pts[i] = jAt(js[i]);
-      pts[n] = mix(pts[n - 1], jAt(js[n]), f.tip);
-      if (now) tubeNow(pts, side(Lm.Hand)); else tube(pts, f.profile, skinCols, 8, side(Lm.Hand));
     }
   };
   const r0 = st.rigid ? [ra(0), ra(1), ra(2), ra(3), rl(0), rl(1), rl(2), rl(3)] : null, hand3 = st.rigid ? [r0[3], r0[3], r0[3] * 0.85] : null;
@@ -1281,7 +1270,7 @@ export function createModel(L, { rig, warn }) {
   // of what they edge; none for a silhouette)
   const lineWidth = L.line && L.paint !== 'silhouette' && L.paint !== 'rim' ? st.line : 0;
   return { look: L, fit, rest, height: 1.76 * (b.height ?? 1), tall: h, facets: !!st.facets, paint: L.paint, ink: hex(g.ink), lines: { width: lineWidth, tint: !!st.tinted },
-    palette, get rows() { return most; }, body: { skin: base, tubes, dyn }, hand: handPose, hung, face, part, partPoints, mark, state, movedOf, pose, bones };
+    palette, get rows() { return most; }, body: { skin: base, tubes, dyn }, hung, face, part, partPoints, mark, state, movedOf, pose, bones };
 }
 
 const X = [1, 0, 0], Y = [0, 1, 0], Z = [0, 0, 1], ZERO = [0, 0, 0], DOWN = [0, -1, 0];

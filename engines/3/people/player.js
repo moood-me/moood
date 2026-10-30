@@ -12,7 +12,6 @@
 //     — some 10 ms a motion: the casts' and the engine's own are made ready at the people's build (people.js), none
 //     in a tick
 //   new Player({rig, fit, rest, motions, does, gait, gaits, turn, warn}) → {update(…), P, points, startOf, durationOf, speedOf,
-//     hand — the fingers' turns at ease its figure has (shapes.js: model.hand; null: the motion's),
 //     save(), restore(data), like(player) — this one as that one is now: PP5}
 // An update makes nothing (5.16): a number handed to a function or back by one is made on the heap each time, so
 // what an update works out stays in arrays made once (the pose's, the player's, TJ and NUM below) and its functions
@@ -304,7 +303,7 @@ export class Player {
   // gait among them); turn — degrees they face at first; warn(text) — said once each
   constructor({ rig, fit, motions = {}, does = 'stand', gait = 'walk', gaits = null, turn = 180, warn }) {
     // (size: their height against Kimodo's man — what touches the floor at what height, on their legs)
-    this.rig = rig; this.fit = fit; this.size = 1; this.motions = motions; this.warn = warn; this.hand = null;
+    this.rig = rig; this.fit = fit; this.size = 1; this.motions = motions; this.warn = warn;
     this.P = poseOf();
     const named = name => (typeof name === 'string' && (motions[name] || LIBRARY[name]) ? name : null);
     this.named = named;
@@ -411,7 +410,7 @@ export class Player {
   // them, what they look at and reach for. What a cut sets anew — the gaits under them, the act gone over from — is
   // left to update(), told a new shot. What it warns of stays its own (the people's own player says nothing)
   like(from) {
-    this.rig = from.rig; this.fit = from.fit; this.size = from.size; this.hand = from.hand; this.motions = from.motions; this.named = from.named;
+    this.rig = from.rig; this.fit = from.fit; this.size = from.size; this.motions = from.motions; this.named = from.named;
     this.standName = from.standName; this.gaitName = from.gaitName; this.gaits = from.gaits; this.turn0 = from.turn0;
     this.gaitRef = from.gaitRef; this.gait = from.gait; this.doRef = from.doRef; this.act = from.act; this.before = null; this.beforeEnd = from.beforeEnd;
     this.facing = from.facing; this.own = from.own; this.by = from.by;
@@ -468,14 +467,6 @@ export class Player {
       U[0] = g.phase * (m.walk.b - m.walk.a); U[1] = g.w * give;
       looped(m, U, Q, R, m.walk);
     }
-  }
-
-  // (the fingers at ease, as the figure has them, in place of the motion's: a hand of its own — shapes.js, hand.js)
-  eased() {
-    const H = this.hand;
-    if (!H) return;
-    const Q = this.Q, js = H.joints, q = H.q;
-    for (let i = 0; i < js.length; i++) { const o = js[i] * 4, k = i * 4; Q[o] = q[k]; Q[o + 1] = q[k + 1]; Q[o + 2] = q[k + 2]; Q[o + 3] = q[k + 3]; }
   }
 
   // (a point of the person's own space — p's at i — in the world, into out at o; and back)
@@ -592,7 +583,6 @@ export class Player {
     this.wasHeld = !!k.held;
     this.at[0] = ax; this.at[1] = ay; this.at[2] = az; this.lat[0] = lx; this.lat[1] = ly; this.lat[2] = lz;
     this.sample();
-    this.eased();
     fk(this.rig, this.fit, this.Q, this.root, this.P);
     this.after();
     this.posed = true;
