@@ -138,6 +138,12 @@ export function fromCode(code, file, own = true, game = false) {
     AssignmentExpression(node) { if (own) for (const n of bound(node.left)) if (OWN.has(n)) wrong(node, 'own-set', { name: n }); },
     // tr is called where its text is written: never made another name (T = tr), handed on (f(tr)), a tag (tr`…`)
     TaggedTemplateExpression(node) { if (own && node.tag.type === 'Identifier' && node.tag.name === 'tr') wrong(node, 'tr-tag'); },
+    // a style's old words (a cast's styles: { name: { …, fingers: true } }): its hands are said by hands now
+    Property(node, st, up) {
+      const key = n => (n?.type === 'Property' ? n.key?.name ?? n.key?.value : null), styles = up[up.length - 5];
+      if (own && key(node) === 'fingers' && key(styles) === 'styles' && node.value.type === 'Literal' && typeof node.value.value === 'boolean')
+        wrong(node, 'hands-old', { word: `fingers: ${node.value.value}`, hands: node.value.value ? 'fingers' : 'mitten' });
+    },
     Identifier(node, ancestors) {
       const up = ancestors[ancestors.length - 2];
       if (!own || node.name !== 'tr' || (up?.type === 'CallExpression' && up.callee === node) || (up?.type === 'MemberExpression' && up.object === node)

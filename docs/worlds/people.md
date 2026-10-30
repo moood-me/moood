@@ -148,11 +148,11 @@ is made from, ours or the world's, its own fields over it):
 
 | table | an entry |
 |---|---|
-| `styles` | `{name, head, egg, neck, legs, limb, sides, square, trunk: {w, d}, arms, fingers, mitten, feet, paint, line, folds, ragged, rigid, straight, drape, face, ground, …}` (shapes.js: STYLES) — the hands: `fingers` — a rounded palm from the wrist to the knuckles and the fingers on it, side by side, thick at the root, tapering to round tips, the knuckles in an arc, the thumb big from the heel of the palm, all gently curled as a hand at rest; `mitten` (ours: `soft`'s, `flat`'s) — the same hand drawn simply, the four fingers held together as one piece of their shape and the thumb another; `fingers` over `mitten`. Either is as big as the person's skeleton has it (a child's smaller), as broad as the figure (a slight one's narrower), in any style. Without either, the hand is the arm profile's own (a rigid style's: a ball) |
+| `styles` | `{name, head, egg, neck, legs, limb, sides, square, trunk: {w, d}, arms, hands, feet, paint, line, folds, ragged, rigid, straight, drape, face, ground, …}` (shapes.js: STYLES) — `arms`: the arm's profile, to the wrist; `hands`: `'fingers'` — a hand as a hand is: a palm widening from the wrist, the knuckles in an arc, the fingers on it side by side, thick at the root, tapering to round tips, the thumb big from the heel of the palm, all gently curled as a hand at rest (ours: `shadow`'s); `'mitten'` — the same hand drawn more simply, the four fingers held together as one piece of their shape and the thumb apart (the others' — a style that says none). Either is as big as the person's skeleton has it (a child's smaller), as broad as the figure (a slight one's narrower), in any style |
 | `characters` | `{name, body, garment, hair, hat, hood, scarf, socks, face, parts, colors}` |
 | `garments` | `{name, hang: [{to, from: 'shoulders' \| 'waist', flare, off, color, folds, ragged, pleats}…], sleeves, short, bare, bodice, draw?}` |
 | `hair`, `hats`, `faces`, `parts` | `{name, draw(F)}` — `parts` worn by a look's `parts: [names]` |
-| `arms`, `legs` | profiles `[[where, half-width]…]` (0 shoulder/hip, 1 elbow/knee, 2 wrist/ankle, 3 tips) |
+| `arms`, `legs` | profiles `[[where, half-width]…]` (0 shoulder/hip, 1 elbow/knee, 2 wrist/ankle, 3 toes: an arm's ends at the wrist) |
 | `paints`, `grounds` | names; `{name, bg, ink, grid, rim, light, haze}` |
 
 `draw(F)` draws on the figure being made, as ours do (all of ours are made so — shapes.js shows them):
@@ -306,8 +306,8 @@ Each writes a JSON snippet for the cast's data and a picture to look at first (t
 
 ## How it is made (if you need it)
 
-Engine 3: `engines/3/people/` — its own, reading the same motions and data as the old engine (`engines/1/people/`). Kimodo's motions keep the fingers as they were made (a little curled, fanned out); a style's own hand (`fingers`, `mitten`:
-`hand.js`) is shaped as a hand is, at ease, and drawn whole on the hand's joint — nothing of it worked out a frame.
+Engine 3: `engines/3/people/` — its own, reading the same motions and data as the old engine (`engines/1/people/`). Kimodo's motions keep the fingers as they were made (a little curled, fanned out); a style's hands (`hand.js`) are shaped as
+a hand is, at ease, and drawn whole on the hand's joint — nothing of them worked out a frame.
 
 The old engine: `engines/1/people.js`: a person's player mixes their motions on Kimodo's 77-joint skeleton
 (skeleton.js) — the act now and the one it goes over from, a loop's seam crossfaded, the walk mixed in by the speed

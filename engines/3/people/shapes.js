@@ -729,7 +729,7 @@ export function createModel(L, { rig, warn }) {
     const n = j => `${s}${j}`, rt = j => rig.rest.subarray(AT[n(j)] * 3, AT[n(j)] * 3 + 3), sw = st.rigid ? rl(3) : 0;
     return { Arm: n('Arm'), ForeArm: n('ForeArm'), Hand: n('Hand'), Middle1: n('HandMiddle1'), Leg: n('Leg'), Shin: n('Shin'), Foot: n('Foot'), ToeBase: n('ToeBase'), ToeEnd: n('ToeEnd'),
       upper: [[0, sleeve]], fore: [[0, sleeve], ...(G.short ? [[0.15, col.skin]] : [])], thigh: [[0, legsCol]], shin: [[0, legsCol], ...socks.map(([w, c]) => [w - 1, c])],
-      shoe: [[0, shod(s)]], arm: [[0, sleeve], [G.short ? 1.15 : 2, col.skin]], leg: [[0, legsCol], ...socks, [2, shod(s)]], axes: [null, null, null],
+      shoe: [[0, shod(s)]], arm: [[0, sleeve], [G.short ? 1.15 : 2, col.skin]], leg: [[0, legsCol], ...socks, [2, shod(s)]],
       // (the points its tubes go through, each frame the same lists; a finger's thickness)
       armPts: [null, null, null, null], legPts: [null, null, null, null],
       // (a shoe's heel and toe at rest, as far up and in as its thickness — each its way from the ankle, as the foot's
@@ -741,9 +741,9 @@ export function createModel(L, { rig, warn }) {
   // at ease on the hand's joint (the fingers' own joints do not move it). The arm goes into the palm past the wrist (the
   // bare arm's width there, whatever a sleeve does), tapering; the palm takes it in as wide as it is there. Each solid's
   // points, the same lists each frame
-  const handed = st.fingers ? 'fingers' : st.mitten ? 'mitten' : null, wristR = thick(T.arms[st.arms], 2) * lk;
-  const armIn = handed ? [...arm.filter(([w]) => w <= 2), [2.5, wristR * 0.85], [3, wristR * 0.7]] : arm;
-  if (handed) for (let m = 0; m < members.length; m++) {
+  const handed = st.hands === 'fingers' ? 'fingers' : 'mitten', wristR = thick(T.arms[st.arms], 2) * lk;
+  const armIn = [...arm.filter(([w]) => w <= 2), [2.5, wristR * 0.85], [3, wristR * 0.7]];
+  for (let m = 0; m < members.length; m++) {
     const Lm = members[m], H = handOf(rig, bind, m ? 'Right' : 'Left', { sigma: Math.min(1.2, Math.max(0.8, Math.sqrt(b.thick * st.limb))), wrist: wristR * (st.rigid ? 0.72 : 0.85) });
     Lm.solids = H[handed].map(S => ({ S, pts: S.rings.map(r => r.map(() => null)) }));
   }
@@ -764,7 +764,7 @@ export function createModel(L, { rig, warn }) {
       rings(pts, col.skin, onJoint(j, S.first), onJoint(j, S.last));
     }
   };
-  const r0 = st.rigid ? [ra(0), ra(1), ra(2), ra(3), rl(0), rl(1), rl(2), rl(3)] : null, hand3 = st.rigid ? [r0[3], r0[3], r0[3] * 0.85] : null;
+  const r0 = st.rigid ? [ra(0), ra(1), ra(2), rl(0), rl(1), rl(2), rl(3)] : null;
   // (a point of the foot at rest — the shoe's: its way from the ankle, w — where the foot has it now)
   const shoe = (Lm, w) => {
     const j = AT[Lm.Foot], R1 = cx.P.R, T1 = cx.P.T, r = j * 9, v = spot();
@@ -786,34 +786,32 @@ export function createModel(L, { rig, warn }) {
     if (now) tubeNow(neckPts, head.axes[2]); else tube(neckPts, neckProfile, skinCols, Math.max(6, sides - 4), head.axes[2]);
     if (st.rigid) for (let m = 0; m < members.length; m++) {
       const Lm = members[m];
-      // each bone a bar: the upper arm, the forearm (a dress's sleeve short; narrower at the wrist into a hand of its
-      // own), a round hand (or one of its own: handSolids); the thigh, the shin, a shoe —
+      // each bone a bar: the upper arm, the forearm (a dress's sleeve short; narrower at the wrist, into the hand),
+      // the hand (handSolids); the thigh, the shin, a shoe —
       // rigid on the foot, a rounded block from the heel to the toes
       // (the upper arm from within the shoulder: its round end level with the shoulder's line, not a ball on it)
       const la = jP('LeftArm'), rA = jP('RightArm'), arm0 = jP(Lm.Arm), hint = fwd('Chest'), uc = up('Chest'), shoulder = spot();
       const wx = la[0] - rA[0], wy = la[1] - rA[1], wz = la[2] - rA[2], inward = r0[0] * 0.6 / (Math.sqrt(wx * wx + wy * wy + wz * wz) / 2), down = -r0[0] * 0.9;
       for (let e = 0; e < 3; e++) shoulder[e] = arm0[e] + (((la[e] + (rA[e] - la[e]) * 0.5) - arm0[e]) * inward + uc[e] * down);
-      const elbow = jP(Lm.ForeArm), wrist = jP(Lm.Hand), ax = Lm.axes;
+      const elbow = jP(Lm.ForeArm), wrist = jP(Lm.Hand);
       if (now) { barNow(shoulder, elbow, hint); barNow(elbow, wrist, hint); }
-      else { bar(shoulder, elbow, r0[0], r0[1], Lm.upper, sides, hint, 0.9); bar(elbow, wrist, r0[1], handed ? r0[2] * 0.72 : r0[2], Lm.fore, sides, hint, 0.9); }
-      ax[0] = side(Lm.Hand); ax[1] = up(Lm.Hand); ax[2] = fwd(Lm.Hand);
-      const palm = mix(jP(Lm.Hand), jP(Lm.Middle1), 0.45), hip = jP(Lm.Leg), knee = jP(Lm.Shin), ankle = jP(Lm.Foot), front = fwd('Hips');
-      if (handed) handSolids(Lm, now); else if (now) placed(palm, ax); else ball(palm, ax, hand3, col.skin, sides);
+      else { bar(shoulder, elbow, r0[0], r0[1], Lm.upper, sides, hint, 0.9); bar(elbow, wrist, r0[1], r0[2] * 0.72, Lm.fore, sides, hint, 0.9); }
+      const hip = jP(Lm.Leg), knee = jP(Lm.Shin), ankle = jP(Lm.Foot), front = fwd('Hips');
+      handSolids(Lm, now);
       if (now) { barNow(hip, knee, front); barNow(knee, ankle, fwd('Hips')); barNow(shoe(Lm, Lm.heel), shoe(Lm, Lm.toe), side(Lm.Foot)); }
       else {
-        bar(hip, knee, r0[4], r0[5], Lm.thigh, sides, front);
-        bar(knee, ankle, r0[5], r0[6], Lm.shin, sides, fwd('Hips'));
-        bar(shoe(Lm, Lm.heel), shoe(Lm, Lm.toe), r0[7], r0[7], Lm.shoe, sides, side(Lm.Foot), 0.78);
+        bar(hip, knee, r0[3], r0[4], Lm.thigh, sides, front);
+        bar(knee, ankle, r0[4], r0[5], Lm.shin, sides, fwd('Hips'));
+        bar(shoe(Lm, Lm.heel), shoe(Lm, Lm.toe), r0[6], r0[6], Lm.shoe, sides, side(Lm.Foot), 0.78);
       }
     }
     else for (let m = 0; m < members.length; m++) {
       const Lm = members[m];
-      // (the hand's end along the palm: into a hand of its own, half way to the knuckles — the palm takes it in; with
-      // none, its profile's hand to as far again as the knuckles)
-      const hand = jP(Lm.Hand), tip = add(hand, mul(sub(jP(Lm.Middle1), hand), handed ? 0.5 : 1.9)), ap = Lm.armPts, lp = Lm.legPts;
+      // (the arm's end: into the hand, half way to the knuckles — the palm takes it in)
+      const hand = jP(Lm.Hand), tip = add(hand, mul(sub(jP(Lm.Middle1), hand), 0.5)), ap = Lm.armPts, lp = Lm.legPts;
       ap[0] = jP(Lm.Arm); ap[1] = jP(Lm.ForeArm); ap[2] = hand; ap[3] = tip;
       if (now) tubeNow(ap, fwd('Chest')); else tube(ap, armIn, Lm.arm, sides, fwd('Chest'), st.arms === 'mitten' || st.arms === 'leaf' ? 0.8 : 1);
-      if (handed) handSolids(Lm, now);
+      handSolids(Lm, now);
       lp[0] = jP(Lm.Leg); lp[1] = jP(Lm.Shin); lp[2] = jP(Lm.Foot); lp[3] = mix(jP(Lm.ToeBase), jP(Lm.ToeEnd), 0.5);
       if (now) tubeNow(lp, fwd('Hips')); else tube(lp, leg, Lm.leg, sides, fwd('Hips'));
     }

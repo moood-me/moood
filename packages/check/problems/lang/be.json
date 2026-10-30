@@ -18,6 +18,7 @@
   {"text":"\"about\" {ref} — no world, game or scene there","translation":"\"about\" {ref} — там няма ні свету, ні гульні, ні сцэны","where":"problems.js"},
   {"text":"\"engine\" {engine} — there is engine 3 (every new scene), and engine 1 (a scene that says none)","translation":"\"engine\" {engine} — ёсць рухавік 3 (кожная новая сцэна) і рухавік 1 (сцэна без \"engine\")","where":"problems.js"},
   {"text":"\"engine\" 2 — engine 2 is gone: the scene is written anew for engine 3 (\"engine\": 3)","translation":"\"engine\" 2 — рухавіка 2 больш няма: сцэна пішацца нанова для рухавіка 3 (\"engine\": 3)","where":"problems.js"},
+  {"text":"{word} — an old word: write hands: \"{hands}\"","translation":"{word} — старое слова: пішыце hands: \"{hands}\"","where":"problems.js"},
   {"text":"\"music\" — {count} descriptions that sound: {most} at most","translation":"\"music\" — гучных апісанняў {count}: не больш за {most}","where":"problems.js"},
   {"text":"\"music\" — the description {n} that sounds: {length} characters, {most} at most","translation":"\"music\" — гучнае апісанне {n}: {length} знакаў, не больш за {most}","where":"problems.js"},
   {"text":"\"music\".{field} {value} — {least} to {most}","translation":"\"music\".{field} {value} — ад {least} да {most}","where":"problems.js"},

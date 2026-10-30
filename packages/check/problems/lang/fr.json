@@ -18,6 +18,7 @@
   {"text":"\"about\" {ref} — no world, game or scene there","translation":"\"about\" {ref} — ni monde, ni jeu, ni scène là","where":"problems.js"},
   {"text":"\"engine\" {engine} — there is engine 3 (every new scene), and engine 1 (a scene that says none)","translation":"\"engine\" {engine} — il y a le moteur 3 (toute nouvelle scène) et le moteur 1 (une scène qui n’en dit aucun)","where":"problems.js"},
   {"text":"\"engine\" 2 — engine 2 is gone: the scene is written anew for engine 3 (\"engine\": 3)","translation":"\"engine\" 2 — le moteur 2 n’existe plus : la scène est réécrite pour le moteur 3 (\"engine\": 3)","where":"problems.js"},
+  {"text":"{word} — an old word: write hands: \"{hands}\"","translation":"{word} — un ancien mot : écrivez hands: \"{hands}\"","where":"problems.js"},
   {"text":"\"music\" — {count} descriptions that sound: {most} at most","translation":"\"music\" — {count} descriptions qui sonnent : {most} au plus","where":"problems.js"},
   {"text":"\"music\" — the description {n} that sounds: {length} characters, {most} at most","translation":"\"music\" — la description {n} qui sonne : {length} caractères, {most} au plus","where":"problems.js"},
   {"text":"\"music\".{field} {value} — {least} to {most}","translation":"\"music\".{field} {value} — de {least} à {most}","where":"problems.js"},

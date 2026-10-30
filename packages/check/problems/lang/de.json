@@ -18,6 +18,7 @@
   {"text":"\"about\" {ref} — no world, game or scene there","translation":"\"about\" {ref} — dort ist weder Welt noch Spiel noch Szene","where":"problems.js"},
   {"text":"\"engine\" {engine} — there is engine 3 (every new scene), and engine 1 (a scene that says none)","translation":"\"engine\" {engine} — es gibt Engine 3 (jede neue Szene) und Engine 1 (eine Szene, die keine angibt)","where":"problems.js"},
   {"text":"\"engine\" 2 — engine 2 is gone: the scene is written anew for engine 3 (\"engine\": 3)","translation":"\"engine\" 2 — Engine 2 gibt es nicht mehr: Die Szene wird für Engine 3 neu geschrieben (\"engine\": 3)","where":"problems.js"},
+  {"text":"{word} — an old word: write hands: \"{hands}\"","translation":"{word} — ein altes Wort: schreiben Sie hands: \"{hands}\"","where":"problems.js"},
   {"text":"\"music\" — {count} descriptions that sound: {most} at most","translation":"\"music\" — {count} klingende Beschreibungen: höchstens {most}","where":"problems.js"},
   {"text":"\"music\" — the description {n} that sounds: {length} characters, {most} at most","translation":"\"music\" — die klingende Beschreibung {n}: {length} Zeichen, höchstens {most}","where":"problems.js"},
   {"text":"\"music\".{field} {value} — {least} to {most}","translation":"\"music\".{field} {value} — von {least} bis {most}","where":"problems.js"},

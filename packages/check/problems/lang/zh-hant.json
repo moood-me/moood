@@ -18,6 +18,7 @@
   {"text":"\"about\" {ref} — no world, game or scene there","translation":"\"about\" {ref}——那裡沒有世界、遊戲或場景","where":"problems.js"},
   {"text":"\"engine\" {engine} — there is engine 3 (every new scene), and engine 1 (a scene that says none)","translation":"\"engine\" {engine}——現有引擎 3（所有新場景）和引擎 1（未寫 \"engine\" 的場景）","where":"problems.js"},
   {"text":"\"engine\" 2 — engine 2 is gone: the scene is written anew for engine 3 (\"engine\": 3)","translation":"\"engine\" 2——引擎 2 已不存在：場景要為引擎 3 重新撰寫（\"engine\": 3）","where":"problems.js"},
+  {"text":"{word} — an old word: write hands: \"{hands}\"","translation":"{word} — 舊的寫法：請寫 hands: \"{hands}\"","where":"problems.js"},
   {"text":"\"music\" — {count} descriptions that sound: {most} at most","translation":"\"music\"——有聲描述 {count} 段：最多 {most} 段","where":"problems.js"},
   {"text":"\"music\" — the description {n} that sounds: {length} characters, {most} at most","translation":"\"music\"——第 {n} 段有聲描述：{length} 個字元，最多 {most} 個","where":"problems.js"},
   {"text":"\"music\".{field} {value} — {least} to {most}","translation":"\"music\".{field} {value}——應在 {least} 到 {most} 之間","where":"problems.js"},

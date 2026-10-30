@@ -103,7 +103,7 @@ export function handOf(rig, P, side, { sigma, wrist }) {
       }
       return row;
     };
-    const end = (i, dir) => [1, 0, -1].map(k => add(cs[i], add(mul(x, dir * rs[i] * Math.cos(k * Math.PI / 4)), mul(y, dir * ds[i] * Math.sin(k * Math.PI / 4)))));
+    const end = (i, dir) => [2, 1, 0, -1, -2].map(k => add(cs[i], add(mul(x, dir * rs[i] * Math.cos(k * Math.PI / 6)), mul(y, dir * ds[i] * Math.sin(k * Math.PI / 6)))));
     return [...side(1), ...end(3, -1), ...side(-1).reverse(), ...end(0, 1)].map(local);
   };
 
@@ -135,14 +135,14 @@ export function handOf(rig, P, side, { sigma, wrist }) {
     const tipR = half.map(h => h * 0.72), ls = lines.map((l, i) => [...l.slice(0, 3), sub(l[3], mul(unit(sub(l[3], l[2])), tipR[i]))]), rings = [];
     for (const k of [0, 0.18, 0.36, 0.52, 0.68, 0.84, 1]) {
       const qs = ls.map(l => along(l, k)), t = 1 - 0.28 * k, rs = half.map(h => h * t);
-      rings.push(across(qs.map(q => q.at), rs, rs.map(deep), unit(qs.map(q => q.way).reduce(add)), 0.1 * smooth(0, 0.18, k)));
+      rings.push(across(qs.map(q => q.at), rs, rs.map(deep), unit(qs.map(q => q.way).reduce(add)), 0.06 * smooth(0, 0.18, k)));
     }
     const ends = ls.map(l => along(l, 1)), w = unit(ends.map(q => q.way).reduce(add));
-    for (const f of [0.5, 0.82, 0.96]) {
+    for (const f of [0.45, 0.78]) {
       const c = Math.sqrt(1 - f * f), rs = tipR.map(r => r * c);
-      rings.push(across(ends.map((q, i) => add(q.at, mul(q.way, tipR[i] * f))), rs, rs.map(deep), w, 0.1));
+      rings.push(across(ends.map((q, i) => add(q.at, mul(q.way, tipR[i] * f))), rs, rs.map(deep), w, 0.06));
     }
-    return { rings, first: local(pt(-0.14 * L * 0.47, 0, 0)), last: local(add(between(ends[1].at, ends[2].at, 0.5), mul(w, tipR[1]))) };
+    return { rings, first: local(pt(-0.14 * L * 0.47, 0, 0)), last: local(add(between(ends[1].at, ends[2].at, 0.5), mul(w, tipR[1] * 0.95))) };
   };
   // the thumb: from inside the heel of the palm on the index finger's side, out and along beside the hand, tapering
   const thumb = () => {

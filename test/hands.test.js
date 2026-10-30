@@ -1,6 +1,6 @@
 // A hand of its own (engines/3/people/hand.js: a style's `fingers` — a palm with the fingers on it — or `mitten`):
 // drawn once, whole, skinned to the hand's joint — nothing of it worked out a frame; as big as the figure's skeleton,
-// as broad as the figure; either hand made in every style, on every body; a style with neither as it was. In node:
+// as broad as the figure; either hand made in every style, on every body; the old words of a style still say its hands. In node:
 // SOMA's skeleton read from engine 1's folder (no GPU).
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -22,13 +22,14 @@ globalThis.XMLHttpRequest ??= class {
 
 const { loadPlayer } = await import('../engines/3/people/player.js');
 const { fitOf, poseOf, pose, bindLocals } = await import('../engines/3/people/rig.js');
-const { look, ARENA } = await import('../engines/3/people/wardrobe.js');
+const { look, ARENA, tablesOf } = await import('../engines/3/people/wardrobe.js');
 const { createModel } = await import('../engines/3/people/shapes.js');
 const { handOf } = await import('../engines/3/people/hand.js');
 const rig = await loadPlayer();
 const STYLES = ['soft', 'toy', 'shadow', 'graphic', 'geometry', 'flat'];
-const cast = { shapes: { styles: Object.fromEntries(STYLES.flatMap(st => [
-  [`${st}_m`, { from: st, name: st, mitten: true, fingers: false }], [`${st}_f`, { from: st, name: st, fingers: true }], [`${st}_0`, { from: st, name: st, mitten: false, fingers: false }]])) } };
+const cast = { shapes: { styles: { ...Object.fromEntries(STYLES.flatMap(st => [[`${st}_m`, { from: st, name: st, hands: 'mitten' }], [`${st}_f`, { from: st, name: st, hands: 'fingers' }]])),
+  // (the old words: a world's style as it was written)
+  old: { from: 'soft', name: 'old', arms: 'palm', fingers: true }, old_m: { from: 'shadow', name: 'old', fingers: false } } } };
 const model = (style, who, warn = t => assert.fail(`${style} ${who}: ${t}`)) => createModel(look({ style, who, hair: 'none', garment: 'none' }, cast), { rig, warn });
 
 // a hand as handOf makes it for a body: its palm's breadth (its widest section), the middle finger's thickness at its root
@@ -53,11 +54,19 @@ test('either hand, in every style, on every body: made without a word said, skin
   }
 });
 
-test('a hand is cheaper than the wires it took the place of; a style with neither hand as it was', () => {
+test('the old words still say the hands: fingers: true — fingers; false — a mitten', () => {
+  const T = tablesOf(cast);
+  assert.equal(T.styles.old.hands, 'fingers');
+  assert.equal(T.styles.old.arms, 'palm');
+  assert.equal(T.styles.old_m.hands, 'mitten');
+  assert.ok(!('fingers' in T.styles.old));
+  assert.equal(T.styles.shadow.hands, 'fingers');
+  for (const st of ['soft', 'toy', 'graphic', 'geometry', 'flat']) assert.equal(T.styles[st].hands, 'mitten', st);
+});
+
+test('a mitten costs less than a hand with fingers', () => {
   const vertices = M => M.body.skin.count + M.body.tubes.count;
-  assert.ok(vertices(model('soft_f', 'man')) < vertices(model('soft_0', 'man')) + 1400, 'fingers: a palm, five pieces, both hands');
-  assert.ok(vertices(model('soft_m', 'man')) < vertices(model('soft_f', 'man')), 'a mitten, less');
-  assert.equal(model('toy', 'man').body.skin.count, model('toy_0', 'man').body.skin.count);
+  assert.ok(vertices(model('soft_m', 'man')) < vertices(model('soft_f', 'man')));
 });
 
 test('the hand is as big as the skeleton, as broad as the figure', () => {

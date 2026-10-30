@@ -29,6 +29,8 @@ export function say({ code, values: v }, tr) {
     // the engine a scene is for
     case 'engine': return tr('"engine" {engine} — there is engine 3 (every new scene), and engine 1 (a scene that says none)', v);
     case 'engine-gone': return tr('"engine" 2 — engine 2 is gone: the scene is written anew for engine 3 ("engine": 3)', v);
+    // a cast's old words for a style's hands
+    case 'hands-old': return tr('{word} — an old word: write hands: "{hands}"', v);
     // a scene's music, as a host makes it (engines/1/music.js: what Lyria takes)
     case 'music-prompts': return tr('"music" — {count} descriptions that sound: {most} at most', v);
     case 'music-text': return tr('"music" — the description {n} that sounds: {length} characters, {most} at most', v);
