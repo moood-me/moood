@@ -52,7 +52,9 @@ export const V = Object.freeze({ add, sub, mul, dot, cross, mix, unit, level, me
 
 // a style: its shapes and proportions — the head's size and shape (an egg's three half-widths; headSquare > 2:
 // squarer), the neck's length, the legs', the limbs' thickness; the trunk's sections (hips to shoulders: their width
-// and depth), how square; the arms' and the legs' profiles (ARMS, LEGS: hands and feet), fingers of their own; how
+// and depth), how square; the arms' and the legs' profiles (ARMS, LEGS: the arm to the wrist, the leg and the foot);
+// the hands (hand.js): fingers — a hand's palm and the fingers on it, at ease; mitten — the same hand, the four
+// fingers held together as one piece (a style that says none: a mitten); how
 // round (a tube's sides; facets: flat faces); garments' folds (how many round, how deep at the hem) and a ragged
 // hem (how much of the length its tatters hang); rigid: each bone of a limb a straight bar of its own (a bent knee
 // the corner of two), the hands balls, the feet shoes; straight: garments' sides straight lines from their top to
@@ -61,31 +63,32 @@ export const V = Object.freeze({ add, sub, mul, dot, cross, mix, unit, level, me
 // painted, its lines (CSS pixels; tinted: each a darker shade of what it edges), the ground it is seen on first
 export const STYLES = {
   shadow: { name: 'shadow', head: 0.94, egg: [0.84, 1.12, 0.96], neck: 1.35, legs: 1.1, limb: 0.66, sides: 20, square: 2,
-    trunk: { w: [0.78, 0.84, 0.66, 0.8, 0.9], d: [0.8, 0.82, 0.7, 0.76, 0.68] }, arms: 'palm', fingers: true, feet: 'point', paint: 'rim', line: 1.4,
+    trunk: { w: [0.78, 0.84, 0.66, 0.8, 0.9], d: [0.8, 0.82, 0.7, 0.76, 0.68] }, arms: 'palm', hands: 'fingers', feet: 'point', paint: 'rim', line: 1.4,
     folds: { n: 7, depth: 0.09 }, ragged: 0.07, ground: 'fog', drape: true },
   soft: { name: 'soft', head: 1.38, egg: [1.08, 1, 1.02], neck: 0.35, legs: 0.84, limb: 1.05, sides: 22, square: 2,
-    trunk: { w: [0.98, 1.04, 0.98, 1.02, 0.92], d: [1.08, 1.1, 1.1, 1.08, 0.98] }, arms: 'mitten', feet: 'bean', paint: 'toned', line: 2.2, tinted: true,
+    trunk: { w: [0.98, 1.04, 0.98, 1.02, 0.92], d: [1.08, 1.1, 1.1, 1.08, 0.98] }, arms: 'mitten', hands: 'mitten', feet: 'bean', paint: 'toned', line: 2.2, tinted: true,
     folds: { n: 5, depth: 0.04 }, face: 'simple', ground: 'paper', drape: true },
   graphic: { name: 'graphic', head: 1.06, egg: [0.9, 1.08, 0.94], headSquare: 2.6, neck: 0.8, legs: 1.06, limb: 0.74, sides: 16, square: 2.8,
-    trunk: { w: [0.82, 0.88, 0.7, 1.06, 1.24], d: [0.78, 0.8, 0.7, 0.76, 0.62] }, arms: 'leaf', feet: 'point', paint: 'flat', line: 1.6, ground: 'day', drape: true },
+    trunk: { w: [0.82, 0.88, 0.7, 1.06, 1.24], d: [0.78, 0.8, 0.7, 0.76, 0.62] }, arms: 'leaf', hands: 'mitten', feet: 'point', paint: 'flat', line: 1.6, ground: 'day', drape: true },
   toy: { name: 'toys', head: 1.16, egg: [0.96, 1.06, 1], neck: 0.6, legs: 0.92, limb: 1.25, sides: 22, square: 2.2,
-    trunk: { w: [1.05, 1.1, 1.08, 1.12, 1.06], d: [1.1, 1.1, 1.15, 1.15, 1.05] }, arms: 'mitten', feet: 'boot', paint: 'clay', line: 1.4,
+    trunk: { w: [1.05, 1.1, 1.08, 1.12, 1.06], d: [1.1, 1.1, 1.15, 1.15, 1.05] }, arms: 'mitten', hands: 'mitten', feet: 'boot', paint: 'clay', line: 1.4,
     folds: { n: 4, depth: 0.03 }, face: 'simple', ground: 'studio', drape: true },
   geometry: { name: 'geometry', head: 1, egg: [0.9, 1.1, 0.98], neck: 0.9, legs: 1.02, limb: 0.9, sides: 6, facets: true, square: 2.4,
-    trunk: { w: [0.9, 0.95, 0.82, 0.98, 1.04], d: [0.9, 0.9, 0.84, 0.9, 0.8] }, arms: 'leaf', feet: 'wedge', paint: 'toned', line: 1.2, ground: 'paper', drape: true },
+    trunk: { w: [0.9, 0.95, 0.82, 0.98, 1.04], d: [0.9, 0.9, 0.84, 0.9, 0.8] }, arms: 'leaf', hands: 'mitten', feet: 'wedge', paint: 'toned', line: 1.2, ground: 'paper', drape: true },
   flat: { name: 'flat geometry', head: 1.1, egg: [0.94, 1.04, 0.98], neck: 0.55, legs: 1.06, limb: 0.9, sides: 20, square: 2.8,
-    trunk: { w: [1, 1, 1.16, 1.03, 0.96], d: [0.82, 0.82, 0.88, 0.8, 0.9] }, arms: 'bar', feet: 'shoe', rigid: true, straight: true, drape: true, sleeves: 0.88,
+    trunk: { w: [1, 1, 1.16, 1.03, 0.96], d: [0.82, 0.82, 0.88, 0.8, 0.9] }, arms: 'bar', hands: 'mitten', feet: 'shoe', rigid: true, straight: true, drape: true, sleeves: 0.88,
     paint: 'lit', line: 1, face: 'dot', ground: 'sunset' },
 };
 // the arms' and the legs' profiles: along the joints (0 the shoulder or the hip, 1 the elbow or the knee, 2 the wrist or
-// the ankle, 3 the fingertips or the toes; between, a share of the bone) their half-width, metres at thickness 1
-// (a rigid style's bars take the joints' only: each bone from one to the next; at 3 the hand's ball, the shoe's half-width)
+// the ankle, 3 the toes; between, a share of the bone) their half-width, metres at thickness 1 — an arm's to the wrist
+// (the hand is the style's own: hands) (a rigid style's bars take the joints' only: each bone from one to the next; a
+// leg's 3, the shoe's half-width)
 export const ARMS = {
-  bar: [[0, 0.05], [1, 0.045], [2, 0.04], [3, 0.047]],
-  palm: [[0, 0.046], [0.55, 0.04], [1, 0.03], [1.45, 0.029], [2, 0.017], [2.5, 0.02], [3, 0.012]],
-  point: [[0, 0.046], [0.55, 0.04], [1, 0.03], [1.45, 0.029], [2, 0.017], [2.6, 0.013], [3, 0]],
-  mitten: [[0, 0.048], [1, 0.036], [1.5, 0.034], [2, 0.028], [2.3, 0.044], [2.7, 0.044], [2.9, 0.03], [3, 0]],
-  leaf: [[0, 0.045], [1, 0.031], [1.5, 0.029], [2, 0.02], [2.4, 0.03], [2.8, 0.018], [3, 0]],
+  bar: [[0, 0.05], [1, 0.045], [2, 0.04]],
+  palm: [[0, 0.046], [0.55, 0.04], [1, 0.03], [1.45, 0.029], [2, 0.017]],
+  point: [[0, 0.046], [0.55, 0.04], [1, 0.03], [1.45, 0.029], [2, 0.017]],
+  mitten: [[0, 0.048], [1, 0.036], [1.5, 0.034], [2, 0.028]],
+  leaf: [[0, 0.045], [1, 0.031], [1.5, 0.029], [2, 0.02]],
 };
 export const LEGS = {
   boot: [[0, 0.09], [1, 0.072], [1.5, 0.068], [1.9, 0.064], [2, 0.058], [2.3, 0.062], [2.8, 0.052], [3, 0]],
@@ -417,6 +420,15 @@ const made = new WeakMap(), OURS = { styles: STYLES, characters: CHARACTERS, gar
 // what its points are worked out on too (people.js)
 // (the shoulders as broad as the trunk is: a thicker figure's arms hang from where its trunk's shoulders end)
 export const bodyOf = L => { const st = tablesOf(L.cast).styles[L.style]; return { ...L.body, legs: L.body.legs * st.legs, neck: L.body.neck * st.neck, shoulders: L.body.shoulders * L.body.thick }; };
+// a world's style in the words of now: the old ones it may say, each as it is said now (moood-check says each: write
+// the new)
+const OLD = { fingers: v => ({ hands: v ? 'fingers' : 'mitten' }) };
+const said = e => {
+  if (!e || !Object.keys(OLD).some(k => k in e)) return e;
+  const out = { ...e };
+  for (const k of Object.keys(OLD)) if (k in out) { const now = OLD[k](out[k]); delete out[k]; for (const [w, v] of Object.entries(now)) if (!(w in e)) out[w] = v; }
+  return out;
+};
 export function tablesOf(cast) {
   const own = cast?.shapes;
   if (!own) return OURS;
@@ -425,7 +437,7 @@ export function tablesOf(cast) {
     // (made from another: that one's, then its own — through as many as it takes; from its own name, ours of it)
     for (const n of ['styles', 'characters']) {
       const whole = (key, seen) => {
-        const e = own[n]?.[key];
+        const e = n === 'styles' ? said(own[n]?.[key]) : own[n]?.[key];
         if (!e) return OURS[n][key];
         if (!e.from || seen.has(key)) return e;
         seen.add(key);

@@ -18,6 +18,7 @@
   {"text":"\"about\" {ref} — no world, game or scene there","translation":"\"about\" {ref} — そこには世界もゲームもシーンもありません","where":"problems.js"},
   {"text":"\"engine\" {engine} — there is engine 3 (every new scene), and engine 1 (a scene that says none)","translation":"\"engine\" {engine} — エンジン 3（新しいシーンはすべてこれ）と、エンジン 1（\"engine\" を書かないシーン）があります","where":"problems.js"},
   {"text":"\"engine\" 2 — engine 2 is gone: the scene is written anew for engine 3 (\"engine\": 3)","translation":"\"engine\" 2 — エンジン 2 はもうありません。シーンはエンジン 3 用に書き直します（\"engine\": 3）","where":"problems.js"},
+  {"text":"{word} — an old word: write hands: \"{hands}\"","translation":"{word} — 古い書き方です：hands: \"{hands}\" と書いてください","where":"problems.js"},
   {"text":"\"music\" — {count} descriptions that sound: {most} at most","translation":"\"music\" — 鳴る説明が {count} 個あります：最大 {most} 個まで","where":"problems.js"},
   {"text":"\"music\" — the description {n} that sounds: {length} characters, {most} at most","translation":"\"music\" — 鳴る説明 {n}：{length} 文字、最大 {most} 文字まで","where":"problems.js"},
   {"text":"\"music\".{field} {value} — {least} to {most}","translation":"\"music\".{field} {value} — {least} から {most} まで","where":"problems.js"},

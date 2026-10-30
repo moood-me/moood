@@ -18,6 +18,7 @@
   {"text":"\"about\" {ref} — no world, game or scene there","translation":"\"about\" {ref} — там немає ні світу, ні гри, ні сцени","where":"problems.js"},
   {"text":"\"engine\" {engine} — there is engine 3 (every new scene), and engine 1 (a scene that says none)","translation":"\"engine\" {engine} — є рушій 3 (кожна нова сцена) і рушій 1 (сцена без \"engine\")","where":"problems.js"},
   {"text":"\"engine\" 2 — engine 2 is gone: the scene is written anew for engine 3 (\"engine\": 3)","translation":"\"engine\" 2 — рушія 2 більше немає: сцена пишеться заново для рушія 3 (\"engine\": 3)","where":"problems.js"},
+  {"text":"{word} — an old word: write hands: \"{hands}\"","translation":"{word} — старе слово: пишіть hands: \"{hands}\"","where":"problems.js"},
   {"text":"\"music\" — {count} descriptions that sound: {most} at most","translation":"\"music\" — звучних описів {count}: не більше {most}","where":"problems.js"},
   {"text":"\"music\" — the description {n} that sounds: {length} characters, {most} at most","translation":"\"music\" — звучний опис {n}: {length} символів, не більше {most}","where":"problems.js"},
   {"text":"\"music\".{field} {value} — {least} to {most}","translation":"\"music\".{field} {value} — від {least} до {most}","where":"problems.js"},

@@ -36,7 +36,7 @@ What it finds wrong in the code: a text that is not a literal (`tr(x)`; a bare t
 `{voice, how}`; a game's line its own manner and spoken words only, `{how, spoken}` — of `say`, `think`, `tr.line`,
 `tr.thought`; a kept line said with either; `who` is not heard). In a game's people (`bespoke/people.json`: `{who: {voice, how, short}}`) anything else; in a
 line's translation, other inline tags than the line's (`<sigh>`, `<short pause>` — heard as written, in English). A
-scene's `"engine"` other than 3 or none (engine 1) — engine 2 is gone. In a scene's music, what a host making it with
+scene's `"engine"` other than 3 or none (engine 1) — engine 2 is gone. In a cast's styles, an old word for its hands (`fingers: true` — write `hands: 'fingers'`). In a scene's music, what a host making it with
 Lyria does not take (`engines/1/music.js`: `MooodMusic.LIMITS` — `bpm` 60–200, `density` and `brightness` 0–1, one of
 Lyria's scales, at most 20 descriptions that sound, 500 characters each).
 

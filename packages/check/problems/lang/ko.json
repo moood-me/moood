@@ -18,6 +18,7 @@
   {"text":"\"about\" {ref} — no world, game or scene there","translation":"\"about\" {ref} — 그곳에 세계도, 게임도, 장면도 없습니다","where":"problems.js"},
   {"text":"\"engine\" {engine} — there is engine 3 (every new scene), and engine 1 (a scene that says none)","translation":"\"engine\" {engine} — 엔진 3(새 장면은 모두 이것)과 엔진 1(\"engine\"을 쓰지 않은 장면)이 있습니다","where":"problems.js"},
   {"text":"\"engine\" 2 — engine 2 is gone: the scene is written anew for engine 3 (\"engine\": 3)","translation":"\"engine\" 2 — 엔진 2는 더 이상 없습니다: 장면을 엔진 3용으로 새로 씁니다 (\"engine\": 3)","where":"problems.js"},
+  {"text":"{word} — an old word: write hands: \"{hands}\"","translation":"{word} — 예전 표기입니다: hands: \"{hands}\"로 쓰세요","where":"problems.js"},
   {"text":"\"music\" — {count} descriptions that sound: {most} at most","translation":"\"music\" — 소리 나는 설명이 {count}개입니다: 최대 {most}개까지","where":"problems.js"},
   {"text":"\"music\" — the description {n} that sounds: {length} characters, {most} at most","translation":"\"music\" — 소리 나는 설명 {n}: {length}자, 최대 {most}자까지","where":"problems.js"},
   {"text":"\"music\".{field} {value} — {least} to {most}","translation":"\"music\".{field} {value} — {least}부터 {most}까지","where":"problems.js"},
