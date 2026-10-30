@@ -7,7 +7,7 @@
 // translated kept (by its text), what is new to translate empty, what the code no longer says gone (git diff shows it,
 // to carry over by hand); an article is translated by hand. A scene's engine one there is (3, or 1); its music as a
 // host makes it (engines/1/music.js: within LIMITS).
-import { problem } from './problems/problems.js';
+import { isAdvice, problem } from './problems/problems.js';
 import { LANGUAGES, scopes } from './scopes.js';
 import './i18n/i18n.js';
 import './engines/1/music.js';
@@ -98,7 +98,8 @@ function music(spec, at) {
   return out;
 }
 
-// A repository read through its source (repository.js) → {problems: [{at, code, values}] (problems/problems.js), scopes: [{name, kind, languages, entries,
+// A repository read through its source (repository.js) → {problems: [{at, code, values}] (problems/problems.js) — what is
+// wrong, advice: [{at, code, values}] — what works, better written otherwise (problems.js: ADVICE), scopes: [{name, kind, languages, entries,
 // said}]} — said: the lines heard (who, text, said: 'say' | 'think', voice? — a scene's, how?, spoken? — a game's line's own); write — each language's file laid out
 // anew (a source that writes: a folder)
 export async function check(source, { write = false } = {}) {
@@ -177,5 +178,5 @@ export async function check(source, { write = false } = {}) {
       }
     }
   }
-  return { problems, scopes: out };
+  return { problems: problems.filter(p => !isAdvice(p)), advice: problems.filter(isAdvice), scopes: out };
 }

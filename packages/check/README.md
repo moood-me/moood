@@ -19,7 +19,7 @@ language, the line shown in it.
 
     npm i -g @moood/check
     moood-check <repo> --write   # each language's file laid out anew from what the code says (translations kept)
-    moood-check <repo>           # checked: "all right", or what is wrong — exits 1
+    moood-check <repo>           # checked: "all right", or what is wrong — exits 1 (advice alone: all right, exits 0)
     moood-check <repo> --json    # the whole report: every text; every line heard, in each language, as its voice is asked for
 
 Where the translations lie (from the world's or the game's folder): a scene's — `scenes/<folder>/lang/<lang>.json`; a
@@ -36,14 +36,19 @@ What it finds wrong in the code: a text that is not a literal (`tr(x)`; a bare t
 `{voice, how}`; a game's line its own manner and spoken words only, `{how, spoken}` — of `say`, `think`, `tr.line`,
 `tr.thought`; a kept line said with either; `who` is not heard). In a game's people (`bespoke/people.json`: `{who: {voice, how, short}}`) anything else; in a
 line's translation, other inline tags than the line's (`<sigh>`, `<short pause>` — heard as written, in English). A
-scene's `"engine"` other than 3 or none (engine 1) — engine 2 is gone. In a cast's styles, an old word for its hands (`fingers: true` — write `hands: 'fingers'`). In a scene's music, what a host making it with
+scene's `"engine"` other than 3 or none (engine 1) — engine 2 is gone. In a scene's music, what a host making it with
 Lyria does not take (`engines/1/music.js`: `MooodMusic.LIMITS` — `bpm` 60–200, `density` and `brightness` 0–1, one of
 Lyria's scales, at most 20 descriptions that sound, 500 characters each).
 
+Advice is what works as it is, better written otherwise — said apart from what is wrong (under its own heading;
+`--json`'s `advice`, beside `problems`), and nothing is refused for it: advice alone is "all right", exit 0. A code's
+level is the problems' (`problems/problems.js`: `ADVICE`). Advice now: in a cast's styles, an old word for its hands
+(`fingers: true` — write `hands: 'fingers'`; the engine still reads it).
+
 It reads a repository through a source of its files (`repository.js`: `folder(root)` — a folder on disk, read as git
 reads it: a symbolic link is not followed nor written through, nothing outside it is read; a host's own — the studio
-reads a git tree so): `check(source, {write})`, `lines(source, report)`. What it finds wrong is data —
-`{at, code, values}` —, said in words by `problems/problems.js`: `say(problem, tr)` in the language of the translator
+reads a git tree so): `check(source, {write})` — `{problems, advice, scopes}`, `lines(source, report)`. What it finds wrong is data —
+`{at, code, values}` (advice the same, in its own list) —, said in words by `problems/problems.js`: `say(problem, tr)` in the language of the translator
 it is given (English on the command line; a page in its own — the translations beside it, `problems/lang/`; it
 imports nothing of Node's: a browser's page says them too). The hosts read a repository by the same rules
 (`repository.js`): `units` (what it holds), `languagesOf` (the languages one says — a value that is not moood's makes
