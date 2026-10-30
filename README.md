@@ -14,6 +14,8 @@ games. Write your own; we'd be glad to see them on moood.
 
 ![How moood fits together](docs/images/how-it-fits.en.svg)
 
+More — in the story [Make your own game](https://moood.me/en/stories/make-your-own) on moood.me: what moood lets you do, and how the studio helps.
+
 ## Making worlds and games
 
 Your worlds and games live in your own git repository — any number of them, in any folders: a folder with

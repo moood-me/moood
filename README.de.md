@@ -15,6 +15,8 @@ für alle, die Welten und Spiele machen. Schreibe deine eigenen; wir würden uns
 
 ![Wie alles zusammenhängt](docs/images/how-it-fits.de.svg)
 
+Mehr dazu im Artikel [„Dein eigenes Spiel machen“](https://moood.me/de/stories/make-your-own) auf moood.me: was moood möglich macht und wie das Studio hilft.
+
 ## Welten und Spiele machen
 
 Deine Welten und Spiele liegen in deinem eigenen Git-Repository — beliebig viele, in beliebigen Ordnern: Ein Ordner mit

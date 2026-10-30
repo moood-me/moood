@@ -14,6 +14,8 @@
 
 ![全体のつながり](docs/images/how-it-fits.ja.svg)
 
+詳しくは moood.me の記事[「自分のゲームを作る」](https://moood.me/ja/stories/make-your-own)へ：moood でできること、スタジオが手伝えること。
+
 ## ワールドとゲームを作る
 
 あなたのワールドとゲームは、あなた自身の git リポジトリに置きます。数もフォルダも自由です。`world.json` のあるフォルダは

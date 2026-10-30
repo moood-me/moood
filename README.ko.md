@@ -14,6 +14,8 @@
 
 ![전체가 이어지는 방식](docs/images/how-it-fits.ko.svg)
 
+자세한 내용은 moood.me의 글 [「나만의 게임 만들기」](https://moood.me/ko/stories/make-your-own)에서: moood로 할 수 있는 것, 스튜디오가 돕는 것.
+
 ## 월드와 게임 만들기
 
 여러분의 월드와 게임은 여러분 자신의 git 저장소에 있습니다. 개수도 폴더도 자유입니다. `world.json`이 있는 폴더는 월드,

@@ -15,6 +15,8 @@ quienes crean mundos y juegos. Escribe los tuyos; nos alegrará verlos en moood.
 
 ![Cómo encaja todo](docs/images/how-it-fits.es.svg)
 
+Más en el artículo [«Haz tu propio juego»](https://moood.me/es/stories/make-your-own) en moood.me: qué permite moood y cómo ayuda el estudio.
+
 ## Crear mundos y juegos
 
 Tus mundos y juegos viven en tu propio repositorio git — los que quieras, en las carpetas que quieras: una carpeta con

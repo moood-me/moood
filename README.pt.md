@@ -14,6 +14,8 @@ Escreva os seus; vamos adorar vê-los no moood.
 
 ![Como tudo se encaixa](docs/images/how-it-fits.pt.svg)
 
+Mais no artigo [«Faça seu próprio jogo»](https://moood.me/pt/stories/make-your-own) no moood.me: o que o moood permite e como o estúdio ajuda.
+
 ## Criando mundos e jogos
 
 Os seus mundos e jogos ficam no seu próprio repositório git — quantos você quiser, nas pastas que quiser: uma pasta com

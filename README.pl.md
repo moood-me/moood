@@ -14,6 +14,8 @@ chętnie zobaczymy je na moood.
 
 ![Jak to wszystko się łączy](docs/images/how-it-fits.pl.svg)
 
+Więcej w artykule [„Zrób własną grę”](https://moood.me/pl/stories/make-your-own) na moood.me: co daje moood i jak pomaga studio.
+
 ## Tworzenie światów i gier
 
 Twoje światy i gry żyją w twoim własnym repozytorium git — w dowolnej liczbie i w dowolnych folderach: folder z

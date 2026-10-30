@@ -13,6 +13,8 @@
 
 ![整體如何串起來](docs/images/how-it-fits.zh-hant.svg)
 
+更多內容請見 moood.me 上的文章[〈做你自己的遊戲〉](https://moood.me/zh-hant/stories/make-your-own)：moood 能做什麼，工作室能幫上什麼忙。
+
 ## 創作世界與遊戲
 
 你的世界與遊戲放在你自己的 git 儲存庫裡——數量不限，放在哪個資料夾都行：含有 `world.json` 的資料夾是世界，含有
