@@ -7,6 +7,8 @@ ensemble de scènes — des lieux avec leur ambiance, peints en code, éclairés
 histoire jouée sur un monde, écrite par son auteur sous forme de code qui lui est propre (un jeu *bespoke*) : chapitres,
 choix, répliques doublées, mini-jeux.
 
+![Une scène vivante : Le Ponton — Le Pêcheur et son Âme](docs/images/the-pier.gif)
+
 Ce dépôt est la partie ouverte de moood : les moteurs qui font tourner les scènes, le runtime qui joue un jeu, le
 langage des mini-jeux, `check` pour les textes et les traductions, un lecteur local — et la documentation de ceux qui
 créent des mondes et des jeux. Écrivez les vôtres ; nous serons heureux de les voir sur moood.

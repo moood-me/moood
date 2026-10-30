@@ -12,3 +12,9 @@ under the opening paragraphs.
 
 **How.** One template, the words per language (the READMEs' own terms and address — «tú» in Spanish, ワールド, 월드);
 each drawn in Chrome and checked that no line of text leaves its box.
+
+**A living scene above it** (the same day). Pavel asked for a short looping animation, to show the scenes move:
+`docs/images/the-pier.gif` — «The Pier» of The Fisherman and his Soul (moood-me/works-006), two seconds, 800 px. Drawn
+by the studio's render on the GPU (a film of the scene, after its title has gone), the last half-second blended into
+the first so the loop has no seam; under each README's first paragraph, its caption in that language with the scene's
+and the game's own titles.

@@ -7,6 +7,8 @@ de escenas: lugares con su ambiente, pintados en código, iluminados y en movimi
 jugada en un mundo, que su autor escribe como código propio (un juego *bespoke*): capítulos, elecciones, líneas con voz,
 minijuegos.
 
+![Una escena viva: El embarcadero — El pescador y su alma](docs/images/the-pier.gif)
+
 Este repositorio es la parte abierta de moood: los motores que ejecutan las escenas, el runtime que reproduce un juego,
 el lenguaje de los minijuegos, `check` para textos y traducciones, un reproductor local — y la documentación para
 quienes crean mundos y juegos. Escribe los tuyos; nos alegrará verlos en moood.

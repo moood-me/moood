@@ -7,6 +7,8 @@ ist eine Reihe von Szenen — Orte mit ihrer Stimmung, in Code gemalt, beleuchte
 Geschichte, die auf einer Welt gespielt wird und die ihr Autor als eigenen Code schreibt (ein *bespoke*-Spiel): Kapitel,
 Entscheidungen, vertonte Zeilen, Minispiele.
 
+![Eine lebendige Szene: Der Steg — Der Fischer und seine Seele](docs/images/the-pier.gif)
+
 Dieses Repository ist der offene Teil von moood: die Engines, die Szenen abspielen, die Laufzeit, die ein Spiel
 ausführt, die Sprache der Minispiele, `check` für Texte und Übersetzungen, ein lokaler Player — und die Dokumentation
 für alle, die Welten und Spiele machen. Schreibe deine eigenen; wir würden uns freuen, sie auf moood zu sehen.

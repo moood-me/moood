@@ -6,6 +6,8 @@
 swoim nastrojem, namalowanych kodem, oświetlonych i w ruchu; **gra** to historia rozgrywana w świecie, którą autor pisze
 jako własny kod (gra *bespoke*): rozdziały, wybory, udźwiękowione kwestie, minigry.
 
+![Żywa scena: Pomost — Rybak i jego dusza](docs/images/the-pier.gif)
+
 To repozytorium jest otwartą częścią moood: silniki, które uruchamiają sceny, runtime, który odtwarza grę, język minigier,
 `check` do tekstów i tłumaczeń, lokalny odtwarzacz — oraz dokumentacja dla tych, którzy tworzą światy i gry. Pisz własne;
 chętnie zobaczymy je na moood.

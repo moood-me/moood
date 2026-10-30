@@ -6,6 +6,8 @@
 cenas — lugares com o seu clima, pintados em código, iluminados e em movimento; um **jogo** é uma história jogada em um
 mundo, escrita pelo autor como código próprio (um jogo *bespoke*): capítulos, escolhas, falas dubladas, minijogos.
 
+![Uma cena viva: O píer — O Pescador e Sua Alma](docs/images/the-pier.gif)
+
 Este repositório é a parte aberta do moood: os motores que executam as cenas, o runtime que roda um jogo, a linguagem
 dos minijogos, o `check` para textos e traduções, um player local — e a documentação para quem cria mundos e jogos.
 Escreva os seus; vamos adorar vê-los no moood.

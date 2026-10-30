@@ -6,6 +6,8 @@ English · [Русский](README.ru.md) · [Українська](README.uk.md
 places with their mood, painted in code, lit and moving; a **game** is a story played on a world, written by its
 author as code of its own (a *bespoke* game): chapters, choices, voiced lines, mini-games.
 
+![A living scene: The Pier — The Fisherman and his Soul](docs/images/the-pier.gif)
+
 This repository is the open part of moood: the engines that run scenes, the runtime that plays a game, the language
 of mini-games, `check` for texts and translations, a local player — and the docs for those who make worlds and
 games. Write your own; we'd be glad to see them on moood.
