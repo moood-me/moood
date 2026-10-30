@@ -4,7 +4,8 @@
 // (its answer's back, "← its title"; before it, or without it, the back the host put in the page's query — a page of its
 // own), ↺ (the play anew, asked first), and, once the game runs, ⏸, the game's ⏭ (while it gives one: bespoke.forward)
 // and ☰ (while it has one: bespoke.menu); how loud (volume.js), the whole screen; a phone plays it across
-// (landscape.js). What keeps the play from being opened (a refusal, the network) is said in the middle, with what can be
+// (landscape.js). Its buttons come and go calmly, none jumping into the place of one aimed at (bar.js). What keeps
+// the play from being opened (a refusal, the network) is said in the middle, with what can be
 // done: continue on the game's new version (once the host tells of one), begin anew, back to the game. A host that
 // tells of files saved (the game's, its world's changes) has the page shown anew as one of them is: the play goes on
 // from what the game kept. A host whose plays are pinned to the commits (a published game's: the publication) they
@@ -15,6 +16,7 @@ import { ask, asked, at, follow, HOST, lang, music, query, scene, voice } from '
 import { start } from './runtime.js';
 import { full, landscape } from './landscape.js';
 import { speak, words } from '../i18n/words.js';
+import { calm } from './bar.js';
 
 const tr = await words(new URL('./', import.meta.url), lang);
 const trouble = text => { const t = document.getElementById('trouble'); t.textContent = text; t.classList.add('on'); };
@@ -42,6 +44,8 @@ const bar = document.createElement('div');
 bar.className = 'bar';
 bar.append(back, again, onward, pause, forward, menu, volume, whole);
 document.body.append(bar);
+// (its buttons come and go calmly: bar.js)
+const { show, shown, change } = calm(bar);
 whole.onclick = () => full();
 
 // my play's id (none till the host gives it), whether the host told of a newer version, what kept it from being opened
@@ -82,7 +86,7 @@ function say() {
     : tr('The play could not be opened: {why}', { why: failure.message || failure });
   unopened.replaceChildren(Object.assign(document.createElement('p'), { textContent: text }), Object.assign(document.createElement('div'), { className: 'acts' }));
   unopened.lastChild.append(...[newer && act(tr('Continue on the new version'), move), act(tr('Begin anew'), anew),
-    !back.hidden && Object.assign(document.createElement('a'), { href: back.href, textContent: tr('Back to the game') })].filter(Boolean));
+    shown(back) && Object.assign(document.createElement('a'), { href: back.href, textContent: tr('Back to the game') })].filter(Boolean));
   unopened.hidden = false;
 }
 
@@ -91,12 +95,12 @@ async function open() {
   const game = asked.get('game');
   if (!game) throw new Error(tr('No game is asked for (?game=).'));
   ({ id } = await ask('POST', 'play', { game }));
-  follow({ game }, () => { newer = true; onward.hidden = false; say(); });
+  follow({ game }, () => { newer = true; show(onward, true); say(); });
   // {id, game: {id, title, mine}, world, code, save, back?}
   const play = await ask('GET', `play?${query({ play: id, lang })}`);
   document.title = play.game.title;
   if (play.back) back.href = at(play.back);
-  if (play.back || home) Object.assign(back, { textContent: `← ${play.game.title}`, hidden: false });
+  if (play.back || home) { change(() => { back.textContent = `← ${play.game.title}`; }); show(back, true); }
   const [world] = await Promise.all([ask('GET', `world?${query({ world: play.world, lang })}`), speak(lang)]);
   return { play, world };
 }
@@ -114,10 +118,10 @@ await start({
   ready: b => {
     const said = () => { pause.classList.toggle('paused', b.paused); pause.ariaLabel = pause.title = b.paused ? tr('Go on') : tr('Pause'); };
     pause.onclick = () => b.pause(!b.paused);
-    pause.hidden = false;
+    show(pause, true);
     b.onPause(said);
     landscape(b);
   },
-  menu: open => { menu.hidden = !open; menu.onclick = open; },
-  forward: press => { forward.hidden = !press; forward.onclick = press; },
+  menu: open => { show(menu, open); if (open) menu.onclick = open; },
+  forward: press => { show(forward, press); if (press) forward.onclick = press; },
 });
