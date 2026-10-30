@@ -48,13 +48,15 @@
 //     (s: − early, + late), hit (|off| ≤ window: a flash and the beat's sound; else a speck before or after the
 //     edge)}. breath: the ring grows a beat (hold) and falls a beat (let go). After a pause: three ticks counted in,
 //     then the beats go on where they were. set({bpm | times}) — changed on the way
-//   lead({zone: {at, width}, away, steer: 'follow' | 'rate', release: 'return' | 'stay', push}) — pressed anywhere,
+//   lead({zone: {at, width}, away, steer: 'follow' | 'rate', release: 'return' | 'stay', push, from, to}) — pressed anywhere,
 //     led sideways (a track with a knob under the finger; without it the track rests, quieter, where it was last laid
 //     — at first in the middle —: seen while the gesture lasts): the arrow (−1…1) follows the finger's offset (rate: it is
 //     steered — turned by it, and by push, a rate the game sets); without the finger it returns or stays. state {held,
 //     knob (the finger's offset on the track, −1…1), arrow, in (in the zone, or away: out of it), jerk (how sharp the
 //     finger's last move, 0…)}; the ghost leading shows the track under it and the knob going with it (the arrow
-//     not moved)
+//     not moved). from, to (together; refs or fns as a mark's at): the track lies from `from` (−1) to `to` (1), going
+//     with the points each frame, hidden while one is unseen; pressed anywhere, the knob starts in its middle and goes
+//     with the finger's offset along it (half the segment — 1)
 //   touch({on | null}) — the touch as it is, no recognition: state {down, x, y}; 'down', 'move', 'up' {x, y}; a ripple
 //     and the knock on each touch
 import { clamp, dist, el } from './layer.js';
@@ -580,37 +582,64 @@ export const GESTURES = {
   // ── 4.9 lead ──
   lead(ctx, o) {
     const { layer, feel } = ctx, state = { held: false, knob: 0, arrow: 0, in: false, jerk: 0 };
+    if ((o.from == null) !== (o.to == null)) throw new Error('lead: from and to together');
     const track = layer.svg('line', { class: 'mg-track' }), knob = layer.svg('circle', { class: 'mg-knob', r: 14 });
-    let from = null, f = 0, tone = null, shown = null, rest = null; // rest: where the track was last laid
-    const reach = () => 0.25 * layer.window().w;
-    // (the track laid where the finger presses, the knob on it at the finger's offset)
-    const lay = p => {
-      const r = reach();
-      track.setAttribute('x1', p.x - r); track.setAttribute('x2', p.x + r); track.setAttribute('y1', p.y); track.setAttribute('y2', p.y);
-      knob.setAttribute('cx', p.x); knob.setAttribute('cy', p.y); knob.setAttribute('r', 14 * layer.k());
+    let from = null, f = 0, tone = null, shown = null, gu = 0, rest = null; // rest: where the track was last laid
+    // (from/to: the track lies along them, as marks stand — a scene's point each frame, or the game's own fn → page px)
+    const at = r => (typeof r === 'function' ? r() : layer.point(r));
+    let last = null; // the segment as last seen: a finger pressed while a point is unseen goes on along it
+    const seg = () => {
+      if (o.from == null) return null;
+      const a = at(o.from), b = at(o.to);
+      if (a && b) last = { a, b };
+      return a && b ? last : null;
     };
+    const sp = () => (o.from == null ? null : last || seg());
+    // (the track's half: a quarter of the window — or half the segment; its middle and direction)
+    const reach = () => { const s = sp(); return s ? Math.max(1, dist(s.a, s.b) / 2) : 0.25 * layer.window().w; };
+    const dir = () => { const s = sp(); if (!s) return { x: 1, y: 0 }; const d = Math.max(1e-6, dist(s.a, s.b)); return { x: (s.b.x - s.a.x) / d, y: (s.b.y - s.a.y) / d }; };
+    const mid = () => { const s = sp(); return s && { x: (s.a.x + s.b.x) / 2, y: (s.a.y + s.b.y) / 2 }; };
+    // (the finger's offset along the track, −1…1)
+    const along = (p, q) => { const d = dir(); return clamp(((p.x - q.x) * d.x + (p.y - q.y) * d.y) / reach(), -1, 1); };
+    const knobAt = (c, u) => { const d = dir(), r = reach(); knob.setAttribute('cx', c.x + d.x * u * r); knob.setAttribute('cy', c.y + d.y * u * r); };
+    // (the track laid where the finger presses — or along from/to —, the knob on it at the finger's offset)
+    const lay = (p, u = 0) => {
+      const c = mid() || p, d = dir(), r = reach();
+      track.setAttribute('x1', c.x - d.x * r); track.setAttribute('x2', c.x + d.x * r); track.setAttribute('y1', c.y - d.y * r); track.setAttribute('y2', c.y + d.y * r);
+      knobAt(c, u); knob.setAttribute('r', 14 * layer.k());
+    };
+    let hidden = false;
+    const hide = on => { if (on === hidden) return; hidden = on; track.style.display = knob.style.display = on ? 'none' : ''; };
     // (no finger, no ghost: it rests, quieter, where it was last laid — at first in the middle — the knob in its middle)
     let laid = '';
     const idle = () => {
-      const p = rest || centre(layer), key = `${p.x},${p.y},${reach()},${layer.k()}`;
+      const p = rest || centre(layer), c = mid() || p, key = `${c.x},${c.y},${reach()},${dir().x},${layer.k()}`;
       if (key !== laid || !track.classList.contains('mg-idle')) { laid = key; lay(p); }
       track.classList.add('mg-idle'); knob.classList.add('mg-idle');
     };
     const live = () => { laid = ''; track.classList.remove('mg-idle'); knob.classList.remove('mg-idle'); };
-    const off = layer.onPlace(() => { if (!from && !shown) idle(); });
+    // (along from/to it goes with its points each frame, the finger down or not; a point unseen — the track hidden)
+    const off = layer.onPlace(() => {
+      const placed = o.from != null, s = placed && seg();
+      hide(placed && !s);
+      if (placed && !s) return;
+      if (from) { if (placed) lay(from, f); } else if (shown) { if (placed) lay(shown, gu); } else idle();
+    });
+    if (o.from != null) hide(!seg());
     idle();
     return {
       mark: null, state,
       demo() {
-        const p = rest || centre(layer), r = reach();
-        return [near(p, layer), { ...p, ms: APPROACH }, { ...p, down: true, ms: 120 }, { ...p, down: true, ms: DWELL }, { x: p.x + r * 0.6, y: p.y, down: true, ms: 1100 }, { x: p.x - r * 0.5, y: p.y, down: true, ms: 1500 }, { ...p, down: true, ms: 900 }, { ...p, ms: LIFT }];
+        const p = mid() || rest || centre(layer), r = reach(), d = dir(), to = u => ({ x: p.x + d.x * r * u, y: p.y + d.y * r * u });
+        return [near(p, layer), { ...p, ms: APPROACH }, { ...p, down: true, ms: 120 }, { ...p, down: true, ms: DWELL }, { ...to(0.6), down: true, ms: 1100 }, { ...to(-0.5), down: true, ms: 1500 }, { ...p, down: true, ms: 900 }, { ...p, ms: LIFT }];
       },
       // (the ghost leads: the track under it where it presses, the knob going with it — only shown, the arrow not moved)
       follow(p, down) {
         if (from) return;
         if (!p || !down) { if (shown) { shown = null; idle(); } return; }
-        if (!shown) { shown = p; rest = p; lay(p); live(); }
-        knob.setAttribute('cx', shown.x + clamp((p.x - shown.x) / reach(), -1, 1) * reach());
+        if (!shown) { shown = p; rest = p; gu = 0; lay(p); live(); }
+        gu = along(p, shown);
+        knobAt(mid() || shown, gu);
       },
       down(p) {
         from = p; f = 0; state.held = true; state.jerk = 0; shown = null; rest = p;
@@ -620,9 +649,9 @@ export const GESTURES = {
       move(p) {
         if (!from) return;
         const was = f;
-        f = clamp((p.x - from.x) / reach(), -1, 1);
+        f = along(p, from);
         state.jerk = Math.abs(f - was); state.knob = f;
-        knob.setAttribute('cx', from.x + f * reach());
+        knobAt(mid() || from, f);
       },
       up() { from = null; f = 0; state.held = false; state.knob = 0; state.jerk = 0; tone?.stop(); tone = null; idle(); },
       tick(dt) {
