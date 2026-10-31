@@ -128,17 +128,19 @@ ${what === 'step' ? /* wgsl */ `
 // blooms), depth tested, added. Bright in its middle, 0.4 at a quarter of its radius, none at its edge; flickering as
 // its light does — a steady light's glow is steady at GLOW.STEADY (the mean of the shimmer: a still scene
 // stays still) —; dimmed by the haze between. A row an instance: a — its place less the origin, its radius; b — its
-// colour, how much (below 0: with a bright middle); c — its flicker, its seed.
+// colour, how much (below 0: with a bright middle); c — its flicker, its seed, 1 for a sky's glow: a — its way and its
+// radius a unit along it, a point at infinity (behind all that stands, unhazed: the sky's own paint is its air).
 chunk('render.glow', /* wgsl */ `
 struct e_GlowIn { @location(0) a: vec4f, @location(1) b: vec4f, @location(2) c: vec4f }
 struct e_GlowOut { @builtin(position) position: vec4f, @location(0) q: vec2f, @location(1) @interpolate(flat) colour: vec4f }
 @vertex fn e_vertex(@builtin(vertex_index) i: u32, g: e_GlowIn) -> e_GlowOut {
   var o: e_GlowOut;
   o.q = vec2f(f32(i & 1u), f32(i >> 1u));
-  var e = e_view.rot * (g.a.xyz - e_view.eye);
-  let hazed = exp(-length(e) / e_frame.e_hazeReach);
+  let away = g.c.z > 0.5;
+  var e = e_view.rot * select(g.a.xyz - e_view.eye, g.a.xyz, away);
+  let hazed = select(exp(-length(e) / e_frame.e_hazeReach), 1.0, away);
   e = vec3f(e.xy + (o.q - 0.5) * vec2f(2.0, -2.0) * g.a.w, e.z);
-  o.position = e_view.proj * vec4f(e, 1.0);
+  o.position = e_view.proj * vec4f(e, select(1.0, 0.0, away));
   var f = ${GLOW.STEADY};
   if (g.c.x > 0.0) { f = e_flickerOf(g.c.x, g.c.y); }
   o.colour = vec4f(g.b.rgb * hazed, g.b.w * f);

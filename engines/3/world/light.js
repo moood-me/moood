@@ -15,7 +15,8 @@
 //   each as strong as its `on` key and the looks' `lights` say — never the flicker (the GPU's, by its seed).
 // A row: kind, node (the node it hangs on: a painted light's, a window's; −1), at (a point light's and a window's
 // place), way (toward a far light; a window's face; where a beam points), cone (a beam's cosines), colour, strength,
-// reach, sprite (its painted glow's radius), glow, flicker, seed, flags (INSIDE: it lights only what is inside; GLOW: a glow of it is drawn), named, and — beside
+// reach, sprite (its painted glow's radius), glow, flicker, seed, flags (INSIDE: it lights only what is inside; GLOW: a glow of it is drawn;
+// SKY: a sky's e.light — its `at` the way toward it, its sprite in stage heights, no reach: a glow at infinity), named, and — beside
 // the contract — soft (a through-light's edge over a pane, metres) and lights.ids[row] (its id).
 //   world.panes (WT5): the panes of the through-lights and the windows of the daylights, each a rectangle and an
 // outline in a node's plane (x right, y down — a sheet's sense); beside the contract, panes.light[i] — the row of the
@@ -327,8 +328,11 @@ export function createLights(world, value, warn) {
   }
   function lightsOf(el, was) {
     const list = [];
-    // (the sky's and an insert's glows are not lights in the world: a light from the sky is far off, "from" its point)
-    if (el.kind === 'sky' || el.kind === 'insert' || el.kind === 'particles') return list;
+    // (an insert's glows are not lights in the world; the sky's are glows only, at infinity — LIGHT.SKY: its row's `at`
+    // the way toward it, its sprite's radius in stage heights, no reach: it lights nothing — a light from the sky is far
+    // off, "from" its point)
+    if (el.kind === 'insert' || el.kind === 'particles') return list;
+    const sky = el.kind === 'sky';
     const old = new Map();
     if (was) for (const r of was) old.set(r.key, r);
     for (let c = 0; c < el.nodes.length; c++) {
@@ -342,9 +346,9 @@ export function createLights(world, value, warn) {
         const row = r.row, col = (over?.colour) || colourOf(pl.color, `${el.who}: e.light`, warn) || [1, 1, 1], tint = el.copies ? el.copies[c].tint : null, scale = el.copies ? el.copies[c].scale : 1;
         r.pl = pl; r.posed = pl.layer >= 0 && el.spec.animated; r.glow = el.glowIndex.get(pl.name) ?? -1;
         T.setLight(Lt.sprite, row, pl.r * scale); T.setLight(Lt.flicker, row, over?.flicker ?? el.flags.flicker);
-        T.setLight(Lt.reach, row, over?.l.reach > 0 ? over.l.reach : 2 * pl.r * scale);
+        T.setLight(Lt.reach, row, sky ? 0 : over?.l.reach > 0 ? over.l.reach : 2 * pl.r * scale);
         T.setLight3(Lt.colour, row, col[0] * (tint ? tint[0] : 1), col[1] * (tint ? tint[1] : 1), col[2] * (tint ? tint[2] : 1));
-        T.setLight(Lt.flags, row, (el.flags.inside ? LIGHT.INSIDE : 0) | LIGHT.GLOW);
+        T.setLight(Lt.flags, row, sky ? LIGHT.GLOW | LIGHT.SKY : (el.flags.inside ? LIGHT.INSIDE : 0) | LIGHT.GLOW);
         r.strength = num(over?.l.strength) ? over.l.strength : pl.strength;
         list.push(r);
       }
@@ -400,7 +404,7 @@ export function createLights(world, value, warn) {
       if (lookChanged) { all(); return; }
       round++;
       for (let i = 0; i < keys.length; i++) { const rs = byKey.get(keys[i]); if (rs) for (let k = 0; k < rs.length; k++) run(rs[k]); }
-      for (let i = 0; i < elementRules.length; i++) { const el = elementRules[i].el, rs = elementRules[i].rs; if (el.movedAt === T.tick || el.glowedAt === T.tick || (yawed && el.flags.faceEye)) for (let k = 0; k < rs.length; k++) run(rs[k]); }
+      for (let i = 0; i < elementRules.length; i++) { const el = elementRules[i].el, rs = elementRules[i].rs; if (el.movedAt === T.tick || el.glowedAt === T.tick || (yawed && (el.flags.faceEye || (el.kind === 'sky' && !world.sky.round)))) for (let k = 0; k < rs.length; k++) run(rs[k]); }
       for (let i = 0; i < always.length; i++) run(always[i]);
       for (let i = 0; i < watched.length; i++) if (watched[i].ran !== round && watched[i].stale()) run(watched[i]);
     },

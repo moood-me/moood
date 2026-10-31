@@ -14,7 +14,7 @@
 // rows (one buffer, the farthest from the frame's eye first: they are drawn among what blends — render/quads.js,
 // render/wgsl/post.js `render.glow` — and, all of them at once, after what blends in a mirror's pass) hold every glow
 // seen by the frame's view or by a mirror's of this frame. A glow: a painted light's sprite is
-// GLOW.PAINTED of its strength; a lamp's own `glow` is two rows — a halo `glow` metres in radius at 0.6 · min(1,
+// GLOW.PAINTED of its strength (a sky's — LIGHT.SKY — at infinity, along its way: behind all that stands); a lamp's own `glow` is two rows — a halo `glow` metres in radius at 0.6 · min(1,
 // strength) in the light's colour, and a bright dot a quarter of that radius at 0.8 · min(1, strength) in a warm
 // white. While the look has hazeGlow, a lamp's halo in the haze is a row of the halos' buffer, for every lamp that
 // shines in the frame's view (render/air.js); a beam has no halo — its cone in the haze is its rows of the lit set's
@@ -41,6 +41,9 @@ const HALO_SHINE = 0.6, DOT_SHINE = 0.8, DOT_RADIUS = 0.25, DOT = linearOf('#fff
 const SPRITE = 0, HALO_ROW = 1, DOT_ROW = 2;
 // how much of its glow a beam's lamp keeps seen from outside its cone
 const BEAM_GLOW = 0.15;
+// how far along its way a sky's glow is looked for in a view (metres): past anything a scene holds — a frustum's sides
+// go through its eye, so only its near plane (a mirror's: laid on the mirror) tells this from infinity
+const SKY_FAR = 1e6;
 
 export function createLights(gpu) {
   const B = GPUBufferUsage, T = GPUTextureUsage;
@@ -332,19 +335,29 @@ export function createLights(gpu) {
     if (lo >= 0) gpu.write(grid, 4 * lo, words, lo, hi - lo + 1);
     L.halos = halos; L.haloN = haloN;
   };
+  // the sphere of light i's glow (part: what row of it) as a view sees it → S: a painted light's sprite, a lamp's halo
+  // (its dot within it); a sky's glow (LIGHT.SKY: its `at` a way, its sprite a unit along it) as wide seen from the
+  // view's eye, SKY_FAR along that way
+  function glowSphere(i, part, e) {
+    const Lt = world.lights, r = part === SPRITE ? Lt.sprite[i] : Lt.glow[i];
+    if (Lt.flags[i] & LIGHT.SKY) {
+      for (let k = 0; k < 3; k++) S[k] = e.eye[k] + SKY_FAR * Lt.at[3 * i + k];
+      S[3] = SKY_FAR * r;
+    } else { S[0] = Lt.at[3 * i]; S[1] = Lt.at[3 * i + 1]; S[2] = Lt.at[3 * i + 2]; S[3] = r; }
+  }
   // The glows' rows of this frame (after L.choose, the mirrors placed): every glow whose sphere — a painted light's
   // sprite, a lamp's halo — is seen by the frame's view or by a view of `mirrors` (the images in view: each { view }),
-  // the farthest before the frame's eye first. → L.glows, L.glowN, L.glowAhead
+  // the farthest before the frame's eye first (a sky's glow farther than all). → L.glows, L.glowN, L.glowAhead
   L.glowsIn = (view, mirrors) => {
     const Lt = world.lights, e = view.e, n = Lt.n;
     let glowN = 0;
     for (let i = 0; i < n; i++) {
       if (Lt.kind[i] < LIGHT.POINT || !(Lt.flags[i] & LIGHT.GLOW)) continue;
       const painted = Lt.sprite[i] > 0, shine = painted ? GLOW.PAINTED * Lt.strength[i] : HALO_SHINE * Math.min(1, Lt.strength[i]);
-      S[0] = Lt.at[3 * i]; S[1] = Lt.at[3 * i + 1]; S[2] = Lt.at[3 * i + 2]; S[3] = painted ? Lt.sprite[i] : Lt.glow[i];
+      glowSphere(i, painted ? SPRITE : HALO_ROW, e);
       if (!(shine > 0.002) || !(S[3] > 0)) continue;
       let seen = sees(e, S);
-      for (let k = 0; !seen && k < mirrors.length; k++) seen = sees(mirrors[k].view.e, S);
+      for (let k = 0; !seen && k < mirrors.length; k++) { glowSphere(i, painted ? SPRITE : HALO_ROW, mirrors[k].view.e); seen = sees(mirrors[k].view.e, S); }
       if (!seen) continue;
       if (glowN + 2 > glowCap) {
         glowCap *= 2;
@@ -353,7 +366,7 @@ export function createLights(gpu) {
         glowOf = of; glowPart = parts; glowKey = keys; glowData = new Float32Array(glowCap * GLOW_BYTES / 4); glowAhead = new Float64Array(glowCap);
         gpu.drop(glows); glows = gpu.buffer('glows', glowCap * GLOW_BYTES, B.VERTEX | B.COPY_DST);
       }
-      ahead(e, S, glowKey, glowN);
+      if (Lt.flags[i] & LIGHT.SKY) glowKey[glowN] = Infinity; else ahead(e, S, glowKey, glowN);
       glowPart[glowN] = painted ? SPRITE : HALO_ROW; glowOf[glowN++] = i;
       if (!painted) { glowKey[glowN] = glowKey[glowN - 1]; glowPart[glowN] = DOT_ROW; glowOf[glowN++] = i; }
     }
@@ -366,12 +379,14 @@ export function createLights(gpu) {
     }
     for (let k = 0; k < glowN; k++) {
       const i = glowOf[k], g = 12 * k, part = glowPart[k], dot = part === DOT_ROW, cone = isBeam(i) ? toward(i, e.eye) : 1, s = Math.min(1, Lt.strength[i]) * cone;
-      glowData[g] = Lt.at[3 * i] - O[0]; glowData[g + 1] = Lt.at[3 * i + 1] - O[1]; glowData[g + 2] = Lt.at[3 * i + 2] - O[2];
+      // (its place less the origin; a sky's glow: its way, as it is — c.z 1)
+      const way = (Lt.flags[i] & LIGHT.SKY) !== 0;
+      glowData[g] = Lt.at[3 * i] - (way ? 0 : O[0]); glowData[g + 1] = Lt.at[3 * i + 1] - (way ? 0 : O[1]); glowData[g + 2] = Lt.at[3 * i + 2] - (way ? 0 : O[2]);
       glowData[g + 3] = part === SPRITE ? Lt.sprite[i] : dot ? DOT_RADIUS * Lt.glow[i] : Lt.glow[i];
       glowData[g + 4] = dot ? DOT[0] : Lt.colour[3 * i]; glowData[g + 5] = dot ? DOT[1] : Lt.colour[3 * i + 1]; glowData[g + 6] = dot ? DOT[2] : Lt.colour[3 * i + 2];
       // (how much it shines; below 0: with a bright middle — the dot)
       glowData[g + 7] = part === SPRITE ? GLOW.PAINTED * Lt.strength[i] * cone : dot ? -DOT_SHINE * s : HALO_SHINE * s;
-      glowData[g + 8] = Lt.flicker[i]; glowData[g + 9] = Lt.seed[i]; glowData[g + 10] = 0; glowData[g + 11] = 0;
+      glowData[g + 8] = Lt.flicker[i]; glowData[g + 9] = Lt.seed[i]; glowData[g + 10] = way ? 1 : 0; glowData[g + 11] = 0;
       glowAhead[k] = glowKey[k];
       if (Lt.flicker[i] > 0) L.flickers = true;
     }
@@ -417,7 +432,7 @@ export function createLights(gpu) {
       // (a lamp's dot goes with its halo)
       if (glowPart[k] === DOT_ROW) continue;
       const i = glowOf[k];
-      S[0] = Lt.at[3 * i]; S[1] = Lt.at[3 * i + 1]; S[2] = Lt.at[3 * i + 2]; S[3] = glowPart[k] === SPRITE ? Lt.sprite[i] : Lt.glow[i];
+      glowSphere(i, glowPart[k], e);
       if (!sees(e, S)) continue;
       if (Lt.flicker[i] > 0) L.moves = true;
       sig = (((sig * 31 + i) | 0) * 31 + Lt.stamp[i]) | 0;

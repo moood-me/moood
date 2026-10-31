@@ -2743,7 +2743,9 @@ seen through it; the sun and the moon come into the room by the look's `inside` 
 not again in the window's light (2026-10-28). Every light's glow
 (its sprite, its halo in the haze) is drawn whether it lights or not — in the frame and in every mirror's image
 (the glows' rows hold every glow seen by the frame's view or by a mirror's of this frame). **A glow is engine
-2's**: a painted light's (`e.light`) sprite is `GLOW.PAINTED` (0.6) of its strength; a lamp's own `glow` is two
+2's**: a painted light's (`e.light`) sprite is `GLOW.PAINTED` (0.6) of its strength — a sky's at infinity (`LIGHT.SKY`:
+its row's `at` the way toward it, its sprite in stage heights a unit along it, no reach: it lights nothing; behind all
+that stands, unhazed, in a mirror's image too); a lamp's own `glow` is two
 sprites — a halo `glow` metres in radius at 0.6 · min(1, strength) and a bright dot a quarter of that radius at
 0.8 · min(1, strength) in the warm white `#fff5dc`; a glow flickers as its light does, and one that does not
 flicker is steady at `GLOW.STEADY` (0.9 — the mean of engine 2's shimmer: a still scene stays still, 5.9).
