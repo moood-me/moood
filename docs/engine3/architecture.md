@@ -1340,7 +1340,7 @@ RENDER imports `hazeReach` and nothing else.
 
 **WT5 the look, the land, the rest** — plain objects SCENE owns, read by R each frame:
 `world.look = { ambient, ambientColor, inside, haze, hazeColor, hazeGlow, brightness, tint, tintStrength,
-saturation, vignette, grain, grainBlend, bounce, shafts, wind: [x, z, strength], stamp }` (`ambient` is 1
+saturation, vignette, vignetteInner, vignetteOuter, vignetteCentre, grain, grainBlend, bounce, shafts, wind: [x, z, strength], stamp }` (`ambient` is 1
 where a spec gives none; SCENE's own beside them: `hazeReach`, `lights` — each spec light's share now);
 `world.relief = { height(across, distance) → metres (the land function — distance is −z; synchronous, the
 thread's), field: { data: Float32Array, nx, nz, step, x0, z0 } (x0, z0: the across and distance of sample 0), low, high,
@@ -2460,8 +2460,9 @@ All render passes. `load` / `store` name what each attachment does (on a tile GP
 | 12 | `canvas` | the canvas; clear → store | always — one full-screen pass: bounce (four reads of `gather wide`: a cubic B-spline), people's lines (from `ids`), bloom (one read of the ¼), tone map, grade, edge smoothing (five taps of `main`, tone-mapped), grain, the stage's veil (`f.veil`, 2.10: black laid over all, display-encoded), dither |
 
 The frame's end is engine 2's arithmetic, number for number (8.4): the look's `vignette` at 0.75 of what it
-says, its `grain` at 0.1 (overlay; with `grainBlend: "normal"` the noise itself at that opacity), its `tintStrength`
-at most 0.5 (each bounded to 0 … 1 first); the bloom's three levels
+says (from 0.35 of the short side to 0.6 of the diagonal round the middle, unless the light's `vignetteInner`,
+`vignetteOuter`, `vignetteCentre` say otherwise), its `grain` at 0.1 (overlay; with `grainBlend: "normal"` the noise
+itself at that opacity), its `tintStrength` at most 0.5 (each bounded to 0 … 1 first); the bloom's three levels
 a third of its light each — as wide as engine 2's five (its halo round a lamp is the night look of the train and
 of Сэвил-Роу), in five small passes instead of nine.
 Why two main passes: a particle's `soft` (smoke and fog fading into what stands behind it — every smoke by

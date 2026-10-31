@@ -74,6 +74,10 @@ export function createLook(light, lights, tables, warn) {
   // (how the grain is laid — a word, not mixed by the looks)
   const grainBlend = L.grainBlend == null || L.grainBlend === 'overlay' || L.grainBlend === 'normal' ? L.grainBlend || 'overlay'
     : (warn(`light.grainBlend: ${JSON.stringify(L.grainBlend)} — "overlay" or "normal"`), 'overlay');
+  // (the vignette's shape — the light's alone, not mixed by the looks: where it begins, a share of the short side; where
+  // it is full, of the long side — none: 0.6 of the diagonal —; how far down its middle is)
+  const share = (k, most, none) => (L[k] == null ? none : num(L[k]) && L[k] >= 0 && L[k] <= most ? L[k] : (warn(`light.${k}: a number 0…${most}`), none));
+  const vignetteInner = share('vignetteInner', 1, 0.35), vignetteOuter = share('vignetteOuter', 2, null), vignetteCentre = share('vignetteCentre', 1, 0.5);
   const lightIndex = new Map();
   lights.forEach((l, i) => { if (l && l.id != null && !lightIndex.has(String(l.id))) lightIndex.set(String(l.id), i); });
   const looks = [];
@@ -92,7 +96,7 @@ export function createLook(light, lights, tables, warn) {
   }
   const now = {
     ambient: 1, ambientColor: [1, 1, 1], inside: 1, haze: 0, hazeColor: [0, 0, 0], hazeGlow: 0, brightness: 1, tint: null, tintStrength: 0, saturation: 1,
-    vignette: 0, grain: 0, grainBlend, bounce: 0.5, shafts: 0, wind: [1, 0, 0.5], stamp: 0,
+    vignette: 0, vignetteInner, vignetteOuter, vignetteCentre, grain: 0, grainBlend, bounce: 0.5, shafts: 0, wind: [1, 0, 0.5], stamp: 0,
     hazeReach: 0, lights: new Float64Array(lights.length).fill(1),
   };
   const tint = [0, 0, 0];
