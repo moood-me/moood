@@ -174,10 +174,10 @@ export function createTables() {
   const lights = T.lights = {
     n: 0, cap: 64, version: 0,
     kind: new Uint8Array(64), node: new Int32Array(64).fill(-1), at: new Float64Array(3 * 64), way: new Float32Array(3 * 64), colour: new Float32Array(3 * 64), cone: new Float32Array(2 * 64),
-    strength: new Float32Array(64), reach: new Float32Array(64), sprite: new Float32Array(64), glow: new Float32Array(64), flicker: new Float32Array(64), seed: new Float32Array(64), soft: new Float32Array(64),
+    strength: new Float32Array(64), reach: new Float32Array(64), sprite: new Float32Array(64), glow: new Float32Array(64), flicker: new Float32Array(64), seed: new Float32Array(64), soft: new Float32Array(64), falloff: new Uint8Array(64),
     flags: new Uint32Array(64), named: new Uint8Array(64), stamp: new Uint32Array(64), ids: [], free: [],
   };
-  const LIGHT_ONE = ['kind', 'node', 'strength', 'reach', 'sprite', 'glow', 'flicker', 'seed', 'soft', 'flags', 'named', 'stamp'];
+  const LIGHT_ONE = ['kind', 'node', 'strength', 'reach', 'sprite', 'glow', 'flicker', 'seed', 'soft', 'falloff', 'flags', 'named', 'stamp'];
   T.addLight = () => {
     let i = lights.free.pop();
     if (i === undefined) {

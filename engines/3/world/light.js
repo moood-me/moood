@@ -18,6 +18,8 @@
 // reach, sprite (its painted glow's radius), glow, flicker, seed, flags (INSIDE: it lights only what is inside; GLOW: a glow of it is drawn;
 // SKY: a sky's e.light — its `at` the way toward it, its sprite in stage heights, no reach: a glow at infinity), named, and — beside
 // the contract — soft (a through-light's edge over a pane, metres) and lights.ids[row] (its id).
+//   A glow's falloff (WT4 `falloff`): 1 — "linear", straight from its middle to its rim as the eye sees it (a canvas's
+// radial gradient); 0 — the engine's own, bright in its middle. A spec light's "falloff", else its e.light's.
 //   world.panes (WT5): the panes of the through-lights and the windows of the daylights, each a rectangle and an
 // outline in a node's plane (x right, y down — a sheet's sense); beside the contract, panes.light[i] — the row of the
 // light whose pane it is. A pane given as a polygon in the world has a node of its own (the polygon's plane).
@@ -202,6 +204,8 @@ export function createLights(world, value, warn) {
     const flicker = l.flicker == null ? null : clamp(Number(l.flicker) || 0, 0, 1), keys = [l.on, ...Object.values(l.place && typeof l.place === 'object' ? l.place : {})].filter(k => typeof k === 'string');
     const day = l.daylight === true ? 1 : l.daylight == null || l.daylight === false ? 0 : num(l.daylight) && l.daylight >= 0 ? l.daylight : (warn(`lights ${id}: "daylight" is true or a strength (1)`), 0);
     const colour = l.color ? colourOf(l.color, `lights ${id}: color`, warn) : null, cone = coneOf(l, id);
+    // (null: not said — an element's light taken over falls off as its e.light says)
+    const falloff = l.falloff == null ? null : l.falloff === 'linear' ? 1 : (warn(`lights ${id}: "falloff" is "linear" or left out (its glow bright in its middle)`), null);
     // (a cone is a point light's: a far light, one through panes and a window's daylight have none)
     if (cone && (l.from != null || (day && l.of != null))) warn(`lights ${id}: "cone" is a point light's (a lamp, a lantern, an element's light) — not one far off or a window's daylight; not taken`);
     // (`size`: accepted, nothing — LG5)
@@ -230,7 +234,7 @@ export function createLights(world, value, warn) {
       if (of && (of.kind === 'sky' || of.kind === 'insert')) { warn(`lights ${id}: "of" names a light standing in the scene — ${JSON.stringify(l.of)} is ${of.kind === 'sky' ? `the sky's: a light from it is far off, "from": ${JSON.stringify(l.of)}` : 'an insert\'s, over the frame'}`); return; }
       if (!of) warn(`lights ${id}: "of" names an element's light ("lamp", "lamp#wick", a copy's "lamp:2#wick") — there is no element ${JSON.stringify(R.id)}`);
       else if (one && (!of.copies || R.copy >= of.copies.length)) warn(`lights ${id}: "of" ${JSON.stringify(l.of)} names copy ${R.copy} of "${R.id}" — it has ${of.copies ? `${of.copies.length} (0…${of.copies.length - 1})` : 'no copies'}`);
-      taken.set(String(l.of), { id, l, on, colour, flicker, keys, one, cone });
+      taken.set(String(l.of), { id, l, on, colour, flicker, falloff, keys, one, cone });
       return;
     }
     const strength = num(l.strength) ? l.strength : 1;
@@ -278,7 +282,7 @@ export function createLights(world, value, warn) {
       return;
     }
     const reach = l.reach > 0 ? l.reach : 8, glow = l.glow > 0 ? l.glow : 0;
-    const point = () => { const row = make(id, LIGHT.POINT); if (colour) T.setLight3(Lt.colour, row, colour[0], colour[1], colour[2]); Lt.reach[row] = reach; Lt.flicker[row] = flicker ?? 0; Lt.glow[row] = glow; Lt.flags[row] = (day ? LIGHT.INSIDE : 0) | flagsOf(row); if (cone) coned(row, cone); return row; };
+    const point = () => { const row = make(id, LIGHT.POINT); if (colour) T.setLight3(Lt.colour, row, colour[0], colour[1], colour[2]); Lt.reach[row] = reach; Lt.flicker[row] = flicker ?? 0; Lt.glow[row] = glow; Lt.falloff[row] = falloff ?? 0; Lt.flags[row] = (day ? LIGHT.INSIDE : 0) | flagsOf(row); if (cone) coned(row, cone); return row; };
     const shine = (row, k) => { T.setLight(Lt.strength, row, strength * k * (day ? daylight.strength : 1)); if (day) T.setLight3(Lt.colour, row, daylight.colour[0], daylight.colour[1], daylight.colour[2]); };
     if (l.at != null) {
       // (a point it goes with: a person's — their hands unless one is named —, an element's, a copy's "id:k#name" —
@@ -350,6 +354,7 @@ export function createLights(world, value, warn) {
         T.setLight3(Lt.colour, row, col[0] * (tint ? tint[0] : 1), col[1] * (tint ? tint[1] : 1), col[2] * (tint ? tint[2] : 1));
         T.setLight(Lt.flags, row, sky ? LIGHT.GLOW | LIGHT.SKY : (el.flags.inside ? LIGHT.INSIDE : 0) | LIGHT.GLOW);
         r.strength = num(over?.l.strength) ? over.l.strength : pl.strength;
+        T.setLight(Lt.falloff, row, over?.falloff ?? (pl.falloff === 'linear' ? 1 : 0));
         list.push(r);
       }
     }

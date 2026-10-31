@@ -388,6 +388,8 @@ export function createLights(gpu) {
       glowData[g + 7] = part === SPRITE ? GLOW.PAINTED * Lt.strength[i] * cone : dot ? -DOT_SHINE * s : HALO_SHINE * s;
       glowData[g + 8] = Lt.flicker[i]; glowData[g + 9] = Lt.seed[i]; glowData[g + 10] = way ? 1 : 0; glowData[g + 11] = 0;
       glowAhead[k] = glowKey[k];
+      // (how it falls off: 1 straight from its middle to its rim — "linear" —, 0 bright in its middle)
+      glowData[g + 11] = Lt.falloff[i];
       if (Lt.flicker[i] > 0) L.flickers = true;
     }
     L.glows = glows; L.glowN = glowN; L.glowAhead = glowAhead;

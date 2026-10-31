@@ -26,7 +26,7 @@ const WORDS = Object.freeze({
   light: ['ambient', 'ambientColor', 'tint', 'tintStrength', 'vignette', 'grain', 'haze', 'hazeColor', 'hazeGlow', 'brightness', 'saturation', 'inside', 'bounce', 'shafts', 'wind', 'looks'],
   look: ['ambient', 'ambientColor', 'tint', 'tintStrength', 'vignette', 'grain', 'haze', 'hazeColor', 'hazeGlow', 'brightness', 'saturation', 'inside', 'bounce', 'shafts', 'wind', 'lights'],
   // (`size`: accepted, does nothing in engine 3 — LG5)
-  lights: ['id', 'on', 'place', 'color', 'strength', 'reach', 'flicker', 'glow', 'from', 'through', 'soft', 'size', 'daylight', 'of', 'at', 'across', 'distance', 'elevation', 'x', 'cone'],
+  lights: ['id', 'on', 'place', 'color', 'strength', 'reach', 'flicker', 'glow', 'from', 'through', 'soft', 'size', 'daylight', 'of', 'at', 'across', 'distance', 'elevation', 'x', 'cone', 'falloff'],
   // (a beam's: where it points, how wide, how soft its edge — world/light.js reads them)
   cone: ['bearing', 'height', 'width', 'soft'],
   // (`lit` on a plane: accepted, does nothing in engine 3 — LG5)
