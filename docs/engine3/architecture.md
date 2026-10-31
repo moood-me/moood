@@ -2860,7 +2860,8 @@ mirrors — a `rough` moved draws its image again (its density, smear and margin
 its overlay's uniform: a keyed ripple's margin is its most's, 1); a pane with `glass`:
 - one image a mirroring plane (planes of one level, one `fade` and one `rough` share one): a texture with
   an alpha, made when the mirror first comes into view; drawn and asked only over
-  the rect the mirror covers, widened each way by what its overlay reads aside — 0.3 · `rough` + 0.05 · `ripple`
+  the rect the mirror covers (its mirroring quads, cut by the view: a flat one exactly, one the wind bends, a
+  draped plane, a form by its sphere), widened each way by what its overlay reads aside — 0.3 · `rough` + 0.05 · `ripple`
   (a keyed one: 1) of a frame's height, within the frame —, at a density of the frame's own px of `MIRROR.DENSITY` / (1 + 3 ·
   rough) (a pane `MIRROR.GLASS`) — a rough mirror needs a coarse image, and gets one —, and no more than keeps the
   image within `MIRROR.SHARE` of the frame's px: its cost follows the tier's frame (`host.budget`), and a wide mirror

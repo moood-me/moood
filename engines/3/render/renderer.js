@@ -89,7 +89,7 @@ export async function createRenderer(gpu, sheets, host) {
   // (the pipelines every world has: made before the areas, which keep those they draw with)
   await lib.own();
   await gpu.ready();
-  const quads = createQuads(gpu, lib, sheets), lights = createLights(gpu), shadows = createShadows(gpu, host, sheets, quads, lib), mirrors = createMirrors(gpu, sheets, lib);
+  const quads = createQuads(gpu, lib, sheets), lights = createLights(gpu), shadows = createShadows(gpu, host, sheets, quads, lib), mirrors = createMirrors(gpu, sheets, lib, quads);
   const land = createLand(gpu, host, lib), own = createOwn(gpu, quads), air = createAir(gpu, lib), post = createPost(gpu, lib), stage = createStage(sheets), timing = createTiming(gpu), survey = createSurvey(sheets.asking);
   let particles = createParticles(gpu, sheets, lib, host);
   const frameU = gpu.buffer('frame', FRAME.BYTES, B.UNIFORM | B.COPY_DST), frameData = new ArrayBuffer(FRAME.BYTES), F32 = new Float32Array(frameData), U32 = new Uint32Array(frameData);
@@ -696,7 +696,7 @@ export async function createRenderer(gpu, sheets, host) {
       quads.begin(lights.points || lights.throughN > 0 || land.shades(), air.on, reach, shadows.blobRect, land.tall);
       own.frameNo++;
       land.group = land.bind ? quads.group(land.bind) : 0;
-      mirrors.groups(quads);
+      mirrors.groups();
       cullFrame.particles = particles;
       cullFrame.marks = people ? inked(frameView.e) : null;
       cullAlways(0, frameView, cullFrame);

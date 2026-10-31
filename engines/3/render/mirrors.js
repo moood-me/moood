@@ -1,9 +1,10 @@
 // Mirrors (5.7): a plane with `reflect`, a pane with `glass`. One image a mirroring plane — the elements that mirror
 // in one plane, with one `fade` and one `rough`, of one kind (planes, or panes) share it: its `members` —, a texture
-// with an alpha, made when the mirror first comes into view. Its view is the mirrored eye's
-// picture (views.js mirrorCamera) cut to the rect the mirror covers of the frame, widened each way by what its
-// overlay reads aside — 0.3 · rough + 0.05 · ripple (a ripple that is a state key: its most, 1) of a frame's height,
-// kept within the frame —, at a density of the
+// with an alpha, made when the mirror first comes into view. Its view is the mirrored eye's picture (views.js
+// mirrorCamera) cut to the rect the mirror covers of the frame — its mirroring quads as the view sees them
+// (render/quads.js seen), not a sphere round them —, widened each way by what its overlay reads aside — 0.3 · rough
+// + 0.05 · ripple (a ripple that is a state key: its most, 1) of a frame's height, kept within the frame —, at a
+// density of the
 // frame's own px of MIRROR.DENSITY / (1 + 3 · rough), at least a quarter (a pane: MIRROR.GLASS), and no more than
 // keeps it within MIRROR.SHARE of the frame's px (imageDensity); drawn into the texture's corner. The world's mirror
 // textures are all of one size: the most any of its images has needed, grown by 64 px when one needs more (its
@@ -41,7 +42,7 @@
 import { FLAG, LIGHT, MIRROR, QUAD, VIEW, empty } from '../base.js';
 import { FORMATS } from './library.js';
 import { MIRROR as OVERLAY, READY } from './wgsl/post.js';
-import { createView, newCamera, copyCamera, sameCamera, mirrorCamera, cropCamera, viewProj, sees, covers } from './views.js';
+import { createView, newCamera, copyCamera, sameCamera, mirrorCamera, cropCamera, viewProj, sees } from './views.js';
 import { since, stampedAt } from '../world/tables.js';
 import { movesItself } from './quads.js';
 
@@ -52,14 +53,14 @@ export function imageDensity(rough, glass, w, h, sw, sh) {
   return Math.min(d, Math.sqrt(MIRROR.SHARE * sw * sh / Math.max(1, w * h)));
 }
 
-export function createMirrors(gpu, sheets, lib) {
+export function createMirrors(gpu, sheets, lib, quads) {
   const B = GPUBufferUsage, T = GPUTextureUsage, linear = gpu.sampler('linear');
   // the size of every mirror texture of the world, px (0 × 0: none made yet)
   const side = new Int32Array(2);
   const target = (name, format) => gpu.texture(name, { size: [side[0], side[1]], format, usage: T.RENDER_ATTACHMENT | T.TEXTURE_BINDING });
   // a world's mirroring elements; the pass's own ids and depth; the smear's step (one for all) and its two pipelines
   let world = null, planes = [], byEl = new Map(), ids = null, depth = null, step = null, stepView = null, stepPipe = null, readyPipe = null;
-  const S4 = new Float64Array(4), R4 = new Float64Array(4), data = new Float32Array(OVERLAY.BYTES / 4), A2 = new Float64Array(2), smear = new Float32Array(READY.BYTES / 4);
+  const S4 = new Float64Array(4), R4 = new Float64Array(4), Q4 = new Float64Array(4), data = new Float32Array(OVERLAY.BYTES / 4), A2 = new Float64Array(2), smear = new Float32Array(READY.BYTES / 4);
   // list: the images in view this frame; show: how much a pane shows now (how dark it is beyond the glass)
   const M = { list: [], ids: null, depth: null, show: 1 };
   const cleared = () => ({ colorAttachments: [{ view: null, loadOp: 'clear', storeOp: 'store', clearValue: [0, 0, 0, 0] }] });
@@ -132,6 +133,19 @@ export function createMirrors(gpu, sheets, lib) {
     }
     return world.nodes.shown[node] !== 0;
   };
+  // what a mirroring element covers of a view → out (x0, y0, x1, y1: clip): the rect round what its mirroring quads
+  // that are shown cover (render/quads.js seen: the quads themselves, not a sphere round them); false: nothing
+  function coversOf(view, el, out) {
+    const Q = world.quads;
+    let any = false;
+    for (let q = el.first; q < el.first + el.count; q++) {
+      if (!(Q.flags[q] & FLAG.SHOWN) || !(Q.flags[q] & (FLAG.REFLECTS | FLAG.GLASS)) || !quads.seen(view, q, Q4)) continue;
+      if (!any) out.set(Q4);
+      else { out[0] = Math.min(out[0], Q4[0]); out[1] = Math.min(out[1], Q4[1]); out[2] = Math.max(out[2], Q4[2]); out[3] = Math.max(out[3], Q4[3]); }
+      any = true;
+    }
+    return any;
+  }
   // The mirrors a view shows, by plane → `list` (emptied first): for each mirroring element in the view — as a shot's
   // overrides place and show it (over: its entry of f.ahead, or null: the frame's, where an element that is not
   // visible now mirrors nothing) — its plane as it stands, toward the eye; its group: one of the list in that plane
@@ -145,8 +159,8 @@ export function createMirrors(gpu, sheets, lib) {
       if (p.now) { p.strength = p.now.strength; p.rough = p.now.rough; p.ripple = p.now.ripple; }
       let Nm = world.nodes.m, o = 12 * p.node;
       if (over) for (let k = 0; k < over.nodesN; k++) if (over.nodeOf[k] === p.node) { Nm = over.nodes; o = 12 * k; break; }
-      S4[0] = Nm[o + 9]; S4[1] = Nm[o + 10]; S4[2] = Nm[o + 11]; S4[3] = el.radius || 1;
-      if (!(p.strength > 0) || !shownIn(p.node, over) || (!over && el.visible === false) || !covers(view.e, S4, R4)) continue;
+      S4[0] = Nm[o + 9]; S4[1] = Nm[o + 10]; S4[2] = Nm[o + 11];
+      if (!(p.strength > 0) || !shownIn(p.node, over) || (!over && el.visible === false) || !coversOf(view, el, R4)) continue;
       // (its plane, through its node's origin: its node's face — or, what faces the eye, the plane it is drawn in,
       // across the view's gaze by the view's yaw —, toward the eye)
       let nx = Nm[o + 6], ny = Nm[o + 7], nz = Nm[o + 8];
@@ -218,7 +232,7 @@ export function createMirrors(gpu, sheets, lib) {
   };
   // each mirroring element's overlay of this frame: what it reads — its image's texture (made when the image first
   // comes into view), a rough one's ready image — and its own uniform: a group of the quads' (render/quads.js)
-  M.groups = quads => {
+  M.groups = () => {
     for (let i = 0; i < planes.length; i++) {
       const p = planes[i], I = p.image;
       if (!I) continue;
