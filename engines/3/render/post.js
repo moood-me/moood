@@ -9,6 +9,8 @@
 // setting it clears it — only a call that draws does).
 //   The grade is the look's (WT5), its numbers these: exposure from its brightness; its tint laid as soft light
 // — as strong as it says, 0.5 at the most —, its saturation, its vignette at 0.75 of what it says — in display space;
+// the vignette round its middle (half across, `vignetteCentre` down), from `vignetteInner` of the picture's short side
+// to `vignetteOuter` of its long side (none: 0.6 of its diagonal);
 // then its grain at 0.1.
 import { CANVAS } from './wgsl/post.js';
 import { FORMATS } from './library.js';
@@ -99,6 +101,9 @@ export function createPost(gpu, lib) {
       data[CANVAS.HAZE / 4 + k] = look.hazeColor[k];
     }
     data[CANVAS.SAT / 4] = Math.max(0, look.saturation); data[CANVAS.VIG / 4] = VIGNETTE * unit(look.vignette); data[CANVAS.GRAIN / 4] = GRAIN * unit(look.grain);
+    const vs = CANVAS.VIG_SHAPE / 4, r0 = look.vignetteInner * Math.min(s[2], s[3]);
+    data[vs] = 0.5 * s[2]; data[vs + 1] = look.vignetteCentre * s[3]; data[vs + 2] = r0;
+    data[vs + 3] = Math.max(r0 + 1, look.vignetteOuter == null ? 0.6 * Math.hypot(s[2], s[3]) : look.vignetteOuter * Math.max(s[2], s[3]));
     data[CANVAS.LINES / 4] = inks ? 1 : 0; data[CANVAS.SCALE / 4] = scale; data[CANVAS.TICK / 4] = tick % 1024;
     // (a pixel of the buffer → its way from the eye a metre ahead: the rect is the lens's picture, whose own middle is
     // the projection's)

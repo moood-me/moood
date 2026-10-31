@@ -9,8 +9,8 @@ import { AIR } from './frame.js';
 import { SKY_LIGHTS } from './light.js';
 
 // the canvas pass's uniform (render/post.js writes it)
-export const CANVAS = Object.freeze({ BYTES: 128, STAGE: 0, SIZE: 16, NEAR: 24, VEIL: 28, EXPOSURE: 32, BLOOM: 36, BOUNCE: 40, TINT_A: 44, TINT: 48, SAT: 60, AMBIENT: 64, VIG: 76,
-  GRAIN: 80, LINES: 84, SCALE: 88, TICK: 92, UNPROJECT: 96, HAZE: 112 });
+export const CANVAS = Object.freeze({ BYTES: 144, STAGE: 0, SIZE: 16, NEAR: 24, VEIL: 28, EXPOSURE: 32, BLOOM: 36, BOUNCE: 40, TINT_A: 44, TINT: 48, SAT: 60, AMBIENT: 64, VIG: 76,
+  GRAIN: 80, LINES: 84, SCALE: 88, TICK: 92, UNPROJECT: 96, HAZE: 112, VIG_SHAPE: 128 });
 // a mirror's overlay's uniform (render/mirrors.js writes it)
 export const MIRROR = Object.freeze({ BYTES: 128, VP: 0, PLANE: 64, PARAMS: 80, AXIS: 96, AT: 112 });
 // the smear's uniform of a rough mirror's image (render/mirrors.js writes it)
@@ -575,6 +575,7 @@ struct e_Canvas {
   grain: f32, lines: f32, scale: f32, tick: f32,   // …; whether people are there; buffer px a CSS px
   unproject: vec4f,                     // a pixel → its way from the eye, a metre ahead: px · xy − zw (the lens's own middle in zw)
   haze: vec4f,                          // the haze's colour, 1 / its reach
+  vigShape: vec4f,                      // the vignette's middle (px from the picture's corner), where it begins, where it is full (px)
 }
 @group(0) @binding(0) var<uniform> e_canvas: e_Canvas;
 @group(0) @binding(1) var e_colour: texture_2d<f32>;
@@ -704,10 +705,8 @@ fn e_noise(p: vec2f, k: f32) -> f32 { return fract(52.9829189 * fract(dot(p + k 
   c = e_toned(c);
   c = mix(c, e_softLight(c, e_canvas.tint), e_canvas.tintA);
   c = mix(vec3f(e_grey(c)), c, e_canvas.sat);
-  let res = e_canvas.stage.zw;
-  let r0 = min(res.x, res.y) * 0.35;
-  let r1 = length(res) * 0.6;
-  c *= 1.0 - e_canvas.vig * clamp((length(inside - lo - res * 0.5) - r0) / (r1 - r0), 0.0, 1.0);
+  let vs = e_canvas.vigShape;
+  c *= 1.0 - e_canvas.vig * clamp((length(inside - lo - vs.xy) - vs.z) / (vs.w - vs.z), 0.0, 1.0);
   // its edges smoothed: \`main\` at four points round the pixel — where an edge passes, along it; elsewhere a little
   // sharper. What that changes of the middle tap is added to the scene here
   let m = e_toned(raw);
