@@ -25,7 +25,7 @@ const object = v => !!v && typeof v === 'object' && !Array.isArray(v);
 const WORDS = Object.freeze({
   spec: ['engine', 'title', 'caption', 'captions', 'music', 'notes', 'widgets', 'horizon', 'camera', 'light', 'lights', 'modules', 'lib', 'relief', 'script', 'showcase', 'state', 'states', 'objects'],
   camera: ['mode', 'height', 'look', 'follow', 'span', 'turn', 'area', 'hero', 'jump', 'on'],
-  light: ['ambient', 'ambientColor', 'tint', 'tintStrength', 'vignette', 'grain', 'haze', 'hazeColor', 'hazeGlow', 'brightness', 'saturation', 'inside', 'bounce', 'shafts', 'wind', 'looks'],
+  light: ['ambient', 'ambientColor', 'tint', 'tintStrength', 'vignette', 'grain', 'grainBlend', 'haze', 'hazeColor', 'hazeGlow', 'brightness', 'saturation', 'inside', 'bounce', 'shafts', 'wind', 'looks'],
   look: ['ambient', 'ambientColor', 'tint', 'tintStrength', 'vignette', 'grain', 'haze', 'hazeColor', 'hazeGlow', 'brightness', 'saturation', 'inside', 'bounce', 'shafts', 'wind', 'lights'],
   // (`size`: accepted, does nothing in engine 3 — LG5)
   lights: ['id', 'on', 'place', 'color', 'strength', 'reach', 'flicker', 'glow', 'from', 'through', 'soft', 'size', 'daylight', 'of', 'at', 'across', 'distance', 'elevation', 'x', 'cone', 'falloff'],

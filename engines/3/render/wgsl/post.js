@@ -9,8 +9,8 @@ import { AIR } from './frame.js';
 import { SKY_LIGHTS } from './light.js';
 
 // the canvas pass's uniform (render/post.js writes it)
-export const CANVAS = Object.freeze({ BYTES: 128, STAGE: 0, SIZE: 16, NEAR: 24, VEIL: 28, EXPOSURE: 32, BLOOM: 36, BOUNCE: 40, TINT_A: 44, TINT: 48, SAT: 60, AMBIENT: 64, VIG: 76,
-  GRAIN: 80, LINES: 84, SCALE: 88, TICK: 92, UNPROJECT: 96, HAZE: 112 });
+export const CANVAS = Object.freeze({ BYTES: 144, STAGE: 0, SIZE: 16, NEAR: 24, VEIL: 28, EXPOSURE: 32, BLOOM: 36, BOUNCE: 40, TINT_A: 44, TINT: 48, SAT: 60, AMBIENT: 64, VIG: 76,
+  GRAIN: 80, LINES: 84, SCALE: 88, TICK: 92, UNPROJECT: 96, HAZE: 112, GRAIN_NORMAL: 128 });
 // a mirror's overlay's uniform (render/mirrors.js writes it)
 export const MIRROR = Object.freeze({ BYTES: 160, VP: 0, PLANE: 64, PARAMS: 80, AXIS: 96, AT: 112, WAVE: 128, PACE: 144 });
 // a ripple's four waves: how many times a second each goes by at `pace` 1 (the longest, 2.6 m, first; each next
@@ -599,6 +599,7 @@ struct e_Canvas {
   grain: f32, lines: f32, scale: f32, tick: f32,   // …; whether people are there; buffer px a CSS px
   unproject: vec4f,                     // a pixel → its way from the eye, a metre ahead: px · xy − zw (the lens's own middle in zw)
   haze: vec4f,                          // the haze's colour, 1 / its reach
+  grainNormal: f32,                     // the grain laid in normal blending (1: the noise itself at \`grain\`), not overlay (0)
 }
 @group(0) @binding(0) var<uniform> e_canvas: e_Canvas;
 @group(0) @binding(1) var e_colour: texture_2d<f32>;
@@ -752,7 +753,7 @@ fn e_noise(p: vec2f, k: f32) -> f32 { return fract(52.9829189 * fract(dot(p + k 
   c = clamp(c + mix(plain, smoothed, smoothstep(0.04, 0.12, most - least)) - m, vec3f(0.0), vec3f(1.0));
   let n = e_noise(p, e_canvas.tick);
   let ov = mix(2.0 * c * n, 1.0 - 2.0 * (1.0 - c) * (1.0 - n), step(vec3f(0.5), c));
-  c = mix(c, ov, e_canvas.grain) * (1.0 - e_canvas.veil);
+  c = mix(c, mix(ov, vec3f(n), e_canvas.grainNormal), e_canvas.grain) * (1.0 - e_canvas.veil);
   return vec4f(c + (e_noise(p, e_canvas.tick + 7.0) - 0.5) / 255.0, 1.0);
 }
 `);

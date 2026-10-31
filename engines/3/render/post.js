@@ -9,7 +9,8 @@
 // setting it clears it — only a call that draws does).
 //   The grade is the look's (WT5), its numbers these: exposure from its brightness; its tint laid as soft light
 // — as strong as it says, 0.5 at the most —, its saturation, its vignette at 0.75 of what it says — in display space;
-// then its grain at 0.1.
+// then its grain at 0.1: blended as overlay (it vanishes in the darks and the lights), or "normal" — the noise itself
+// laid over the picture at that opacity (a painter's noise tile: it lifts the darks by half of it).
 import { CANVAS } from './wgsl/post.js';
 import { FORMATS } from './library.js';
 
@@ -98,7 +99,7 @@ export function createPost(gpu, lib) {
       data[CANVAS.AMBIENT / 4 + k] = look.ambientColor[k] * Math.pow(Math.max(0, look.ambient), 2.2);
       data[CANVAS.HAZE / 4 + k] = look.hazeColor[k];
     }
-    data[CANVAS.SAT / 4] = Math.max(0, look.saturation); data[CANVAS.VIG / 4] = VIGNETTE * unit(look.vignette); data[CANVAS.GRAIN / 4] = GRAIN * unit(look.grain);
+    data[CANVAS.SAT / 4] = Math.max(0, look.saturation); data[CANVAS.VIG / 4] = VIGNETTE * unit(look.vignette); data[CANVAS.GRAIN / 4] = GRAIN * unit(look.grain); data[CANVAS.GRAIN_NORMAL / 4] = look.grainBlend === 'normal' ? 1 : 0;
     data[CANVAS.LINES / 4] = inks ? 1 : 0; data[CANVAS.SCALE / 4] = scale; data[CANVAS.TICK / 4] = tick % 1024;
     // (a pixel of the buffer → its way from the eye a metre ahead: the rect is the lens's picture, whose own middle is
     // the projection's)
