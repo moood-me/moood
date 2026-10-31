@@ -131,7 +131,7 @@ ${what === 'step' ? /* wgsl */ `
 // colour, how much (below 0: with a bright middle); c — its flicker, its seed.
 chunk('render.glow', /* wgsl */ `
 struct e_GlowIn { @location(0) a: vec4f, @location(1) b: vec4f, @location(2) c: vec4f }
-struct e_GlowOut { @builtin(position) position: vec4f, @location(0) q: vec2f, @location(1) @interpolate(flat) colour: vec4f }
+struct e_GlowOut { @builtin(position) position: vec4f, @location(0) q: vec2f, @location(1) @interpolate(flat) colour: vec4f, @location(2) @interpolate(flat) straight: f32 }
 @vertex fn e_vertex(@builtin(vertex_index) i: u32, g: e_GlowIn) -> e_GlowOut {
   var o: e_GlowOut;
   o.q = vec2f(f32(i & 1u), f32(i >> 1u));
@@ -142,6 +142,7 @@ struct e_GlowOut { @builtin(position) position: vec4f, @location(0) q: vec2f, @l
   var f = ${GLOW.STEADY};
   if (g.c.x > 0.0) { f = e_flickerOf(g.c.x, g.c.y); }
   o.colour = vec4f(g.b.rgb * hazed, g.b.w * f);
+  o.straight = g.c.w;
   return o;
 }
 @fragment fn e_fragment(in: e_GlowOut) -> @location(0) vec4f {
@@ -149,6 +150,9 @@ struct e_GlowOut { @builtin(position) position: vec4f, @location(0) q: vec2f, @l
   if (r >= 1.0) { discard; }
   var p = mix(0.4, 0.0, (r - 0.25) / 0.75);
   if (r < 0.25) { p = mix(1.0, 0.4, r / 0.25); }
+  // (c.w 1, "linear": straight from its middle to its rim as the eye sees it — p is what the display shows, ^2.2 its
+  // linear light: a canvas's radial gradient, its alpha linear; brighter than ~0.5 linear in the middle, it blooms)
+  if (in.straight > 0.5) { p = 1.0 - r; }
   var c = in.colour.rgb * pow(p * abs(in.colour.a), 2.2);
   if (in.colour.a < 0.0) { c *= 1.0 + 6.0 * (1.0 - smoothstep(0.0, 0.2, r)); }
   return vec4f(c, 0.0);

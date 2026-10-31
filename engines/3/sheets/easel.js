@@ -13,7 +13,7 @@
 // finished painting where it is rastered: the sheet is opaque whatever the code paints or erases. An element with a
 // form has one painting: what else it may not have the scene's thread says (world/world.js), with the element.
 //   A painting made: { rec, form: { points, closed } | null, parts: [{ dx, dz, box, rec }], layers: [{ name, opts,
-// rec }], lights: [{ x, y, r, color, strength, name | null, part, layer }], points: [[name | null, { x, y, part,
+// rec }], lights: [{ x, y, r, color, strength, name | null, falloff ("linear" | null), part, layer }], points: [[name | null, { x, y, part,
 // layer }]], notes: [{ value, at: { x, y, part, layer } | null }], reads: [key], seen: [[key, json]], errors,
 // warnings } — x, y in the painting's units; part / layer: the index in parts / layers the thing was painted in, −1 the
 // base. The recordings are live (Recording): the artist sends them.
@@ -121,10 +121,12 @@ export function createEasel(C, shared, land, state, late) {
       ground: (across, distance) => (land ? land(across, distance) : 0),
       // where it stands (metres): across, distance, its elevation and the ground's under it — its place's keys read
       get spot() { if (E.place) for (const f in E.place) reads.add(E.place[f]); return { across: spot.across, distance: spot.distance, elevation: spot.elevation, ground: spot.ground }; },
-      light(x, y, r, color = '#ffd08a', strength = 0.6, name) {
-        if (![x, y, r].every(Number.isFinite)) { fail('e.light(x, y, radius, color, strength, name?): numbers'); return; }
+      light(x, y, r, color = '#ffd08a', strength = 0.6, name, falloff) {
+        if (![x, y, r].every(Number.isFinite)) { fail('e.light(x, y, radius, color, strength, name?, falloff?): numbers'); return; }
+        // (its glow's falloff: "linear" — straight from its middle to its rim; left out, the engine's own)
+        if (falloff != null && falloff !== 'linear') { warn(`e.light: falloff is "linear" or left out (bright in its middle), not ${JSON.stringify(falloff)}`); falloff = null; }
         const p = mapped(x, y, { x: 0, y: 0 });
-        made.lights.push({ x: p.x, y: p.y, r: r * scaleNow(), color: String(color), strength: Number(strength), name: name == null ? null : String(name), part: cur.part, layer: cur.layer });
+        made.lights.push({ x: p.x, y: p.y, r: r * scaleNow(), color: String(color), strength: Number(strength), name: name == null ? null : String(name), falloff: falloff ?? null, part: cur.part, layer: cur.layer });
       },
       at(x, y, name) {
         if (!Number.isFinite(x) || !Number.isFinite(y)) return;

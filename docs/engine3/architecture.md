@@ -1317,12 +1317,12 @@ scenes test a layer's presence so).
 
 **WT4 lights** — every light of the world, any number (the train scene has 946): `world.lights = { n, version,
 kind: Uint8Array, node: Int32Array, at: Float64Array(3 · cap), way: Float32Array(3 · cap), colour: Float32Array(3
-· cap), strength, reach, sprite, glow, flicker, seed: Float32Array, flags: Uint32Array, named: Uint8Array, stamp:
+· cap), strength, reach, sprite, glow, flicker, seed: Float32Array, flags: Uint32Array, named, falloff: Uint8Array, stamp:
 Uint32Array, cone: Float32Array(2 · cap) }` — `kind`: `LIGHT.FAR = 0, THROUGH = 1, POINT = 2, WINDOW = 3`; `strength`:
 as it shines now (its `on`, the looks' share) — never the flicker (the GPU's); `reach`: metres; `sprite`: the radius
 of its painted glow; `way`: toward a far light, a window's face, where a beam points; `cone`: a beam's — a point
 light with a cone (5.5) — the cosine of half its width and the cosine where its soft edge begins (above 0), (0, 0)
-for every other light;
+for every other light; `falloff`: its glows' — 1 `"linear"`, 0 the engine's own;
 `flags`: `INSIDE, GLOW`; `named`: a caster's `shadow.light` names it; `version`: one more when the set of lights
 changed. The panes of through-lights: `world.panes` (rects in their nodes' planes), `stamp`. Which of them light
 and which cast this frame is RENDER's (5.5). A spec light's `at` is any point of the world (IN1's refs: a person's —
@@ -2747,6 +2747,9 @@ not again in the window's light (2026-10-28). Every light's glow
 sprites — a halo `glow` metres in radius at 0.6 · min(1, strength) and a bright dot a quarter of that radius at
 0.8 · min(1, strength) in the warm white `#fff5dc`; a glow flickers as its light does, and one that does not
 flicker is steady at `GLOW.STEADY` (0.9 — the mean of engine 2's shimmer: a still scene stays still, 5.9).
+A glow is bright in its middle, 0.4 at a quarter of its radius, none at its rim; with `falloff` `"linear"` (a spec
+light's, else its `e.light`'s: WT4 `falloff`) it falls straight from its middle to its rim as the eye sees it — a
+canvas's radial gradient (2026-10-31).
 **`translucent`** (a sail, leaves, paper): every light, far or near, adds to how such a quad is faced
 `sheer · max(0, −(the way to the eye) · (the way to the light))` — lit from behind it glows its own colour that
 much, as the language says (WT2 `sheer`; an emitter's `sheer` likewise for its particles) —, and its shadow is
