@@ -110,14 +110,14 @@ ${mode === 'glass' ? /* wgsl */ `  return vec4f(min(image.rgb * much, vec3f(1.0)
 chunk('render.mirror.ready', ({ what }) => /* wgsl */ `
 struct e_Ready {
   axis: vec4f,         // the way the plane's normal goes across the image (x, y: a unit of its px); S, px of the image
-  used: vec4f,         // the used part of the texture, px (x, y); 1 / the texture's side
+  used: vec4f,         // the used part of the texture, px (x, y); 1 / the texture's size (z, w)
 }
 @group(0) @binding(0) var<uniform> e_ready: e_Ready;
 @group(0) @binding(1) var e_src: texture_2d<f32>;
 @group(0) @binding(2) var e_linear: sampler;
 // the source, px aside of a pixel along the axis
 fn e_aside(at: vec2f, px: f32) -> vec4f {
-  return textureSampleLevel(e_src, e_linear, clamp(at + e_ready.axis.xy * px, vec2f(0.5), e_ready.used.xy - 0.5) * e_ready.used.z, 0.0);
+  return textureSampleLevel(e_src, e_linear, clamp(at + e_ready.axis.xy * px, vec2f(0.5), e_ready.used.xy - 0.5) * e_ready.used.zw, 0.0);
 }
 @fragment fn e_fragment(in: e_Full) -> @location(0) vec4f {
   let at = in.position.xy;

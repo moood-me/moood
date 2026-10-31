@@ -197,6 +197,8 @@ export function createQuads(gpu, lib, sheets) {
   // loop carries is kept in an array: 5.16)
   const far = new Float64Array(4);
   const K4 = new Float64Array(16), cutA = new Float64Array(6 * 10), cutB = new Float64Array(6 * 10), cutD = new Float64Array(10), pieceAt = new Float32Array(3 * 10), BOX = new Float64Array(4);
+  // (cutBy's answer: cutA or cutB)
+  let cut = cutA;
   // (a quad in lay: its rect's sides — wide, tall —, the greater of them, and its edge-on fade: edgeOf's answer)
   const DIM = new Float64Array(4);
   // a sky quad's turns (first, last); a corner of it, placed
@@ -450,12 +452,31 @@ export function createQuads(gpu, lib, sheets) {
     // the piece the view sees, a little wider (PIECE): its corners round it — (l, t), (r, t), (r, b), (l, b) — cut by
     // each side in turn (a corner on a side is kept, once)
     const ox = px * SHEET.PAGE / SHEET.MAX_PPM, oy = py * SHEET.PAGE / SHEET.MAX_PPM, G = 1 + PIECE.WIDER;
-    let src = cutA, dst = cutB, n = 4;
     for (let k = 0; k < 4; k++) {
       const from = 4 * (k === 2 ? 3 : k === 3 ? 2 : k);
-      for (let a = 0; a < 4; a++) src[6 * k + a] = K4[from + a];
-      src[6 * k + 4] = (k === 1 || k === 2 ? wide : 0) - ox; src[6 * k + 5] = (k >= 2 ? tall : 0) - oy;
+      for (let a = 0; a < 4; a++) cutA[6 * k + a] = K4[from + a];
+      cutA[6 * k + 4] = (k === 1 || k === 2 ? wide : 0) - ox; cutA[6 * k + 5] = (k >= 2 ? tall : 0) - oy;
     }
+    const n = cutBy(five, G), src = cut;
+    if (n < 3) return -1;
+    for (let k = 0; k < n; k++) {
+      // (every corner left is before the eye: the sides cut what is not. Its bounds: of the view itself)
+      const o = 6 * k, iw = 1 / src[o + 3], x = Math.min(1, Math.max(-1, src[o] * iw)), y = Math.min(1, Math.max(-1, src[o + 1] * iw));
+      if (x < B[0]) B[0] = x; if (x > B[2]) B[2] = x; if (y < B[1]) B[1] = y; if (y > B[3]) B[3] = y;
+      // (on the sheet: within the quad's rect — the cut's own arithmetic may leave a corner a hair outside it)
+      pieceAt[3 * k] = Math.min(wide - ox, Math.max(-ox, src[o + 4])) * iw; pieceAt[3 * k + 1] = Math.min(tall - oy, Math.max(-oy, src[o + 5])) * iw; pieceAt[3 * k + 2] = iw;
+    }
+    // (seen exactly edge on: nothing of it is seen)
+    if (!(B[2] > B[0]) || !(B[3] > B[1])) return -1;
+    pieceN = n;
+    if (v) SPAN[0] = Math.max(0.5 * (B[2] - B[0]) * view.width, 0.5 * (B[3] - B[1]) * view.height); else SPAN[0] = 0;
+    return SHAPE.SCREEN | gridOf(LIT.CELL, SHAPE.MID);
+  }
+  // A quad's four corners in cutA — six numbers each: clip x, y, z, w, and two carried along — cut by the view's
+  // sides in turn, G times as wide as the view (five: and by the near side, at PIECE.NEAR — a perspective view's) →
+  // how many corners are left, in `cut` (a corner on a side is kept, once)
+  function cutBy(five, G) {
+    let src = cutA, dst = cutB, n = 4;
     for (let side = 0, sides = five ? 5 : 4; side < sides && n; side++) {
       let m = 0;
       // (each corner's distance inside this side — into cutD)
@@ -472,19 +493,32 @@ export function createQuads(gpu, lib, sheets) {
       }
       const was = src; src = dst; dst = was; n = m;
     }
-    if (n < 3) return -1;
-    for (let k = 0; k < n; k++) {
-      // (every corner left is before the eye: the sides cut what is not. Its bounds: of the view itself)
-      const o = 6 * k, iw = 1 / src[o + 3], x = Math.min(1, Math.max(-1, src[o] * iw)), y = Math.min(1, Math.max(-1, src[o + 1] * iw));
-      if (x < B[0]) B[0] = x; if (x > B[2]) B[2] = x; if (y < B[1]) B[1] = y; if (y > B[3]) B[3] = y;
-      // (on the sheet: within the quad's rect — the cut's own arithmetic may leave a corner a hair outside it)
-      pieceAt[3 * k] = Math.min(wide - ox, Math.max(-ox, src[o + 4])) * iw; pieceAt[3 * k + 1] = Math.min(tall - oy, Math.max(-oy, src[o + 5])) * iw; pieceAt[3 * k + 2] = iw;
+    cut = src;
+    return n;
+  }
+  // What a quad covers of a view → out (x0, y0, x1, y1: clip −1 … 1); false: nothing of it. A flat one — a card, what
+  // faces the eye, a plane —: its placed corners (a shot's view: as its overrides place them) cut by the view's sides
+  // and its near side, exact; what the wind bends, a plane draped on the land, a form: what its sphere covers
+  function seen(view, q, out) {
+    const Q = world.quads, kind = Q.kind[q], e = view.e;
+    room();
+    if (kind === QUAD.DRAPE || kind === QUAD.FORM || (Q.layer[q] >= 0 && (Q.flags[q] & FLAG.WIND) !== 0)) return sphereOf(q, view, S4)[3] >= 0 && covers(e, S4, out);
+    if (view.nodesN > 0 || (view.ahead && view.overN > 0)) sphereOf(q, view, S4); else cornersOf(q, view);
+    for (let k = 0; k < 4; k++) clip(e, C[k], K4, 4 * k);
+    for (let k = 0; k < 4; k++) {
+      // ((l, t), (r, t), (r, b), (l, b): round it)
+      const from = 4 * (k === 2 ? 3 : k === 3 ? 2 : k);
+      for (let a = 0; a < 4; a++) cutA[6 * k + a] = K4[from + a];
+      cutA[6 * k + 4] = 0; cutA[6 * k + 5] = 0;
     }
-    // (seen exactly edge on: nothing of it is seen)
-    if (!(B[2] > B[0]) || !(B[3] > B[1])) return -1;
-    pieceN = n;
-    if (v) SPAN[0] = Math.max(0.5 * (B[2] - B[0]) * view.width, 0.5 * (B[3] - B[1]) * view.height); else SPAN[0] = 0;
-    return SHAPE.SCREEN | gridOf(LIT.CELL, SHAPE.MID);
+    const n = cutBy(!e.ortho, 1);
+    if (n < 3) return false;
+    out[0] = Infinity; out[1] = Infinity; out[2] = -Infinity; out[3] = -Infinity;
+    for (let k = 0; k < n; k++) {
+      const o = 6 * k, iw = 1 / cut[o + 3], x = Math.min(1, Math.max(-1, cut[o] * iw)), y = Math.min(1, Math.max(-1, cut[o + 1] * iw));
+      if (x < out[0]) out[0] = x; if (x > out[2]) out[2] = x; if (y < out[1]) out[1] = y; if (y > out[3]) out[3] = y;
+    }
+    return out[2] > out[0] && out[3] > out[1];
   }
   // The quads that cast and are seen in a view, whatever light they cast in (render/shadows.js: what a light is worth
   // to) → their rows into `into`, their spheres into `spheres` (four numbers each); → how many
@@ -787,7 +821,7 @@ export function createQuads(gpu, lib, sheets) {
   }
 
   return {
-    build, begin, cull, changes, casters, group, counters,
+    build, begin, cull, changes, casters, group, counters, seen,
     // the order's rows to the GPU: once, when every view's lists are laid — in a call that draws
     flush() { if (rows) gpu.write(order, 0, bytes, 0, rows * ROW); },
     // A list's runs drawn (groups 0 and 1 set by the caller; group 2 is left `none`). sprites: who draws a run that

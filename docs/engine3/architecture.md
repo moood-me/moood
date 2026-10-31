@@ -2417,8 +2417,8 @@ The vertex stage sees six storage buffers in `frame`; a family's group adds at m
 | `main` | colour `rg11b10ufloat` (the feature of 4.6) + depth `depth32float` | depth reversed: cleared to 0; `greater` where depth is written; `greater-equal` with `DEPTH.BIAS` for what blends |
 | `ids` | `rgba8uint` — the second colour target of the main passes and of a mirror's pass, in every world (1 byte a pixel more where no one stands; one set of pipelines for it) | people write (slot, part, line width, kind); solid pipelines write 0; blended pipelines have write mask 0 for it |
 | `bloom` | `rg11b10ufloat`: ¼, 1⁄16 and 1⁄64 of the frame | the ¼ holds the sum the canvas reads (4.4); it holds only the part brighter than white, so the bounce cannot read it |
-| `mirror` | `rgba16float`, `MIRROR.IMAGE` (512) px a side, + `rgba8uint` and `depth32float` (the pass's own, discarded) | one image a mirroring plane, drawn into the part of the texture its view needs; ITS ALPHA IS HOW MUCH OF A MIRROR IMAGE THERE IS (5.7) — cleared to (0, 0, 0, 0); another colour format than `main`'s, so a mirror's pass has pipelines of its own (4.5) |
-| `mirror ready`, `mirror step` | `rgba16float`, `MIRROR.IMAGE` a side: one `ready` a rough mirror's image, one `step` for all | a rough mirror's image smeared (4.4 pass 6) — what its overlays read |
+| `mirror` | `rgba16float`, the world's mirror size (5.7), + `rgba8uint` and `depth32float` (the pass's own, discarded) | one image a mirroring plane, drawn into the part of the texture its view needs; ITS ALPHA IS HOW MUCH OF A MIRROR IMAGE THERE IS (5.7) — cleared to (0, 0, 0, 0); another colour format than `main`'s, so a mirror's pass has pipelines of its own (4.5) |
+| `mirror ready`, `mirror step` | `rgba16float`, the world's mirror size: one `ready` a rough mirror's image, one `step` for all | a rough mirror's image smeared (4.4 pass 6) — what its overlays read |
 | `shadowStatic`, `shadowMovers` | `depth32float`, reversed | the two shadow atlases (5.5) |
 | `blob` | `r8unorm`, 512² | people's contact shadow |
 | `air` | `rgba16float`, 2D 384 × 144 — a 64 × 36 × 24 volume laid out as 6 × 4 tiles, filled by two small passes (4.4), read with two filtered taps (each kept half a texel inside its tile) and a mix | shafts and lamp glow |
@@ -2564,7 +2564,7 @@ never a late compile.
 | `WAIT.LEAST` | 0.5 s: a wait sign once shown stays at least this long (2.4) — the usual pattern of a progress sign that must not flash: a delay before it shows (`WAIT.SHOWN`) and a least time shown (Android's `ContentLoadingProgressBar` has the same two) | PAGE |
 | `PASSES` (pass names) | 4.4 | RENDER |
 | `VIEW.MIRROR` | 1 (bit 0 of `View.flags`, 4.1) | RENDER |
-| `MIRROR.IMAGE`, `MIRROR.DENSITY`, `MIRROR.GLASS`, `MIRROR.OVER` | 512 px: a mirror's image's side at the most; 0.75: the most of the frame's own px it is drawn at — a rough one's 0.75 / (1 + 3 · rough), at least 0.25; 0.5: a pane's; 0.01 m: its near plane lies that far over the mirror (5.7) | RENDER |
+| `MIRROR.SHARE`, `MIRROR.DENSITY`, `MIRROR.GLASS`, `MIRROR.OVER` | 0.25: the most of the frame's px a mirror's image has; 0.75: the most of the frame's own px it is drawn at — a rough one's 0.75 / (1 + 3 · rough), at least 0.25; 0.5: a pane's; 0.01 m: its near plane lies that far over the mirror (5.7) | RENDER |
 | `LIT.CELL` | 96 px: a lit quad's cell is no larger in the view (5.12; the run's to set) | RENDER |
 | `GLOW.PAINTED`, `GLOW.STEADY` | 0.6: a painted light's glow is that much of its strength; 0.9: a glow that does not flicker (5.5) | RENDER |
 | message types | → `mount, size, in, call`; ← `mounted, reply, frame, state, action, event, say, unsay, waits, perf, lost, failed` | SCENE / PAGE |
@@ -2601,7 +2601,7 @@ by `dpdx`, `dpdy`.
 | `host.busy` (painters at work while a film plays) | 4 | 4 | 2 | 2 |
 | `host.pages` (pages placed a tick — by every frame that is not whole; the run's to set) | 8 | 8 | 4 | 4 |
 | `host.ahead` (s: how far on `f.toward` is asked along a known path — about what the tier's painters at work need for what a moving view brings in; half the painters on phones, twice the time) | 0.5 | 0.5 | 1 | 1 |
-| one value on every tier: `host.painters` = clamp(cores − 3, 1, 4) threads, all of them at work in a held frame; `host.cells` (static shadow cells a frame) = 1; `host.land` (land nodes baked a frame by the land function, for each field — the frame's, and each shot's ahead; what a field takes of another field's tiles is not of this ration: RN4) = 1; `host.field` (land shadow-field points a frame) = 2048; a mirror's image: at most `MIRROR.IMAGE` px a side on every tier, drawn and asked only over the rect the mirror covers and its margin (5.7) | | | | |
+| one value on every tier: `host.painters` = clamp(cores − 3, 1, 4) threads, all of them at work in a held frame; `host.cells` (static shadow cells a frame) = 1; `host.land` (land nodes baked a frame by the land function, for each field — the frame's, and each shot's ahead; what a field takes of another field's tiles is not of this ration: RN4) = 1; `host.field` (land shadow-field points a frame) = 2048; a mirror's image: at most `MIRROR.SHARE` of the frame's px (the tier's `host.budget` sets those), drawn and asked only over the rect the mirror covers and its margin (5.7) | | | | |
 
 All four columns are inside the promise; the two in bold are the devices the frame is accounted for (5.17, 5.21).
 `host.busy` on phones (ruling 3-2.7): with four painters, the artist, the scene's thread, the page, the GPU
@@ -2864,11 +2864,15 @@ key (0…1: the world's `el.mirror`, worked out as the key moves; RENDER takes t
 mirrors — a `rough` moved draws its image again (its density, smear and margin), a `strength`, a `ripple` or a
 `pace` only its overlay's uniform: a keyed ripple's margin is its most's, 1); `pace` — how fast the ripple goes,
 0…4 (`spec.js PACE_MOST`), 1 by default and for a key with no value yet; a number or a state key; a pane with `glass`:
-- one image a mirroring plane (planes of one level, one `fade` and one `rough` share one): a texture of
-  `MIRROR.IMAGE` px a side with an alpha, made when the mirror first comes into view; drawn and asked only over
-  the rect the mirror covers, widened each way by what its overlay reads aside — 0.3 · `rough` + 0.05 · `ripple`
+- one image a mirroring plane (planes of one level, one `fade` and one `rough` share one): a texture with
+  an alpha, made when the mirror first comes into view; drawn and asked only over
+  the rect the mirror covers (its mirroring quads, cut by the view: a flat one exactly, one the wind bends, a
+  draped plane, a form by its sphere), widened each way by what its overlay reads aside — 0.3 · `rough` + 0.05 · `ripple`
   (a keyed one: 1) of a frame's height, within the frame —, at a density of the frame's own px of `MIRROR.DENSITY` / (1 + 3 ·
-  rough) (a pane `MIRROR.GLASS`), so that it fits the texture: a rough mirror needs a coarse image, and gets one.
+  rough) (a pane `MIRROR.GLASS`) — a rough mirror needs a coarse image, and gets one —, and no more than keeps the
+  image within `MIRROR.SHARE` of the frame's px: its cost follows the tier's frame (`host.budget`), and a wide mirror
+  is as sharp as a small one. The world's mirror textures are all of one size, the most any of its images has
+  needed, grown by 64 px when one needs more (its images then drawn anew).
   Drawn in ONE pass by the mirror's own pipelines (opaque paint, the sky, what blends, the lights' glows — 4.4,
   4.5; its `ids` and depth are discarded), everything lit at its vertices; particles are not drawn in it (their
   pipeline reads the scene's depth). Its near plane lies `MIRROR.OVER` over the mirror: what lies level with a
@@ -3396,7 +3400,7 @@ view of every scene at each tier's frame, hidden sheets included (v3-whole-pictu
 |---|---|---|---|---|
 | least / median / upper quarter / most (dzhungli) | 223 / 482 / 608 / 1061 | 194 / 353 / 442 / 799 | 151 / 265 / 306 / 491 | 82 / 175 / 209 / 381 |
 | the larger of: the heaviest view; an upper-quarter view with a median view ahead | 1090 | 799 | 571 | 384 |
-| + an allowance, not counted (11.23): shadow views at two levels coarser (≈ 10–15 pages a cascade), a mirror's view (at most 512 px a side, coarser the rougher the mirror: under a quarter of the frame's pages) | ≈ 49 | ≈ 49 | ≈ 49 | ≈ 49 |
+| + an allowance, not counted (11.23): shadow views at two levels coarser (≈ 10–15 pages a cascade), a mirror's view (at most `MIRROR.SHARE` — a quarter — of the frame's px, coarser the rougher the mirror: under a quarter of the frame's pages) | ≈ 49 | ≈ 49 | ≈ 49 | ≈ 49 |
 | layers of 49 slots that hold both | 24 | 18 | 13 | 9 |
 | **`host.cache`**, with the parents (below): a fifth more on computers and laptops, phones as counted | **29** | **22** | 13 | 9 |
 | **with the parents (SH10), counted** on the start views of «Вокруг света v3»'s five scenes by the engine's own ask (2026-10-14; the parents not named already, the top and pages blank by their recording apart): main / gavan / the train / Сэвил-Роу / dzhungli, own pages → with parents, slots | 672 → 780 · 634 → 755 · 542 → 651 · 401 → 474 · 871 → 1104 (at bias 2) | 359 → 438 · 372 → 471 · 375 → 470 · 238 → 311 · 846 → 1066 (bias 1) | 270 → 343 · 272 → 341 · 330 → 393 · 286 → 327 · 394 → 502 (bias 3) | 234 → 270 · 209 → 245 · 219 → 264 · 155 → 184 · 351 → 449 (bias 2) |
