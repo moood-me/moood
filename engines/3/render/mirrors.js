@@ -1,11 +1,13 @@
 // Mirrors (5.7): a plane with `reflect`, a pane with `glass`. One image a mirroring plane — the elements that mirror
 // in one plane, with one `fade` and one `rough`, of one kind (planes, or panes) share it: its `members` —, a texture
-// MIRROR.IMAGE px a side with an alpha, made when the mirror first comes into view. Its view is the mirrored eye's
+// with an alpha, made when the mirror first comes into view. Its view is the mirrored eye's
 // picture (views.js mirrorCamera) cut to the rect the mirror covers of the frame, widened each way by what its
 // overlay reads aside — 0.3 · rough + 0.05 · ripple (a ripple that is a state key: its most, 1) of a frame's height,
 // kept within the frame —, at a density of the
 // frame's own px of MIRROR.DENSITY / (1 + 3 · rough), at least a quarter (a pane: MIRROR.GLASS), and no more than
-// fits the texture; drawn into the texture's corner. ITS ALPHA IS HOW MUCH OF A MIRROR IMAGE THERE IS: cleared to
+// keeps it within MIRROR.SHARE of the frame's px (imageDensity); drawn into the texture's corner. The world's mirror
+// textures are all of one size: the most any of its images has needed, grown by 64 px when one needs more (its
+// images then drawn anew). ITS ALPHA IS HOW MUCH OF A MIRROR IMAGE THERE IS: cleared to
 // nothing, drawn in ONE pass by the mirror's own pipelines (render/library.js: what is solid, the people, the sky,
 // what blends, the lights' glows — its ids and depth discarded); particles are not drawn in it.
 //   `fade` — mirrored things are THERE less with their height above the mirror (the mirror pass's vertex stages: a
@@ -43,9 +45,18 @@ import { createView, newCamera, copyCamera, sameCamera, mirrorCamera, cropCamera
 import { since, stampedAt } from '../world/tables.js';
 import { movesItself } from './quads.js';
 
+// px of a mirror's image a px of the view (5.7): MIRROR.DENSITY / (1 + 3 · rough), at least a quarter (a pane:
+// MIRROR.GLASS) — and no more than keeps the image, w × h px of the view, within MIRROR.SHARE of the view's sw × sh
+export function imageDensity(rough, glass, w, h, sw, sh) {
+  const d = glass ? MIRROR.GLASS : Math.max(0.25, MIRROR.DENSITY / (1 + 3 * rough));
+  return Math.min(d, Math.sqrt(MIRROR.SHARE * sw * sh / Math.max(1, w * h)));
+}
+
 export function createMirrors(gpu, sheets, lib) {
-  const B = GPUBufferUsage, T = GPUTextureUsage, SIDE = MIRROR.IMAGE, linear = gpu.sampler('linear');
-  const target = (name, format) => gpu.texture(name, { size: [SIDE, SIDE], format, usage: T.RENDER_ATTACHMENT | T.TEXTURE_BINDING });
+  const B = GPUBufferUsage, T = GPUTextureUsage, linear = gpu.sampler('linear');
+  // the size of every mirror texture of the world, px (0 × 0: none made yet)
+  const side = new Int32Array(2);
+  const target = (name, format) => gpu.texture(name, { size: [side[0], side[1]], format, usage: T.RENDER_ATTACHMENT | T.TEXTURE_BINDING });
   // a world's mirroring elements; the pass's own ids and depth; the smear's step (one for all) and its two pipelines
   let world = null, planes = [], byEl = new Map(), ids = null, depth = null, step = null, stepView = null, stepPipe = null, readyPipe = null;
   const S4 = new Float64Array(4), R4 = new Float64Array(4), data = new Float32Array(OVERLAY.BYTES / 4), A2 = new Float64Array(2), smear = new Float32Array(READY.BYTES / 4);
@@ -68,19 +79,21 @@ export function createMirrors(gpu, sheets, lib) {
     data: image ? new Float32Array(OVERLAY.BYTES / 4) : null, dataOf: -1, origin: -1, version: 0,
     has: false, due: false, moved: false, waited: 0, drawnTick: 0, sig: 0, nextSig: 0, clipped: false, asked: 0 });
   const imageOf = () => groupOf(true, true);
-  const letGo = I => {
-    I.view.e.drop();
+  // an image's textures let go — made again when it is next in view, and it drawn anew —; … and its view
+  const textures = I => {
     if (I.image) gpu.drop(I.image);
     if (I.masks) gpu.drop(I.masks);
     if (I.ready) { gpu.drop(I.ready); gpu.drop(I.readyU); }
     I.image = I.masks = I.ready = I.readyU = null;
+    I.has = false;
   };
+  const letGo = I => { I.view.e.drop(); textures(I); };
 
   // a world's mirrors: its elements that reflect. What the world before had is let go
   M.build = world_ => {
     for (const p of planes) { gpu.drop(p.uniform); if (p.own) letGo(p.own); }
     for (const t of [ids, depth, step]) if (t) gpu.drop(t);
-    planes = []; byEl = new Map(); ids = depth = step = stepView = null; empty(M.list);
+    planes = []; byEl = new Map(); ids = depth = step = stepView = M.ids = M.depth = null; side[0] = side[1] = 0; empty(M.list);
     world = world_;
     for (const el of world.elements) {
       const E = el.spec, r = E.reflect || E.glass;
@@ -95,11 +108,20 @@ export function createMirrors(gpu, sheets, lib) {
       planes.push(p); byEl.set(el.index, p);
     }
     if (!planes.length) return;
-    ids = gpu.texture('mirror ids', { size: [SIDE, SIDE], format: FORMATS.IDS, usage: T.RENDER_ATTACHMENT });
-    depth = gpu.texture('mirror depth', { size: [SIDE, SIDE], format: FORMATS.DEPTH, usage: T.RENDER_ATTACHMENT });
-    M.ids = ids.createView(); M.depth = depth.createView();
     stepPipe = lib.get('mirror-step'); readyPipe = lib.get('mirror-ready');
   };
+  // the world's mirror textures at least w × h px: grown by 64 px — every image's let go, the pass's own ids and depth
+  // made again at that size
+  function fit(w, h) {
+    if (w <= side[0] && h <= side[1]) return;
+    side[0] = Math.max(side[0], 64 * Math.ceil(w / 64)); side[1] = Math.max(side[1], 64 * Math.ceil(h / 64));
+    for (const p of planes) if (p.own) textures(p.own);
+    for (const t of [ids, depth, step]) if (t) gpu.drop(t);
+    step = stepView = null;
+    ids = gpu.texture('mirror ids', { size: [side[0], side[1]], format: FORMATS.IDS, usage: T.RENDER_ATTACHMENT });
+    depth = gpu.texture('mirror depth', { size: [side[0], side[1]], format: FORMATS.DEPTH, usage: T.RENDER_ATTACHMENT });
+    M.ids = ids.createView(); M.depth = depth.createView();
+  }
   // the mirror a quad is (its element's): its `group` is its overlay's this frame, 0 when it is not placed
   M.of = q => byEl.get(world.quads.el[q]);
 
@@ -160,8 +182,8 @@ export function createMirrors(gpu, sheets, lib) {
     const m = 0.3 * G.rough + 0.05 * G.reach, mx = 2 * m * sh / sw, my = 2 * m;
     const fx0 = (0.5 + 0.5 * Math.max(-1, G.covers[0] - mx)) * sw, fx1 = (0.5 + 0.5 * Math.min(1, G.covers[2] + mx)) * sw;
     const fy0 = (0.5 - 0.5 * Math.min(1, G.covers[3] + my)) * sh, fy1 = (0.5 - 0.5 * Math.max(-1, G.covers[1] - my)) * sh;
-    // (px of the image a px of the view: no more than fits the texture a side)
-    const d = Math.min(G.glass ? MIRROR.GLASS : Math.max(0.25, MIRROR.DENSITY / (1 + 3 * G.rough)), (SIDE - 1) / (fx1 - fx0), (SIDE - 1) / (fy1 - fy0));
+    // (px of the image a px of the view)
+    const d = imageDensity(G.rough, G.glass, fx1 - fx0, fy1 - fy0, sw, sh);
     const x0 = Math.floor(fx0 * d), x1 = Math.max(x0 + 1, Math.ceil(fx1 * d)), y0 = Math.floor(fy0 * d), y1 = Math.max(y0 + 1, Math.ceil(fy1 * d));
     G.size[0] = x1 - x0; G.size[1] = y1 - y0; G.height = sh * d;
     mirrorCamera(view.camera, G.plane, G.camera);
@@ -174,8 +196,8 @@ export function createMirrors(gpu, sheets, lib) {
   }
   const ownOf = p => p.own || (p.own = imageOf());
 
-  // The frame's part: how much a pane shows now; the mirrors in view placed — M.list, each an image. frame: the
-  // frame's view; sw, sh: the stage's px
+  // The frame's part: how much a pane shows now; the mirrors in view placed — M.list, each an image —, the world's
+  // mirror textures fitted to them. frame: the frame's view; sw, sh: the stage's px
   M.place = (frame, sw, sh) => {
     if (!planes.length) return;
     const look = world.look, Lt = world.lights, R = frame.camera.rot, gx = -R[2], gy = -R[5], gz = -R[8];
@@ -190,7 +212,9 @@ export function createMirrors(gpu, sheets, lib) {
     M.show = 1 - Math.min(1, lit);
     for (let i = 0; i < planes.length; i++) { planes[i].image = null; planes[i].group = 0; }
     gather(frame, null, M.list, ownOf);
-    for (let k = 0; k < M.list.length; k++) settle(M.list[k], frame, sw, sh);
+    let w = 0, h = 0;
+    for (let k = 0; k < M.list.length; k++) { const I = M.list[k]; settle(I, frame, sw, sh); w = Math.max(w, I.size[0]); h = Math.max(h, I.size[1]); }
+    fit(w, h);
   };
   // each mirroring element's overlay of this frame: what it reads — its image's texture (made when the image first
   // comes into view), a rough one's ready image — and its own uniform: a group of the quads' (render/quads.js)
@@ -266,7 +290,7 @@ export function createMirrors(gpu, sheets, lib) {
     const dx = 0.5 * w * (A2[0] - x0), dy = 0.5 * h * (A2[1] - y0), dl = Math.sqrt(dx ** 2 + dy ** 2) || 1;
     // (… and how far a frame's height is across its rect, each way)
     data[ax] = dx / dl; data[ax + 1] = dy / dl; data[ax + 2] = I.drawnHeight / w; data[ax + 3] = I.drawnHeight / h;
-    data[at] = 0; data[at + 1] = 0; data[at + 2] = w / SIDE; data[at + 3] = h / SIDE;
+    data[at] = 0; data[at + 1] = 0; data[at + 2] = w / side[0]; data[at + 3] = h / side[1];
     I.data.set(data);
     I.dataOf = I.version; I.origin = world.originStamp;
   }
@@ -278,7 +302,7 @@ export function createMirrors(gpu, sheets, lib) {
     reads(I, O);
     if (!(I.rough > 0)) return;
     smear[0] = I.data[OVERLAY.AXIS / 4]; smear[1] = I.data[OVERLAY.AXIS / 4 + 1]; smear[2] = 0.6 * I.rough * I.drawnHeight; smear[3] = 0;
-    smear[4] = I.drawnSize[0]; smear[5] = I.drawnSize[1]; smear[6] = 1 / SIDE; smear[7] = 0;
+    smear[4] = I.drawnSize[0]; smear[5] = I.drawnSize[1]; smear[6] = 1 / side[0]; smear[7] = 1 / side[1];
     gpu.write(I.readyU, 0, smear);
   };
   // a rough mirror's image smeared, after its pass (4.4 pass 6: two small passes, timed with `mirror`): the image →

@@ -310,7 +310,7 @@ Storage buffers in the vertex stage: 6 in `frame` (1–4, 7, 8) + at most 2 of a
 | `shadowStatic`, `shadowMovers` | DEPTH, `host.shadow`², half that | `render/shadows.js` |
 | `blob` | BLOB, 512² | `render/shadows.js` |
 | `air`, `air steps` | AIR, 384 × 144 (`AIR.W·TX × AIR.H·TY`) | `render/air.js` |
-| a mirror's image, `mirror masks`; `mirror ids`, `mirror depth` (one each, shared) | MIRROR, MASK; IDS, DEPTH — `MIRROR.IMAGE` (512)² | `render/mirrors.js` |
+| a mirror's image, `mirror masks`; `mirror ids`, `mirror depth` (one each, shared) | MIRROR, MASK; IDS, DEPTH — all of one size: the most any image of the world has needed (each within `MIRROR.SHARE` of the buffer's px), grown by 64 px | `render/mirrors.js` |
 | `land heights`, `land shadow` | HEIGHTS, LAND_SHADOW, `LAND.N`² a field | `render/land.js` |
 | `sprites` | `rgba8unorm-srgb` 2D array, `PT.SPRITE`² | `render/particles.js` |
 | `panes` | `r8unorm` | `render/lights.js` |
@@ -1315,7 +1315,7 @@ Plan 4.7, 4.9. All in `engines/3/base.js` (imports nothing) unless said.
 | `LATE` (people) | 0.25 s | |
 | `WAITS_EVERY` | 15 | thread |
 | `VIEW.MIRROR` | 1 | |
-| `MIRROR` `IMAGE, DENSITY, GLASS, OVER` | 512, 0.75, 0.5, 0.01 | |
+| `MIRROR` `SHARE, DENSITY, GLASS, OVER` | 0.25, 0.75, 0.5, 0.01 | |
 | `LIT.CELL`; `GLOW` `PAINTED, STEADY` | 96; 0.6, 0.9 | |
 | `PASSES` | `bake, shadow-static, shadow-movers, blob, air, mirror, masks, main-solid, main-blend, bloom, gather, canvas` | |
 | `SETTLED` (page.js) | 150 ms | |

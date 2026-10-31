@@ -80,9 +80,10 @@ export const PACE = Object.freeze({ PERIOD_LEAST: 10, WINDOW: 120, MISSES: 6, LA
 export const LATE = 0.25;
 export const WAITS_EVERY = 15;
 export const VIEW = Object.freeze({ MIRROR: 1 });
-// a mirror's image (5.7): its side at the most, px; the most of the frame's own px it is drawn at (a rough one's
-// DENSITY / (1 + 3 · rough), at least 0.25) and a pane's; how far over the mirror its near plane lies, metres
-export const MIRROR = Object.freeze({ IMAGE: 512, DENSITY: 0.75, GLASS: 0.5, OVER: 0.01 });
+// a mirror's image (5.7): the most of the frame's px it has, a share; the most of the frame's own px it is drawn at (a
+// rough one's DENSITY / (1 + 3 · rough), at least 0.25) and a pane's; how far over the mirror its near plane lies,
+// metres
+export const MIRROR = Object.freeze({ SHARE: 0.25, DENSITY: 0.75, GLASS: 0.5, OVER: 0.01 });
 // a lit quad's cell is no larger in the view, px (5.12)
 export const LIT = Object.freeze({ CELL: 96 });
 // a painted light's glow is that much of its strength; a glow that does not flicker (5.5)
