@@ -2462,7 +2462,8 @@ All render passes. `load` / `store` name what each attachment does (on a tile GP
 The frame's end is engine 2's arithmetic, number for number (8.4): the look's `vignette` at 0.75 of what it
 says (from 0.35 of the short side to 0.6 of the diagonal round the middle, unless the light's `vignetteInner`,
 `vignetteOuter`, `vignetteCentre` say otherwise), its `grain` at 0.1 (overlay; with `grainBlend: "normal"` the noise
-itself at that opacity), its `tintStrength` at most 0.5 (each bounded to 0 … 1 first); the bloom's three levels
+itself at that opacity — white noise, an integer hash of the cell and the tick: a cell a CSS px, a grey of its own,
+fresh every frame drawn; the dither after it alone is interleaved gradient noise), its `tintStrength` at most 0.5 (each bounded to 0 … 1 first); the bloom's three levels
 a third of its light each — as wide as engine 2's five (its halo round a lamp is the night look of the train and
 of Сэвил-Роу), in five small passes instead of nine.
 Why two main passes: a particle's `soft` (smoke and fog fading into what stands behind it — every smoke by

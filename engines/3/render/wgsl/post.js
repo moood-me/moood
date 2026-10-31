@@ -708,7 +708,17 @@ fn e_toned(c: vec3f) -> vec3f { return e_encode(e_neutral(c * e_canvas.exposure)
 // \`main\` at a place of the frame, only tone-mapped: a tap of the edge smoothing
 fn e_tap(at: vec2f) -> vec3f { return e_toned(e_finite3(textureSampleLevel(e_colour, e_linear, e_within(at) / e_canvas.size, 0.0).rgb)); }
 fn e_grey(c: vec3f) -> f32 { return dot(c, vec3f(0.299, 0.587, 0.114)); }
-fn e_noise(p: vec2f, k: f32) -> f32 { return fract(52.9829189 * fract(dot(p + k * vec2f(5.588, 3.167), vec2f(0.06711056, 0.00583715)))); }
+// the dither's noise: interleaved gradient noise — even, built to spread a rounding; its pattern is regular, so it is
+// only ever the last ½ of 1/255
+fn e_dither(p: vec2f, k: f32) -> f32 { return fract(52.9829189 * fract(dot(p + k * vec2f(5.588, 3.167), vec2f(0.06711056, 0.00583715)))); }
+// (an integer hash: pcg's output step)
+fn e_pcg(v: u32) -> u32 { let s = v * 747796405u + 2891336453u; let w = ((s >> ((s >> 28u) + 4u)) ^ s) * 277803737u; return (w >> 22u) ^ w; }
+// the grain: white noise 0…1 — every cell its own grey, fresh every frame drawn (the tick), shapeless; a cell a CSS
+// px (the nearest whole number of buffer px — at least one: a buffer the budget made smaller, a buffer px)
+fn e_grain(p: vec2f) -> f32 {
+  let q = vec2u(floor(p / max(1.0, round(e_canvas.scale))));
+  return f32(e_pcg(q.x + e_pcg(q.y + e_pcg(u32(e_canvas.tick)))) >> 8u) * (1.0 / 16777216.0);
+}
 @fragment fn e_fragment(in: e_Full) -> @location(0) vec4f {
   let p = in.position.xy;
   let lo = e_canvas.stage.xy;
@@ -750,9 +760,9 @@ fn e_noise(p: vec2f, k: f32) -> f32 { return fract(52.9829189 * fract(dot(p + k 
   let smoothed = mix(0.5 * (ne + sw), 0.5 * (nw + se), clamp(k, 0.0, 1.0));
   let plain = clamp(m + 0.6 * (m - 0.25 * (nw + ne + sw + se)), min(m, min(min(nw, ne), min(sw, se))), max(m, max(max(nw, ne), max(sw, se))));
   c = clamp(c + mix(plain, smoothed, smoothstep(0.04, 0.12, most - least)) - m, vec3f(0.0), vec3f(1.0));
-  let n = e_noise(p, e_canvas.tick);
+  let n = e_grain(p);
   let ov = mix(2.0 * c * n, 1.0 - 2.0 * (1.0 - c) * (1.0 - n), step(vec3f(0.5), c));
   c = mix(c, mix(ov, vec3f(n), e_canvas.grainNormal), e_canvas.grain) * (1.0 - e_canvas.veil);
-  return vec4f(c + (e_noise(p, e_canvas.tick + 7.0) - 0.5) / 255.0, 1.0);
+  return vec4f(c + (e_dither(p, e_canvas.tick) - 0.5) / 255.0, 1.0);
 }
 `);
