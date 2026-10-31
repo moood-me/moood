@@ -69,3 +69,17 @@ test('a mirror\'s view seeing it where the frame does not: its row is there', ()
   assert.equal(L.glowN, 1);
   assert.equal(L.glowAhead[0], Infinity);
 });
+
+test('the skies\' rows lead, counted: a mirror with no sky draws only the rows after them', () => {
+  const way = unit(0, 0.2, -1), { L, world } = made(way), { v } = viewOf(world, unit(0, 0, -1));
+  L.choose(v, ORIGIN, 0); L.glowsIn(v, []);
+  assert.equal(L.glowN, 2);
+  assert.equal(L.skyGlowN, 1);
+  assert.equal(L.glowAhead[0], Infinity);
+  assert.ok(L.glowAhead[1] < Infinity);
+  // looking away: no rows, none of them a sky's
+  const away = viewOf(world, unit(0, 0, 1)).v;
+  L.choose(away, ORIGIN, 0); L.glowsIn(away, []);
+  assert.equal(L.glowN, 0);
+  assert.equal(L.skyGlowN, 0);
+});

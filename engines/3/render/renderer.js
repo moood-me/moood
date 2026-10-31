@@ -396,7 +396,8 @@ export async function createRenderer(gpu, sheets, host) {
   const at = (pass, x, y, w, h) => { pass.setViewport(x, y, w, h, 0, 1); pass.setScissorRect(x, y, w, h); };
   // a view's world drawn into a pass of its targets — the main passes', a mirror's (turned: by the mirror's set, the
   // people's winding turned): opaque paint, the people, the sky — its base where its sheets do not reach (past: the
-  // view shows the sky past its painting — a pane's image shows no sky; the frame's view, only where it is: skyPast),
+  // view shows the sky past its painting — a pane's image and a mirror's with no sky show none; the frame's view, only
+  // where it is: skyPast),
   // then its sheets
   function solids(pass, view, turned, past) {
     bound(pass, view.e.group);
@@ -511,13 +512,15 @@ export async function createRenderer(gpu, sheets, host) {
       mirrorPass.colorAttachments[0].view = I.imageView; mirrorPass.colorAttachments[1].view = mirrors.ids; mirrorPass.depthStencilAttachment.view = mirrors.depth;
       const pass = gpu.pass('mirror', mirrorPass), before = quads.counters.lit;
       at(pass, 0, 0, w, h);
-      // (a pane has no sky)
-      solids(pass, I.view, true, !I.glass);
+      // (a pane has no sky, nor a mirror that says `sky: false`)
+      solids(pass, I.view, true, I.sky);
       quads.draw(pass, I.view.e.lists.blend, none, null);
-      if (lights.glowN) {
+      // (the glows' rows are the frame's, for every view; the skies' lead them — one with no sky draws those after)
+      const glowFrom = I.sky ? 0 : lights.skyGlowN, glowsN = lights.glowN - glowFrom;
+      if (glowsN > 0) {
         pass.setPipeline(glowMirror); pass.setVertexBuffer(0, lights.glows);
-        pass.draw(4, lights.glowN);
-        quads.counters.draws++; quads.counters.triangles += 2 * lights.glowN;
+        pass.draw(4, glowsN, 0, glowFrom);
+        quads.counters.draws++; quads.counters.triangles += 2 * glowsN;
       }
       pass.end();
       mirrored += quads.counters.lit - before;

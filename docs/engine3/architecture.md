@@ -2861,12 +2861,12 @@ amounts (a land node's heights; people's floor).
 
 ### 5.7 Mirrors
 
-A plane with `reflect: { strength, ripple?, rough?, fade?, pace? }` — `strength`, `rough`, `ripple` each a number or a state
+A plane with `reflect: { strength, ripple?, rough?, fade?, pace?, sky? }` — `strength`, `rough`, `ripple` each a number or a state
 key (0…1: the world's `el.mirror`, worked out as the key moves; RENDER takes them each frame as it gathers the
 mirrors — a `rough` moved draws its image again (its density, smear and margin), a `strength`, a `ripple` or a
 `pace` only its overlay's uniform: a keyed ripple's margin is its most's, 1); `pace` — how fast the ripple goes,
 0…4 (`spec.js PACE_MOST`), 1 by default and for a key with no value yet; a number or a state key; a pane with `glass`:
-- one image a mirroring plane (planes of one level, one `fade` and one `rough` share one): a texture with
+- one image a mirroring plane (planes of one level, one `fade`, one `rough` and one `sky` share one): a texture with
   an alpha, made when the mirror first comes into view; drawn and asked only over
   the rect the mirror covers (its mirroring quads, cut by the view: a flat one exactly, one the wind bends, a
   draped plane, a form by its sphere), widened each way by what its overlay reads aside — 0.3 · `rough` + 0.05 · `ripple`
@@ -2891,6 +2891,11 @@ mirrors — a `rough` moved draws its image again (its density, smear and margin
   after what is solid, where nothing stands, as in the frame. What blends is laid premultiplied by how much of it
   there is, over what the image has behind it (one alpha cannot be both its cover and its fog: a faded veil lets
   what is behind it in the mirror show). A faded thing never turns black;
+- `sky: false` — the sky is not in the image: no sky quads in the mirror's view, no sky past its painting in its
+  pass (as a pane's). Its alpha is then only what stands before the mirror, and the overlay's strength lands there
+  alone — everywhere else the plane's own paint shows as painted, as where a `fade` leaves nothing. What glows
+  with its painting in the sky goes with it (the skies' glow rows lead the frame's — `lights.skyGlowN` —, and such
+  a mirror's pass draws the rows after them); a lamp's glow standing before the mirror stays;
 - `rough` — made once on the image, not at every pixel of the frame: after a rough mirror's pass,
   `mirror-ready` smears the image along the way the plane's face goes across it — the arithmetic of engine 2's
   smear (nine taps over 0.6 · rough of a frame's height, weighted `exp(−60 u²)`, colour and alpha together; what

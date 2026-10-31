@@ -68,7 +68,7 @@ export function createLights(gpu) {
   const isBeam = i => world.lights.kind[i] === LIGHT.POINT && world.lights.cone[2 * i + 1] > 0;
   const WHAT = { far: 'far lights', through: 'lights through panes' };
   const S = new Float64Array(4), sent = new Float32Array(data.length), sentWords = new Uint32Array(words.length);
-  const L = { buffer, grid, panes: panes.createView(), glows: null, glowN: 0, glowAhead: null, halos: null, haloN: 0, farN: 0, throughN: 0, spotN: 0, lightN: 0, gridAt: new Float32Array(4), flickers: false, points: false, rowOf: null, moves: false };
+  const L = { buffer, grid, panes: panes.createView(), glows: null, glowN: 0, skyGlowN: 0, glowAhead: null, halos: null, haloN: 0, farN: 0, throughN: 0, spotN: 0, lightN: 0, gridAt: new Float32Array(4), flickers: false, points: false, rowOf: null, moves: false };
 
   // a pane's mask: its outline (the node's plane, x right, y down) rastered into a tile of the texture, its edge soft
   function rasterPanes() {
@@ -241,7 +241,7 @@ export function createLights(gpu) {
     return Math.min(n, room);
   }
 
-  L.build = w => { world = w; panesStamp = -1; said.far = said.through = said.spot = said.planes = false; L.glowN = 0; L.haloN = 0; };
+  L.build = w => { world = w; panesStamp = -1; said.far = said.through = said.spot = said.planes = false; L.glowN = 0; L.skyGlowN = 0; L.haloN = 0; };
   // The frame's lights chosen for its view (view.e: its frustum), written where they changed. origin: the render
   // origin; hazeGlow: the look's. → nothing; L's fields say what there is
   L.choose = (view, origin, hazeGlow) => {
@@ -347,7 +347,8 @@ export function createLights(gpu) {
   }
   // The glows' rows of this frame (after L.choose, the mirrors placed): every glow whose sphere — a painted light's
   // sprite, a lamp's halo — is seen by the frame's view or by a view of `mirrors` (the images in view: each { view }),
-  // the farthest before the frame's eye first (a sky's glow farther than all). → L.glows, L.glowN, L.glowAhead
+  // the farthest before the frame's eye first (a sky's glow farther than all: the skies' rows lead). → L.glows, L.glowN,
+// L.glowAhead; L.skyGlowN: how many rows lead that are skies' (a mirror with no sky draws the rest)
   L.glowsIn = (view, mirrors) => {
     const Lt = world.lights, e = view.e, n = Lt.n;
     let glowN = 0;
@@ -392,7 +393,9 @@ export function createLights(gpu) {
       glowData[g + 11] = Lt.falloff[i];
       if (Lt.flicker[i] > 0) L.flickers = true;
     }
-    L.glows = glows; L.glowN = glowN; L.glowAhead = glowAhead;
+    let skyGlowN = 0;
+    while (skyGlowN < glowN && (Lt.flags[glowOf[skyGlowN]] & LIGHT.SKY)) skyGlowN++;
+    L.glows = glows; L.glowN = glowN; L.skyGlowN = skyGlowN; L.glowAhead = glowAhead;
   };
   // how much of a beam's light goes toward the eye — its cone's edge, as the light's shader has it —, at least BEAM_GLOW
   function toward(i, eye) {

@@ -39,7 +39,7 @@ const WORDS = Object.freeze({
   copy: ['across', 'distance', 'elevation', 'facing', 'tilt', 'roll', 'rotation', 'scale', 'flip', 'tint', 'glow', 'seed'],
   // (a caster's `soft`, a mirror's and a pane's `blur`: accepted, do nothing in engine 3 — LG5)
   shadow: ['light', 'onto', 'strength', 'soft'],
-  reflect: ['strength', 'fade', 'blur', 'rough', 'ripple', 'pace'],
+  reflect: ['strength', 'fade', 'blur', 'rough', 'ripple', 'pace', 'sky'],
   glass: ['strength', 'blur'],
   clip: ['inside', 'outside'],
 });
@@ -410,20 +410,21 @@ function copiesOf(o, E, who, warn) {
     };
   });
 }
-// `reflect` on a plane: { strength, fade (metres), rough, ripple, pace } or null (`blur`: accepted, nothing — LG5);
+// `reflect` on a plane: { strength, fade (metres), rough, ripple, pace, sky } or null (`blur`: accepted, nothing — LG5);
 // strength, rough and ripple each a number 0…1 or a state key (its value now: world.js el.mirror); pace — how fast
-// the ripple goes, 1 as by itself — a number 0…PACE_MOST or a state key likewise
+// the ripple goes, 1 as by itself — a number 0…PACE_MOST or a state key likewise; sky — whether the sky is mirrored
+// in it (false: only what stands before it, its own paint the rest)
 function mirrorOf(o, who, warn) {
   const r = o.reflect;
   if (!r) return null;
   const c = r === true ? {} : typeof r === 'number' ? { strength: r } : object(r) ? known(r, 'reflect', `${who}: reflect`, warn) : null;
   const keyed = v => v == null || (num(v) && v >= 0) || (typeof v === 'string' && v !== '');
-  if (!c || [c.fade, c.blur].some(v => v != null && !(num(v) && v >= 0)) || ![c.strength, c.rough, c.ripple, c.pace].every(keyed)) {
-    warn(`${who}: "reflect" on a plane is true, a strength 0…1 or { "strength", "fade" (metres), "rough", "ripple", "pace" } — strength, rough and ripple each 0…1 or a state key, pace 0…${PACE_MOST} (1: as the ripple goes by itself) or a state key`);
+  if (!c || [c.fade, c.blur].some(v => v != null && !(num(v) && v >= 0)) || ![c.strength, c.rough, c.ripple, c.pace].every(keyed) || (c.sky != null && typeof c.sky !== 'boolean')) {
+    warn(`${who}: "reflect" on a plane is true, a strength 0…1 or { "strength", "fade" (metres), "rough", "ripple", "pace", "sky" } — strength, rough and ripple each 0…1 or a state key, pace 0…${PACE_MOST} (1: as the ripple goes by itself) or a state key, sky true or false`);
     return null;
   }
   const part = (v, none, most = 1) => (typeof v === 'string' ? v : clamp(v ?? none, 0, most));
-  return { strength: part(c.strength, 0.35), fade: c.fade ?? 4, rough: part(c.rough, 0), ripple: part(c.ripple, 0), pace: part(c.pace, 1, PACE_MOST) };
+  return { strength: part(c.strength, 0.35), fade: c.fade ?? 4, rough: part(c.rough, 0), ripple: part(c.ripple, 0), pace: part(c.pace, 1, PACE_MOST), sky: c.sky !== false };
 }
 // `seen`: where it is seen — { main: in the view itself, mirrors: in reflections } — or null (everywhere).
 // "reflection": only in mirrors (a ghost in the water, a figure in a looking-glass)
