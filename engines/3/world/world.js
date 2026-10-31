@@ -16,7 +16,7 @@
 //   Nothing is worked out per tick for what does not move: a key changed marks what reads it (its place → its node
 // and what it carries; its painting → asked anew), and only those are touched (frame()).
 import { QUAD, FLAG, FORM, OWN, ORIGIN, RECV, MAKES_AHEAD, empty, framedPoint } from '../base.js';
-import { STAGE, EYE } from './spec.js';
+import { STAGE, EYE, PACE_MOST } from './spec.js';
 import { createTables, packNode, packQuad, packLayer, drain, NODE_BYTES, QUAD_BYTES, LAYER_BYTES } from './tables.js';
 import * as m34 from './m34.js';
 import { place, posed, skyWay, skyAt, IRIS_ALL } from './place.js';
@@ -98,8 +98,8 @@ export function createWorld(C, env) {
       index: E.index, path: E.path, id: E.id, kind: E.kind, spec: E, o: E.o, who: E.who, flags: E.flags, box: E.box, copies: E.copies,
       node: -1, nodes: new Int32Array(n), faces: new Uint8Array(n), local: new Float64Array(12 * n),
       parent: null, kids: [], below: [], riders: [], leans: false,
-      // a mirror's strength, rough and ripple as they are now (its keys' values: mirrorNow) and the tick they changed
-      mirror: E.reflect ? { strength: 0, rough: 0, ripple: 0, stamp: 0 } : null,
+      // a mirror's strength, rough, ripple and pace as they are now (its keys' values: mirrorNow) and the tick they changed
+      mirror: E.reflect ? { strength: 0, rough: 0, ripple: 0, pace: 1, stamp: 0 } : null,
       visible: !E.flags.unseen && E.kind !== 'unseen', open: 0, insertRow: -1, ownFirst: -1, uniforms: null,
       // an insert's: the scene's time its key left 0 and its opening began (−1: not), its key's move then (RN4)
       leftAt: -1, openedAt: -1, move: null,
@@ -810,11 +810,16 @@ export function createWorld(C, env) {
   // x, h, z: what a path's speed is measured along — play/director.js)
   const METRE_FIELDS = ['across', 'distance', 'elevation'], metreKeys = new Set(['camera_x', 'camera_h', 'camera_z']);
   world.metres = key => metreKeys.has(key);
-  // (a mirror's numbers that may be keys: each its key's value now, 0…1 — render/mirrors.js reads them every frame)
-  const MIRROR_KEYED = ['strength', 'rough', 'ripple'];
+  // (a mirror's numbers that may be keys: each its key's value now, 0…1 (none: 0) — a pace 0…PACE_MOST (none: 1, the
+  // ripple going as by itself) — render/mirrors.js reads them every frame)
+  const MIRROR_KEYED = ['strength', 'rough', 'ripple', 'pace'];
   function mirrorNow(el) {
     const r = el.spec.reflect, M = el.mirror;
-    for (const f of MIRROR_KEYED) M[f] = typeof r[f] === 'string' ? clamp(Number(state.value(r[f])) || 0, 0, 1) : r[f];
+    for (const f of MIRROR_KEYED) {
+      if (typeof r[f] !== 'string') { M[f] = r[f]; continue; }
+      const raw = state.value(r[f]), v = Number(raw);
+      M[f] = f === 'pace' ? (raw == null || Number.isNaN(v) ? 1 : clamp(v, 0, PACE_MOST)) : clamp(v || 0, 0, 1);
+    }
     M.stamp = T.tick;
   }
   const put = (map, k, el) => { if (typeof k !== 'string') return; (map.get(k) || map.set(k, new Set()).get(k)).add(el); };

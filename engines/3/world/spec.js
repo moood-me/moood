@@ -10,6 +10,8 @@ import { compileParticles, mostOf, BURSTS } from './emitters.js';
 import { INSERTS, OWN, PARTICLES, CLIP, linearOf } from '../base.js';
 
 export const EYE = 1.7, STAGE = 16 / 9, NARROWEST = 4 / 3, WIDEST = 21 / 9;
+// the fastest a mirror's ripple goes: its `pace` (1 as it goes by itself) is 0…PACE_MOST
+export const PACE_MOST = 4;
 // how near and far (metres) what is placed by its height on the stage ("y") may be
 const Z_NEAR = 0.6 * EYE;
 export const Z_FAR = 150 * EYE;
@@ -37,7 +39,7 @@ const WORDS = Object.freeze({
   copy: ['across', 'distance', 'elevation', 'facing', 'tilt', 'roll', 'rotation', 'scale', 'flip', 'tint', 'glow', 'seed'],
   // (a caster's `soft`, a mirror's and a pane's `blur`: accepted, do nothing in engine 3 — LG5)
   shadow: ['light', 'onto', 'strength', 'soft'],
-  reflect: ['strength', 'fade', 'blur', 'rough', 'ripple'],
+  reflect: ['strength', 'fade', 'blur', 'rough', 'ripple', 'pace'],
   glass: ['strength', 'blur'],
   clip: ['inside', 'outside'],
 });
@@ -78,7 +80,7 @@ function cameraSetup(spec, warn) {
 //     place: { field: key } | null, on, height, box, copies: [{ across, distance, elevation, facing, roll (a card's), tilt,
 //     rotation (a plane's), scale, flip, tint: [r, g, b], glow, seed }] | null, paints (it has paint code), code: fn(g, e) | null (made when first read:
 //     the artist's), animate: fn(e) | null (likewise: the thread's), redraw: { key: step } | null, flags, shadow,
-//     reflect, glass (a mirror's and a pane's numbers — a mirror's strength, rough, ripple may be state keys —, or null: WT11), clip: { inside, ids, set — its cutter set's
+//     reflect, glass (a mirror's and a pane's numbers — a mirror's strength, rough, ripple, pace may be state keys —, or null: WT11), clip: { inside, ids, set — its cutter set's
 //     number } | null, cuts (bits: the cutter sets it is a cutter of — WT2), behind, inFront, insert: { key, iris |
 //     null }, shader: { text, names, values } | null, particles, person, solid, width }
 // C.has — what the world has, for the closed set of pipelines (RN2): nothing in it is guessed from a text.
@@ -408,19 +410,20 @@ function copiesOf(o, E, who, warn) {
     };
   });
 }
-// `reflect` on a plane: { strength, fade (metres), rough, ripple } or null (`blur`: accepted, nothing — LG5);
-// strength, rough and ripple each a number 0…1 or a state key (its value now: world.js el.mirror)
+// `reflect` on a plane: { strength, fade (metres), rough, ripple, pace } or null (`blur`: accepted, nothing — LG5);
+// strength, rough and ripple each a number 0…1 or a state key (its value now: world.js el.mirror); pace — how fast
+// the ripple goes, 1 as by itself — a number 0…PACE_MOST or a state key likewise
 function mirrorOf(o, who, warn) {
   const r = o.reflect;
   if (!r) return null;
   const c = r === true ? {} : typeof r === 'number' ? { strength: r } : object(r) ? known(r, 'reflect', `${who}: reflect`, warn) : null;
   const keyed = v => v == null || (num(v) && v >= 0) || (typeof v === 'string' && v !== '');
-  if (!c || [c.fade, c.blur].some(v => v != null && !(num(v) && v >= 0)) || ![c.strength, c.rough, c.ripple].every(keyed)) {
-    warn(`${who}: "reflect" on a plane is true, a strength 0…1 or { "strength", "fade" (metres), "rough", "ripple" } — strength, rough and ripple each 0…1 or a state key`);
+  if (!c || [c.fade, c.blur].some(v => v != null && !(num(v) && v >= 0)) || ![c.strength, c.rough, c.ripple, c.pace].every(keyed)) {
+    warn(`${who}: "reflect" on a plane is true, a strength 0…1 or { "strength", "fade" (metres), "rough", "ripple", "pace" } — strength, rough and ripple each 0…1 or a state key, pace 0…${PACE_MOST} (1: as the ripple goes by itself) or a state key`);
     return null;
   }
-  const part = (v, none) => (typeof v === 'string' ? v : clamp(v ?? none, 0, 1));
-  return { strength: part(c.strength, 0.35), fade: c.fade ?? 4, rough: part(c.rough, 0), ripple: part(c.ripple, 0) };
+  const part = (v, none, most = 1) => (typeof v === 'string' ? v : clamp(v ?? none, 0, most));
+  return { strength: part(c.strength, 0.35), fade: c.fade ?? 4, rough: part(c.rough, 0), ripple: part(c.ripple, 0), pace: part(c.pace, 1, PACE_MOST) };
 }
 // `seen`: where it is seen — { main: in the view itself, mirrors: in reflections } — or null (everywhere).
 // "reflection": only in mirrors (a ghost in the water, a figure in a looking-glass)
