@@ -60,7 +60,8 @@
 // to any list of any view but its overlay's, in the frame's — sorted by where its plane stands, as any quad's —; it
 // is no plane's first quad (it lays no depth, and leaves the plane to what is drawn), casts nothing, cuts nothing; it is in
 // the frame's and a shot's `list` (its pages are asked: the overlay reads its alpha) and in no mirror's or light's.
-// A pane's own image holds the room alone (5.7): no sky, nothing draped on the land.
+// A pane's own image holds the room alone (5.7): no sky, nothing draped on the land; a plane's that says `sky: false`,
+// no sky.
 //   A view's `list` (SH10) is every quad the view may show, drawn or not: what its asks name — in the order of
 // their rows. A shot's view leaves out the rows its swaps end (SH2: the triple (quad, −1, −1)); the frame's views
 // ignore such a triple. A view whose camera stands need not be culled again for rows that are not its matter:
@@ -519,7 +520,7 @@ export function createQuads(gpu, lib, sheets) {
     if (light >= 0 && (glass || !Q.cast[q] || kind === QUAD.SKY || kind === QUAD.INSERT || kind === QUAD.DRAPE || !world.castsIn(q, light))) return false;
     if (mirror) {
       if (glass || kind === QUAD.INSERT || inGroup(mirror, Q.el[q])) return false;
-      if (kind === QUAD.SKY && mirror.glass) return false;
+      if (kind === QUAD.SKY && !mirror.sky) return false;
       if (kind === QUAD.DRAPE && mirror.glass) return false;
     }
     if (kind === QUAD.INSERT) return !!view.inserts;

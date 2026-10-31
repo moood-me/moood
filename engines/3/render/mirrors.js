@@ -1,5 +1,5 @@
 // Mirrors (5.7): a plane with `reflect`, a pane with `glass`. One image a mirroring plane — the elements that mirror
-// in one plane, with one `fade` and one `rough`, of one kind (planes, or panes) share it: its `members` —, a texture
+// in one plane, with one `fade`, one `rough` and one `sky`, of one kind (planes, or panes) share it: its `members` —, a texture
 // MIRROR.IMAGE px a side with an alpha, made when the mirror first comes into view. Its view is the mirrored eye's
 // picture (views.js mirrorCamera) cut to the rect the mirror covers of the frame, widened each way by what its
 // overlay reads aside — 0.3 · rough + 0.05 · ripple (a ripple that is a state key: its most, 1) of a frame's height,
@@ -11,7 +11,9 @@
 //   `fade` — mirrored things are THERE less with their height above the mirror (the mirror pass's vertex stages: a
 // factor of how much of them there is, written as the image's alpha — a fog toward the mirror's own paint, which the
 // overlay lays the image over; what is solid stays opaque, hiding what is behind it, the sky too; the sky is all
-// there). `rough` — made once on the image,
+// there). `sky: false` — the sky is not in the image (render/quads.js: no sky; RENDER: no sky past its painting):
+// its alpha is only what stands before the mirror, and the overlay lays its strength there alone — the rest is the
+// mirror's own paint, as where a fade leaves nothing. `rough` — made once on the image,
 // after its pass: two small passes smear it along the way the plane's face goes across it (render/wgsl/post.js
 // `render.mirror.ready`: the image → `mirror step`, one for all → that image's `mirror ready`), and the overlay
 // reads the ready image. `ripple` is the overlay's arithmetic; `blur` — accepted, no effect.
@@ -54,14 +56,15 @@ export function createMirrors(gpu, sheets, lib) {
   const cleared = () => ({ colorAttachments: [{ view: null, loadOp: 'clear', storeOp: 'store', clearValue: [0, 0, 0, 0] }] });
   const stepPass = cleared(), readyPass = cleared();
 
-  // what a group of mirrors in one plane has: its plane, its fade and rough, whether it is panes', the greatest reach
+  // what a group of mirrors in one plane has: its plane, its fade and rough, whether it is panes', whether the sky is in
+  // it (sky: a pane's never), the greatest reach
   // of its members' ripples (elements: reach), what it covers of the view (clip: x0, y0, x1, y1), its view with its camera; size: its
   // image's px (the used part of the texture); height: how many px of the image a frame's height is. … and an image
   // (image: true): what is kept of it as drawn — its camera, its plane, its size, the tick of the call that drew it —
   // and what its overlays read it by (data: worked out for `version` at the origin's `origin`th step); a rough one's
   // ready image, with the smear's uniform and its two steps' groups. A group (a shot's) has those at none: one shape
   // for both, which pass the same places (5.16)
-  const groupOf = (drawn, image = false) => ({ plane: new Float64Array(4), fade: 0, rough: 0, glass: false, reach: 0, members: new Int32Array(8), membersN: 0, covers: new Float64Array(4),
+  const groupOf = (drawn, image = false) => ({ plane: new Float64Array(4), fade: 0, rough: 0, glass: false, sky: true, reach: 0, members: new Int32Array(8), membersN: 0, covers: new Float64Array(4),
     size: new Int32Array(2), height: 0, view: createView(gpu, 'mirror', drawn), camera: newCamera(),
     drawn: image ? newCamera() : null, drawnPlane: image ? new Float64Array(4) : null, drawnSize: image ? new Int32Array(2) : null, drawnHeight: 0, drawnRough: 0,
     image: null, masks: null, ready: null, imageView: null, masksView: null, readyView: null, readyU: null, stepGroup: null, readyGroup: null,
@@ -89,7 +92,7 @@ export function createMirrors(gpu, sheets, lib) {
       // are gathered —; a pane's as said. reach: the most its ripple may be — a key's 1 —, what its image's margin
       // keeps, so a ripple that moves draws no image again)
       const keyed = E.reflect && typeof E.reflect.ripple === 'string';
-      const p = { el: el.index, node: el.node, glass: !E.reflect, now: el.mirror, strength: E.reflect ? 0 : r.strength, fade: r.fade || 0, rough: 0, ripple: 0,
+      const p = { el: el.index, node: el.node, glass: !E.reflect, sky: !!E.reflect && E.reflect.sky, now: el.mirror, strength: E.reflect ? 0 : r.strength, fade: r.fade || 0, rough: 0, ripple: 0,
         reach: E.reflect ? (keyed ? 1 : E.reflect.ripple) : 0,
         uniform: gpu.buffer('mirror', OVERLAY.BYTES, B.UNIFORM | B.COPY_DST), overlay: null, overlayOf: null, own: null, image: null, group: 0, wrote: null, wroteVersion: -1, wroteOrigin: -1, wroteShow: -1, wroteNow: -1 };
       planes.push(p); byEl.set(el.index, p);
@@ -113,7 +116,7 @@ export function createMirrors(gpu, sheets, lib) {
   // The mirrors a view shows, by plane → `list` (emptied first): for each mirroring element in the view — as a shot's
   // overrides place and show it (over: its entry of f.ahead, or null: the frame's, where an element that is not
   // visible now mirrors nothing) — its plane as it stands, toward the eye; its group: one of the list in that plane
-  // with that fade and rough, of its kind, or a new one (taken: its record)
+  // with that fade, rough and sky, of its kind, or a new one (taken: its record)
   function gather(view, over, list, taken) {
     const eye = view.e.eye, Q = world.quads;
     empty(list);
@@ -136,11 +139,11 @@ export function createMirrors(gpu, sheets, lib) {
       let G = null;
       for (let k = 0; k < list.length && !G; k++) {
         const X = list[k];
-        if (X.fade === p.fade && X.rough === p.rough && X.glass === p.glass && Math.abs(X.plane[3] - d) < 1e-3 && X.plane[0] * nx + X.plane[1] * ny + X.plane[2] * nz > 1 - 1e-6) G = X;
+        if (X.fade === p.fade && X.rough === p.rough && X.glass === p.glass && X.sky === p.sky && Math.abs(X.plane[3] - d) < 1e-3 && X.plane[0] * nx + X.plane[1] * ny + X.plane[2] * nz > 1 - 1e-6) G = X;
       }
       if (!G) {
         G = taken(p, list.length);
-        G.plane[0] = nx; G.plane[1] = ny; G.plane[2] = nz; G.plane[3] = d; G.fade = p.fade; G.rough = p.rough; G.glass = p.glass; G.reach = p.reach; G.membersN = 0;
+        G.plane[0] = nx; G.plane[1] = ny; G.plane[2] = nz; G.plane[3] = d; G.fade = p.fade; G.rough = p.rough; G.glass = p.glass; G.sky = p.sky; G.reach = p.reach; G.membersN = 0;
         G.covers.set(R4);
         list.push(G);
       } else {

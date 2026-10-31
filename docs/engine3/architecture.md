@@ -2854,11 +2854,11 @@ amounts (a land node's heights; people's floor).
 
 ### 5.7 Mirrors
 
-A plane with `reflect: { strength, ripple?, rough?, fade? }` — `strength`, `rough`, `ripple` each a number or a state
+A plane with `reflect: { strength, ripple?, rough?, fade?, sky? }` — `strength`, `rough`, `ripple` each a number or a state
 key (0…1: the world's `el.mirror`, worked out as the key moves; RENDER takes the three each frame as it gathers the
 mirrors — a `rough` moved draws its image again (its density, smear and margin), a `strength` or a `ripple` only
 its overlay's uniform: a keyed ripple's margin is its most's, 1); a pane with `glass`:
-- one image a mirroring plane (planes of one level, one `fade` and one `rough` share one): a texture of
+- one image a mirroring plane (planes of one level, one `fade`, one `rough` and one `sky` share one): a texture of
   `MIRROR.IMAGE` px a side with an alpha, made when the mirror first comes into view; drawn and asked only over
   the rect the mirror covers, widened each way by what its overlay reads aside — 0.3 · `rough` + 0.05 · `ripple`
   (a keyed one: 1) of a frame's height, within the frame —, at a density of the frame's own px of `MIRROR.DENSITY` / (1 + 3 ·
@@ -2879,6 +2879,10 @@ its overlay's uniform: a keyed ripple's margin is its most's, 1); a pane with `g
   after what is solid, where nothing stands, as in the frame. What blends is laid premultiplied by how much of it
   there is, over what the image has behind it (one alpha cannot be both its cover and its fog: a faded veil lets
   what is behind it in the mirror show). A faded thing never turns black;
+- `sky: false` — the sky is not in the image: no sky quads in the mirror's view, no sky past its painting in its
+  pass (as a pane's). Its alpha is then only what stands before the mirror, and the overlay's strength lands there
+  alone — everywhere else the plane's own paint shows as painted, as where a `fade` leaves nothing. What glows
+  with its painting in the sky goes with it; a lamp's glow standing before the mirror stays;
 - `rough` — made once on the image, not at every pixel of the frame: after a rough mirror's pass,
   `mirror-ready` smears the image along the way the plane's face goes across it — the arithmetic of engine 2's
   smear (nine taps over 0.6 · rough of a frame's height, weighted `exp(−60 u²)`, colour and alpha together; what
