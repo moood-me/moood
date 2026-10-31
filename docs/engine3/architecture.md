@@ -1103,7 +1103,7 @@ Outcome:
   quad, layer or light row marked since, no pane's stamp, no own shader's values of a quad in view
   (`world.own[i].stamp`); the camera equal; no page placed for a sheet in the frame's view or a
   mirror's; `people.show` returned false; no quad in view moves by itself (wind, drift, shimmer, flicker, an own
-  shader that reads `u_time` or calls `cycle` — the two names of LG2 that read the time —, a mirror's or a pane's overlay that ripples: `ripple` above 0); no shining light flickers; no particle alive; no rationed work waiting; no quad
+  shader that reads `u_time` or calls `cycle` — the two names of LG2 that read the time —, a mirror's or a pane's overlay that ripples: `ripple` and `pace` above 0); no shining light flickers; no particle alive; no rationed work waiting; no quad
   with `OFFERED` in view (it pulses: IN3); no `R.resize()` since; `f.veil` the same. Nothing is drawn.
 - **2 drawn**.
 RENDER's own tables that follow the world — the lit set, the grid, a land field's nodes — are written where they
@@ -1451,8 +1451,8 @@ lib, kits }`); `landOf(C, shared[, warn]) → height(across, distance) | null` a
 `index`, `id`, `kind`, `node` (its row of WT1), `first`, `count` (its quad rows: WT8), `visible`, `radius`, `cast` (the
 receivers its shadow falls on, WT2's bits — for a person, who has no quad row to carry them; 0: the ground, bit 0); of its compiled spec (`spec`): `behind`,
 `inFront` (the ids named), `shadow` (`{ light, onto, strength }`, null or false), `reflect`, `glass` (their
-numbers — a mirror's `strength`, `rough` and `ripple` may be state keys there), and `mirror` (a mirroring plane's
-`{ strength, rough, ripple, stamp }` now: its keys' values, 0…1, worked out by SCENE as they change, the tick they
+numbers — a mirror's `strength`, `rough`, `ripple` and `pace` may be state keys there), and `mirror` (a mirroring plane's
+`{ strength, rough, ripple, pace, stamp }` now: its keys' values, 0…1 (a pace 0…4), worked out by SCENE as they change, the tick they
 did), and the `flags` `translucent`, `reflect`, `glass`, `inside`. What a quad row carries — the clip's set
 and side, a cutter's sets (WT2) — is read from the row, not from here. (The stand's detail run alone —
 `render/survey.js` — also reads `nodes` and `partSlots`, to tell whose node a stamp is.)
@@ -2859,10 +2859,11 @@ amounts (a land node's heights; people's floor).
 
 ### 5.7 Mirrors
 
-A plane with `reflect: { strength, ripple?, rough?, fade? }` — `strength`, `rough`, `ripple` each a number or a state
-key (0…1: the world's `el.mirror`, worked out as the key moves; RENDER takes the three each frame as it gathers the
-mirrors — a `rough` moved draws its image again (its density, smear and margin), a `strength` or a `ripple` only
-its overlay's uniform: a keyed ripple's margin is its most's, 1); a pane with `glass`:
+A plane with `reflect: { strength, ripple?, rough?, fade?, pace? }` — `strength`, `rough`, `ripple` each a number or a state
+key (0…1: the world's `el.mirror`, worked out as the key moves; RENDER takes them each frame as it gathers the
+mirrors — a `rough` moved draws its image again (its density, smear and margin), a `strength`, a `ripple` or a
+`pace` only its overlay's uniform: a keyed ripple's margin is its most's, 1); `pace` — how fast the ripple goes,
+0…4 (`spec.js PACE_MOST`), 1 by default and for a key with no value yet; a number or a state key; a pane with `glass`:
 - one image a mirroring plane (planes of one level, one `fade` and one `rough` share one): a texture of
   `MIRROR.IMAGE` px a side with an alpha, made when the mirror first comes into view; drawn and asked only over
   the rect the mirror covers, widened each way by what its overlay reads aside — 0.3 · `rough` + 0.05 · `ripple`
@@ -2891,7 +2892,10 @@ its overlay's uniform: a keyed ripple's margin is its most's, 1); a pane with `g
   moon) in two steps: the first averages the image over one tap's spacing of the second, so the second's taps
   read no gaps (the image has no levels) — and the overlay is ONE read of the ready image. A mirror without
   `rough`, and a pane, are read as drawn;
-- `ripple` — the overlay's arithmetic; `blur` — accepted, no effect (LG5): softness by a mirrored thing's
+- `ripple` — the overlay's arithmetic: four waves, each going by `pace` × its own rate (`post.js RIPPLE_HZ`, about
+  0.3…1.4 a second at 1) and its phase shift in the overlay's uniform; a pace that moves (a key) shifts each wave's
+  phase at the frame's second as it moves (`post.js ripplePaced`), so the waves slow or hasten where they are, never
+  jumping; a pace that never moves never shifts them; `blur` — accepted, no effect (LG5): softness by a mirrored thing's
   height would read the mirror's depth, which translucent paint does not write;
 - **a pane of glass**: its painting is the overlay's mask and is never drawn (WT2); the overlay is added (it
   hides nothing behind the glass). **It shows where it is dark beyond the glass and light before it**: its

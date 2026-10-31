@@ -524,7 +524,7 @@ export async function createRenderer(gpu, sheets, host) {
       mirrors.drew(I, O);
       if (I.rough > 0) mirrors.smear(I);
     }
-    mirrors.write(O);
+    mirrors.write(O, f.t);
     group1(frameView, post.masks, land.field);
     if (clips && !hidden) {
       timing.mark('masks');
@@ -789,7 +789,7 @@ export async function createRenderer(gpu, sheets, host) {
       }
       // idle? What the picture is made of, as numbers: the sheets and the own shaders' values of the quads in view —
       // under a solid insert that covers the stage, of the inserts alone — and whether any of them moves by itself, or
-      // shows its mirror through water that ripples (the overlay's own arithmetic reads the time)
+      // shows its mirror through water that ripples (the overlay's own arithmetic reads the time; a ripple at pace 0 stands)
       let sig = frameView.n, moves = false, rows = 0;
       for (let k = 0; k < frameView.n; k++) {
         const q = frameView.list[k], layer = Q.layer[q];
@@ -797,7 +797,7 @@ export async function createRenderer(gpu, sheets, host) {
         if (Q.sheet[q] >= 0) sig = (sig * 31 + sheets.stamp(Q.sheet[q])) | 0;
         if (Q.own[q]) sig = (sig * 31 + world.own[Q.own[q] - 1].stamp) | 0;
         if (movesItself(world, own, q)) moves = true;
-        if (Q.flags[q] & (FLAG.REFLECTS | FLAG.GLASS)) { const m = mirrors.of(q); if (m && m.group && m.ripple > 0) moves = true; }
+        if (Q.flags[q] & (FLAG.REFLECTS | FLAG.GLASS)) { const m = mirrors.of(q); if (m && m.group && m.ripple > 0 && m.pace > 0) moves = true; }
         rows = Math.max(rows, Q.stamp[q], world.nodes.stamp[Q.node[q]], layer >= 0 ? world.layers.stamp[layer] : 0);
       }
       const panes = world.panes ? world.panes.stamp : -1;

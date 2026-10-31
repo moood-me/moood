@@ -682,7 +682,7 @@ GPU: texture `rgba32float`, `31·66` wide, `33·rows` tall; form i at `(66·(i m
 to the right (w = 0). More rows → a new texture, all forms written again, `formsVersion + 1`.
 
 **WT11 what RENDER reads of `world.elements[i]`**: `index, id, kind, node, first, count, visible, radius, cast, mirror`
-(a mirroring plane's `{ strength, rough, ripple, stamp }` as its keys have them now); of `spec`:
+(a mirroring plane's `{ strength, rough, ripple, pace, stamp }` as its keys have them now); of `spec`:
 `behind, inFront, shadow ({ light, onto, strength } | null | false), reflect, glass`, `flags.translucent/reflect/glass/inside`.
 (Exception: the stand's detail survey, `render/survey.js`, also reads `nodes`, `partSlots` and `world.tables.measure/delta`.)
 
@@ -1244,7 +1244,7 @@ give it); every new scene is engine 3's.
 | a light's cone | `bearing height width soft` (`spec.js WORDS.cone`); read by `light.js`: bearing (0), height (0, −90…90), width 1…170 (30), soft 0…1 (0.25); a cone on a far light, a through light or a window's daylight is warned and not taken |
 | element | `id name x y across distance elevation bearing facing tilt roll rotation plane width depth height box code animate redraw place on onLand copies sky insert iris person particles unseen glows inside translucent reflect glass lit walk water drape flicker solid seen shadow clip behind inFront shader uniforms script color` |
 | place / copy | place: `across distance elevation x facing tilt roll rotation bearing`; copy: `across distance elevation facing tilt roll rotation scale flip tint glow seed` (`facing`, `roll` a card's copy's, `rotation` a plane's: the other warned, not taken) |
-| shadow / reflect / glass / clip | `light onto strength soft` / `strength fade blur rough ripple` / `strength blur` / `inside outside` |
+| shadow / reflect / glass / clip | `light onto strength soft` / `strength fade blur rough ripple pace` / `strength blur` / `inside outside` |
 | particles | `world/emitters.js` `PARTICLE_FIELDS` (BASE's keys + `kind`); kinds snow, blizzard, rain, drops, sparks, embers, fire, smoke, puff, dust, splashes, fireflies, petals, leaves, bubbles |
 | a layer's options | `sheets/easel.js LAYER_OPTS`: `pivot wind drift flicker shimmer blend depth box`; blend `normal add multiply` (`screen` warned, drawn normal) |
 | person | not word-checked in `spec.js` (people's own) |

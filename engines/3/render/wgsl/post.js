@@ -12,7 +12,21 @@ import { SKY_LIGHTS } from './light.js';
 export const CANVAS = Object.freeze({ BYTES: 128, STAGE: 0, SIZE: 16, NEAR: 24, VEIL: 28, EXPOSURE: 32, BLOOM: 36, BOUNCE: 40, TINT_A: 44, TINT: 48, SAT: 60, AMBIENT: 64, VIG: 76,
   GRAIN: 80, LINES: 84, SCALE: 88, TICK: 92, UNPROJECT: 96, HAZE: 112 });
 // a mirror's overlay's uniform (render/mirrors.js writes it)
-export const MIRROR = Object.freeze({ BYTES: 128, VP: 0, PLANE: 64, PARAMS: 80, AXIS: 96, AT: 112 });
+export const MIRROR = Object.freeze({ BYTES: 160, VP: 0, PLANE: 64, PARAMS: 80, AXIS: 96, AT: 112, WAVE: 128, PACE: 144 });
+// a ripple's four waves: how many times a second each goes by at `pace` 1 (the longest, 2.6 m, first; each next
+// 0.55 of the one before) — f32 values, written into the overlay as they are, so that render/mirrors.js shifts their
+// phases by the very numbers the overlay goes by
+export const RIPPLE_HZ = Object.freeze([0, 1, 2, 3].map(i => Math.fround((1.1 + 0.4 * i) / Math.sqrt(2.6 * 0.55 ** i * 6))));
+// A ripple's pace moved from `from` to `to` at the scene's second t: each wave's phase shift (shift: four, each 0…1;
+// changed in place) so that where it is in its cycle — fract(its hz · pace · t + its shift), the overlay's
+// arithmetic — goes on from where it was, not jumping. The products are the overlay's own f32 ones
+export function ripplePaced(shift, t, from, to) {
+  const a = Math.fround(from), b = Math.fround(to);
+  for (let i = 0; i < 4; i++) {
+    const s = shift[i] + (Math.fround(RIPPLE_HZ[i] * a) - Math.fround(RIPPLE_HZ[i] * b)) * t;
+    shift[i] = s - Math.floor(s);
+  }
+}
 // the smear's uniform of a rough mirror's image (render/mirrors.js writes it)
 export const READY = Object.freeze({ BYTES: 32 });
 // a light's halo in the air: a row (render/lights.js writes them) — three vec4f
@@ -28,10 +42,11 @@ const BEAM_TAPS = 4, BEAM_DEPTH = 12, BEAM_NEAR = 6, BEAM_FORWARD = 0.35, BEAM_M
 
 // A mirror at X (a point of its plane, where the pixel sees it): its image there — ONE read of it —, as strong as it
 // says, for as much of the mirror as is painted there; small waves (ripple: in its metres, those finer than a pixel
-// left out) tip it, read that much aside. The image's alpha is how much of a mirror image there is (5.7): a plane
-// lays image.rgba · strength · paint over its own painting — where nothing is mirrored its paint shows as painted. A
-// pane of glass: the room before it, added — it shows on the dark, hardly on the light (its strength comes times how
-// dark it is beyond the glass: render/mirrors.js). The image is of what the mirror covers of the frame and its
+// left out) tip it, read that much aside; they go by `pace` times as fast as at 1, each from its phase shift (a pace
+// that moved: render/mirrors.js keeps them going on from where they were). The image's alpha is how much of a mirror
+// image there is (5.7): a plane lays image.rgba · strength · paint over its own painting — where nothing is mirrored
+// its paint shows as painted. A pane of glass: the room before it, added — it shows on the dark, hardly on the light
+// (its strength comes times how dark it is beyond the glass: render/mirrors.js). The image is of what the mirror covers of the frame and its
 // margin: the used part of its texture; a rough mirror's is read smeared (`render.mirror.ready`).
 chunk('render.mirror', ({ mode }) => /* wgsl */ `
 struct e_Mirror {
@@ -40,6 +55,8 @@ struct e_Mirror {
   params: vec4f,       // strength, ripple, rough, 1: there is an image now
   axis: vec4f,         // the way the plane's normal goes across the image (x, y: a unit of its px); how far a frame's height is across its rect (z, w)
   at: vec4f,           // the used part of the image's texture (x, y, w, h: shares of it)
+  wave: vec4f,         // the ripple's four waves' phase shifts (0…1)
+  pace: vec4f,         // how fast the ripple goes (x: 1 as RIPPLE_HZ say)
 }
 @group(2) @binding(0) var<uniform> e_mirror: e_Mirror;
 @group(2) @binding(1) var e_image: texture_2d<f32>;
@@ -65,12 +82,13 @@ fn e_rippleAxis(k: i32) -> vec3f {
     let W = in.world + e_frame.e_origin;
     let at = vec2f(dot(W, e_rippleAxis(0)), dot(W, e_rippleAxis(1)));
     var tilt = vec2f(0.0);
+    let hz = vec4f(${RIPPLE_HZ.join(', ')}) * e_mirror.pace.x;
     for (var i = 0; i < 4; i++) {
       let fi = f32(i);
       let l = 2.6 * pow(0.55, fi);
       let ang = 0.7 + 0.6 * fi;
       let dir = vec2f(cos(ang), sin(ang));
-      tilt += dir * cos(6.2832 * (fract(dot(dir, at) / l) - cycle((1.1 + 0.4 * fi) / sqrt(l * 6.0)))) * (1.0 - smoothstep(0.25, 0.5, fine / l));
+      tilt += dir * cos(6.2832 * (fract(dot(dir, at) / l) - (cycle(hz[i]) + e_mirror.wave[i]))) * (1.0 - smoothstep(0.25, 0.5, fine / l));
     }
     q += (vec2f(e_mirror.axis.y, -e_mirror.axis.x) * tilt.x * 0.4 + e_mirror.axis.xy * tilt.y) * e_mirror.params.y * 0.012 * e_mirror.axis.zw;
   }

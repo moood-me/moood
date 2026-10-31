@@ -14,7 +14,9 @@
 // there). `rough` — made once on the image,
 // after its pass: two small passes smear it along the way the plane's face goes across it (render/wgsl/post.js
 // `render.mirror.ready`: the image → `mirror step`, one for all → that image's `mirror ready`), and the overlay
-// reads the ready image. `ripple` is the overlay's arithmetic; `blur` — accepted, no effect.
+// reads the ready image. `ripple` is the overlay's arithmetic, its waves going by `pace` (a pace that moves shifts
+// each wave's phase as it moves, so that the waves go on from where they were: post.js ripplePaced); `blur` —
+// accepted, no effect.
 //   A pane of glass: its image holds the room alone (render/quads.js: no sky, nothing draped on the land, no pane),
 // and it shows where it is dark beyond the glass: its strength comes times `show` = 1 − min(1, ambient ·
 // mean(ambientColor) + Σ far lights' strength · mean(colour) — the sun or the moon in through panes too: beyond the
@@ -29,16 +31,16 @@
 // frame, longest waiting first. A mirror in which a clipped thing is seen has a mask of its own,
 // drawn for its view before its pass.
 //   The overlay (render/wgsl/post.js `render.mirror`) reads the image by the matrix it was drawn with, less the
-// render origin as it is now: a uniform a mirroring element (its own strength, ripple and rough), written when its
-// image was drawn again, the origin stepped, its keys moved those three (a plane's may be state keys: the world's
-// el.mirror, taken each frame — a rough another draws its image again: its density, its margin, its smear; a strength
-// or a ripple, the uniform alone) or — a pane's — `show` is another.
+// render origin as it is now: a uniform a mirroring element (its own strength, ripple, rough and pace), written when its
+// image was drawn again, the origin stepped, its keys moved those four (a plane's may be state keys: the world's
+// el.mirror, taken each frame — a rough another draws its image again: its density, its margin, its smear; a strength,
+// a ripple or a pace, the uniform alone) or — a pane's — `show` is another.
 //   The frame's swaps (SH2) ride in its mirrors' views as in its own; a shot's in its mirrors'.
 //   A shot ahead has its own mirrors' views (SH10): the same planes as its values place and show them, seen by its
 // camera — placed and asked, never drawn.
 import { FLAG, LIGHT, MIRROR, QUAD, VIEW, empty } from '../base.js';
 import { FORMATS } from './library.js';
-import { MIRROR as OVERLAY, READY } from './wgsl/post.js';
+import { MIRROR as OVERLAY, READY, ripplePaced } from './wgsl/post.js';
 import { createView, newCamera, copyCamera, sameCamera, mirrorCamera, cropCamera, viewProj, sees, covers } from './views.js';
 import { since, stampedAt } from '../world/tables.js';
 import { movesItself } from './quads.js';
@@ -85,12 +87,13 @@ export function createMirrors(gpu, sheets, lib) {
     for (const el of world.elements) {
       const E = el.spec, r = E.reflect || E.glass;
       if (!r || el.kind === 'person') continue;
-      // (a plane's strength, rough and ripple as its keys have them now — the world's el.mirror, taken as its mirrors
+      // (a plane's strength, rough, ripple and pace as its keys have them now — the world's el.mirror, taken as its mirrors
       // are gathered —; a pane's as said. reach: the most its ripple may be — a key's 1 —, what its image's margin
-      // keeps, so a ripple that moves draws no image again)
+      // keeps, so a ripple that moves draws no image again; wave: its waves' phase shifts, for the pace `paced` — none
+      // before its first write)
       const keyed = E.reflect && typeof E.reflect.ripple === 'string';
-      const p = { el: el.index, node: el.node, glass: !E.reflect, now: el.mirror, strength: E.reflect ? 0 : r.strength, fade: r.fade || 0, rough: 0, ripple: 0,
-        reach: E.reflect ? (keyed ? 1 : E.reflect.ripple) : 0,
+      const p = { el: el.index, node: el.node, glass: !E.reflect, now: el.mirror, strength: E.reflect ? 0 : r.strength, fade: r.fade || 0, rough: 0, ripple: 0, pace: 1,
+        wave: new Float64Array(4), paced: null, reach: E.reflect ? (keyed ? 1 : E.reflect.ripple) : 0,
         uniform: gpu.buffer('mirror', OVERLAY.BYTES, B.UNIFORM | B.COPY_DST), overlay: null, overlayOf: null, own: null, image: null, group: 0, wrote: null, wroteVersion: -1, wroteOrigin: -1, wroteShow: -1, wroteNow: -1 };
       planes.push(p); byEl.set(el.index, p);
     }
@@ -119,8 +122,8 @@ export function createMirrors(gpu, sheets, lib) {
     empty(list);
     for (let i = 0; i < planes.length; i++) {
       const p = planes[i], el = world.elements[p.el];
-      // (a plane's three as its keys have them now)
-      if (p.now) { p.strength = p.now.strength; p.rough = p.now.rough; p.ripple = p.now.ripple; }
+      // (a plane's four as its keys have them now)
+      if (p.now) { p.strength = p.now.strength; p.rough = p.now.rough; p.ripple = p.now.ripple; p.pace = p.now.pace; }
       let Nm = world.nodes.m, o = 12 * p.node;
       if (over) for (let k = 0; k < over.nodesN; k++) if (over.nodeOf[k] === p.node) { Nm = over.nodes; o = 12 * k; break; }
       S4[0] = Nm[o + 9]; S4[1] = Nm[o + 10]; S4[2] = Nm[o + 11]; S4[3] = el.radius || 1;
@@ -297,19 +300,22 @@ export function createMirrors(gpu, sheets, lib) {
     pass.end();
   };
   // the overlays' uniforms, where their image was drawn again or is another, the origin stepped (an image not drawn
-  // again in that call is read where it is), its keys moved its strength, ripple or rough, or — a pane's — it shows
-  // another much — in a call that draws. O: the
-  // render origin
-  M.write = O => {
+  // again in that call is read where it is), its keys moved its strength, ripple, rough or pace (its waves' phases
+  // shifted at t, so that they go on from where they were), or — a pane's — it shows another much — in a call that
+  // draws. O: the render origin; t: the frame's second (what the overlay's cycle reads)
+  M.write = (O, t) => {
     const step_ = world.originStamp;
     for (let i = 0; i < planes.length; i++) {
       const p = planes[i], I = p.image, show = p.glass ? M.show : 1, now = p.now ? p.now.stamp : 0;
       if (!I || (p.wrote === I && p.wroteVersion === I.version && p.wroteOrigin === step_ && p.wroteShow === show && p.wroteNow === now)) continue;
       p.wrote = I; p.wroteVersion = I.version; p.wroteOrigin = step_; p.wroteShow = show; p.wroteNow = now;
+      // (its first: the waves as the pace it has — a pace that never moves never shifts them)
+      if (p.pace !== p.paced) { if (p.paced !== null) ripplePaced(p.wave, t, p.paced, p.pace); p.paced = p.pace; }
       if (I.has && (I.dataOf !== I.version || I.origin !== step_)) reads(I, O);
       data.set(I.data);
       const pr = OVERLAY.PARAMS / 4;
       data[pr] = p.strength * show; data[pr + 1] = p.ripple; data[pr + 2] = p.rough; data[pr + 3] = I.has ? 1 : 0;
+      data.set(p.wave, OVERLAY.WAVE / 4); data[OVERLAY.PACE / 4] = p.pace;
       gpu.write(p.uniform, 0, data);
     }
   };
