@@ -606,13 +606,13 @@ New row: pose (0,0,0,1,1,1,1,0), opts 0. An animate writes `pose[0…6]` by name
 |---|---|---|
 | `kind` | Uint8Array | `LIGHT.FAR` 0, `THROUGH` 1, `POINT` 2, `WINDOW` 3 |
 | `node` | Int32Array | node it hangs on (painted light, window, person), −1 |
-| `at` | Float64Array(3·cap) | place (point, window middle) |
+| `at` | Float64Array(3·cap) | place (point, window middle); a sky's `e.light` (`LIGHT.SKY`): the way toward it |
 | `way` | Float32Array(3·cap) | toward a far light; a window's face; where a beam points (default (0,1,0)) |
 | `cone` | Float32Array(2·cap) | a beam's (a POINT with a cone): cos of half its width, cos where its soft edge begins (> 0); (0, 0) for every other light |
 | `colour` | Float32Array(3·cap) | linear |
 | `strength` | Float32Array | as it shines now (`on` × the looks' share × glow) — never the flicker; a window's (and a point light's with `daylight`) × the brightest channel of the look's `ambient · ambientColor`, its colour that over it — no far light in it |
 | `reach`, `sprite`, `glow`, `flicker`, `seed`, `soft` | Float32Array | metres; painted glow radius; …; through-light edge (default 0.3 m) |
-| `flags` | Uint32Array | `LIGHT.INSIDE` 1, `LIGHT.GLOW` 2 |
+| `flags` | Uint32Array | `LIGHT.INSIDE` 1, `LIGHT.GLOW` 2, `LIGHT.SKY` 4 (a sky's `e.light`: a glow at infinity — its sprite in stage heights a unit along its way, reach 0: it lights nothing) |
 | `named` | Uint8Array | 1: some caster's `shadow.light` names it |
 | `ids` | Array | its id (`namesLight` matches `shadow.light` against it) |
 | `version` | number | +1 at every add / free |

@@ -47,8 +47,9 @@ export const FORM = Object.freeze({ SIDE: 33, BLOCK: 4, CELL: 12 });
 export const INSERTS = Object.freeze({ MOST: 16 });
 // the highlight's breath (IN3)
 export const PULSE = Object.freeze({ DEPTH: 0.35, RATE: 2.4 });
-// a light's kind, its flags, and the lit set's numbers (5.5): the far, the through lights and the beams lit at once
-export const LIGHT = Object.freeze({ FAR: 0, THROUGH: 1, POINT: 2, WINDOW: 3, INSIDE: 1, GLOW: 2, LIT: 256, CELL: 16, SMALL: 4, FAR_MOST: 8, THROUGH_MOST: 4, SPOT_MOST: 2 });
+// a light's kind, its flags (SKY: its `at` is a way — a sky's e.light, a glow at infinity that lights nothing), and the
+// lit set's numbers (5.5): the far, the through lights and the beams lit at once
+export const LIGHT = Object.freeze({ FAR: 0, THROUGH: 1, POINT: 2, WINDOW: 3, INSIDE: 1, GLOW: 2, SKY: 4, LIT: 256, CELL: 16, SMALL: 4, FAR_MOST: 8, THROUGH_MOST: 4, SPOT_MOST: 2 });
 export const SHADOW = Object.freeze({ COARSER: 8, LIGHTS: 4, KEYS: 2, HOLD: 1.5 });
 // the shadow receivers a quad is (WT2 `recv`, bits): bit 0 is THE GROUND
 export const RECV = Object.freeze({ GROUND: 1 });
