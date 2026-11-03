@@ -15,6 +15,7 @@
 import { ask, asked, at, follow, HOST, lang, music, query, scene, voice } from '../scene/host.js';
 import { start } from './runtime.js';
 import { full, landscape } from './landscape.js';
+import { awake } from './awake.js';
 import { speak, words } from '../i18n/words.js';
 import { calm } from './bar.js';
 
@@ -121,6 +122,7 @@ await start({
     show(pause, true);
     b.onPause(said);
     landscape(b);
+    awake(b);
   },
   menu: open => { show(menu, open); if (open) menu.onclick = open; },
   forward: press => { show(forward, press); if (press) forward.onclick = press; },
