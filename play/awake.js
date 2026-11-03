@@ -6,15 +6,19 @@
 //   awake(b) — b: the play (runtime.js: paused, onPause)
 export function awake(b) {
   if (!navigator.wakeLock) return;
-  let lock = null;
+  // (one request at a time; what is wanted looked at again once it is answered — paused meanwhile: let go at once)
+  let lock = null, asking = false;
+  const wanted = () => !b.paused && document.visibilityState === 'visible';
   const keep = async () => {
-    const wanted = !b.paused && document.visibilityState === 'visible';
-    if (wanted && !lock) {
+    if (wanted() && !lock && !asking) {
+      asking = true;
       try {
         lock = await navigator.wakeLock.request('screen');
         lock.addEventListener('release', () => { lock = null; });
       } catch { lock = null; }
-    } else if (!wanted && lock) await lock.release().catch(() => {});
+      asking = false;
+    }
+    if (!wanted() && lock) await lock.release().catch(() => {});
   };
   b.onPause(keep);
   document.addEventListener('visibilitychange', keep);
