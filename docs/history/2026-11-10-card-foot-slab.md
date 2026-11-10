@@ -14,3 +14,7 @@ transparent texels lay no depth: render/wgsl/quad.js `cut`).
 
 **What changed.** One paragraph in `docs/worlds/scene-format-3.md` (beside "what a card paints below its foot"): what
 the straight cut looks like and what a painting gives its foot instead.
+
+**And the line beside it.** scene-format-3 said that what a card paints below its foot "lies on the ground toward the
+eye". A card painting a bright band 0.3 m below its foot (box reaching there) on flat striped ground, the eye low
+(render 43436): none of that band is seen — the ground hides it, but for a hair at the foot line. The line now says so.
