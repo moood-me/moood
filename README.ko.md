@@ -31,6 +31,8 @@
 
 게임을 moood.me에 게시하려면 스튜디오에서 요청하세요. 공개되기 전에 검토를 거칩니다.
 
+게임 곁에서 이미 시도해 본 것들 — 캐릭터를 만드는 방법, 시나리오 — 은 연구실에 있습니다: [lab.moood.me](https://lab.moood.me).
+
 ## moood 변경 요청
 
 이 저장소의 GitHub issues를 통해 요청하세요(`AGENTS.md`).

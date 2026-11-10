@@ -31,6 +31,8 @@ shows worlds and games). Work the way you like:
 
 To have a game published on moood.me, ask in the studio; it is reviewed before it is shown.
 
+What has been tried beside the games — ways of making characters, scenarios — is in the lab: [lab.moood.me](https://lab.moood.me).
+
 ## Changes to moood
 
 Ask through GitHub issues in this repository (`AGENTS.md`).

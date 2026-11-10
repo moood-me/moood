@@ -29,6 +29,8 @@
 
 若要讓遊戲發布在 moood.me，請在工作室中提出；展示之前會先經過審核。
 
+在遊戲之外已經試過的東西——做角色的方法、劇本——都在實驗室：[lab.moood.me](https://lab.moood.me)。
+
 ## 對 moood 的修改
 
 請透過這個儲存庫的 GitHub issues 提出（`AGENTS.md`）。

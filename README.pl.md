@@ -31,6 +31,8 @@ Twoje światy i gry żyją w twoim własnym repozytorium git — w dowolnej licz
 
 Żeby gra pojawiła się na moood.me, poproś o to w studiu; przed pokazaniem jest sprawdzana.
 
+To, co już wypróbowano obok gier — sposoby robienia postaci, scenariusze — jest w laboratorium: [lab.moood.me](https://lab.moood.me).
+
 ## Zmiany w moood
 
 Zgłaszaj je przez GitHub issues w tym repozytorium (`AGENTS.md`).

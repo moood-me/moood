@@ -32,6 +32,8 @@ reproductor local muestra mundos y juegos). Trabaja como prefieras:
 
 Para que un juego se publique en moood.me, pídelo en el estudio; se revisa antes de mostrarse.
 
+Lo que ya se probó junto a los juegos — formas de hacer personajes, guiones — está en el laboratorio: [lab.moood.me](https://lab.moood.me).
+
 ## Cambios en moood
 
 Pídelos mediante los issues de GitHub de este repositorio (`AGENTS.md`).

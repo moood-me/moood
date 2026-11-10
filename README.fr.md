@@ -32,6 +32,8 @@ moood : le lecteur local montre les mondes et les jeux). Travaillez comme vous p
 
 Pour qu'un jeu soit publié sur moood.me, demandez-le dans le studio ; il est examiné avant d'être montré.
 
+Ce qui a déjà été essayé à côté des jeux — façons de faire des personnages, scénarios — est au laboratoire : [lab.moood.me](https://lab.moood.me).
+
 ## Modifications de moood
 
 Demandez-les via les issues GitHub de ce dépôt (`AGENTS.md`).

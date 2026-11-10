@@ -31,6 +31,8 @@ mostra mundos e jogos). Trabalhe do jeito que preferir:
 
 Para ter um jogo publicado no moood.me, peça no estúdio; ele é revisado antes de ser exibido.
 
+O que já foi testado ao lado dos jogos — jeitos de fazer personagens, roteiros — está no laboratório: [lab.moood.me](https://lab.moood.me).
+
 ## Mudanças no moood
 
 Peça pelas issues do GitHub deste repositório (`AGENTS.md`).

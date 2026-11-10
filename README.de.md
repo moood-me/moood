@@ -33,6 +33,8 @@ lokale Player zeigt Welten und Spiele). Arbeite so, wie es dir gefällt:
 
 Damit ein Spiel auf moood.me veröffentlicht wird, bitte im Studio darum; es wird geprüft, bevor es gezeigt wird.
 
+Was neben den Spielen schon ausprobiert wurde — Wege, Figuren zu machen, Szenarien — steht im Labor: [lab.moood.me](https://lab.moood.me).
+
 ## Änderungen an moood
 
 Bitte über GitHub-Issues in diesem Repository (`AGENTS.md`).
