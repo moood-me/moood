@@ -173,4 +173,4 @@ shown — why, in `__mooodErrors`); a renderer waits for it before it moves the 
 - **Its scripts** — every script of the scene and play pages is a file (none inline): a host's Content-Security-Policy may be
   `script-src 'self' 'unsafe-eval'` (a scene's code is made into functions: `MooodI18n.bind`).
 - **In a frame** — a scene page in another page's frame tells it what the scene waits for: `{moood: 'waits', text,
-  cannot?}` (`postMessage`, to the same origin).
+  cannot?}`, and once the scene has drawn itself: `{moood: 'shown'}` (`postMessage`, to the same origin).

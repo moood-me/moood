@@ -31,6 +31,8 @@ try {
   stage.showcase.start();
   MooodCaptions.show(seen.captions);
   await stage.seen();
+  // (in another page's frame: told it is drawn — docs/host.md)
+  if (window.parent !== window) window.parent.postMessage({ moood: 'shown' }, location.origin);
   widgets.show(seen, sceneTr);
 } catch (e) {
   trouble(tr('The scene could not be shown: {why}', { why: e.message || e }));
