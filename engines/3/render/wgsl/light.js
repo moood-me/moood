@@ -79,6 +79,7 @@ fn e_beamEdge(L: e_Light, along: vec3f) -> f32 { return smoothstep(L.d.w, L.e.x,
 // how much of its light a beam (reach R) has l away, of its strength's: (BEAM_FIELD · R / l)²
 fn e_beamSpread(l: f32, R: f32) -> f32 { let f = ${BEAM_FIELD} * R / max(l, 1e-4); return f * f; }
 // how much of a light through panes reaches P: all of it before its panes (outside), what they let through past them
+// — the sum of their masks, at most all of it: two panes that touch let it through whole along their seam
 fn e_through(L: e_Light, P: vec3f, inside: f32) -> f32 {
   let first = ${LIT.PLANE0}u + u32(L.d.x);
   let count = u32(L.d.y);
@@ -92,10 +93,10 @@ fn e_through(L: e_Light, P: vec3f, inside: f32) -> f32 {
     let m = textureSampleLevel(e_panes, e_linear, (R.d.xy + clamp(at, vec2f(0.5), R.d.zw - 0.5)) / vec2f(textureDimensions(e_panes)), 0.0).r;
     var beyond = 0.0;
     if (dot(R.a.xyz, P) + R.a.w > 0.0) { beyond = 1.0; }
-    deep = max(deep, m * beyond);
+    deep += m * beyond;
     past = max(past, beyond);
   }
-  if (past > 0.5) { return deep; }
+  if (past > 0.5) { return min(deep, 1.0); }
   return 1.0;
 }
 // how much of the light coming along \`way\` (toward the light) a thing at P that lets \`sheer\` of it through shows

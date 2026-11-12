@@ -611,7 +611,7 @@ New row: pose (0,0,0,1,1,1,1,0), opts 0. An animate writes `pose[0…6]` by name
 | `cone` | Float32Array(2·cap) | a beam's (a POINT with a cone): cos of half its width, cos where its soft edge begins (> 0); (0, 0) for every other light |
 | `colour` | Float32Array(3·cap) | linear |
 | `strength` | Float32Array | as it shines now (`on` × the looks' share × glow) — never the flicker; a window's (and a point light's with `daylight`) × the brightest channel of the look's `ambient · ambientColor`, its colour that over it — no far light in it |
-| `reach`, `sprite`, `glow`, `flicker`, `seed`, `soft` | Float32Array | metres; painted glow radius; …; through-light edge (default 0.3 m) |
+| `reach`, `sprite`, `glow`, `flicker`, `seed`, `soft` | Float32Array | metres; painted glow radius; …; through-light edge, metres (0 sharp; left out 0.3) |
 | `flags` | Uint32Array | `LIGHT.INSIDE` 1, `LIGHT.GLOW` 2, `LIGHT.SKY` 4 (a sky's `e.light`: a glow at infinity — its sprite in stage heights a unit along its way, reach 0: it lights nothing) |
 | `named` | Uint8Array | 1: some caster's `shadow.light` names it |
 | `falloff` | Uint8Array | its glows': 1 `"linear"` (straight from the middle to the rim as the eye sees it — a glow row's `c.w`), 0 the engine's own (bright in its middle) — a spec light's `falloff`, else its `e.light`'s |
