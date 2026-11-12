@@ -79,7 +79,7 @@ struct e_Out {
   @location(11) @interpolate(flat) fx: vec4f,    // its drift (px a second), its shimmer (px aside, px across a wave)
   @location(12) @interpolate(flat) more: vec4f,  // its seed, whether inside, whether it faces a way, its own glow
   @location(13) @interpolate(flat) px: vec2f,    // its sheet's size, px
-  @location(14) @interpolate(flat) sheer: f32,   // how much of the light behind it comes through (WT2)
+  @location(14) @interpolate(flat) lit: vec4f,   // how much of the light behind it comes through (WT2); what is opaque and lit at its vertices: what its pixels' lights with an edge are multiplied by (its brightness now; 0 when it glows)
 }
 const e_SHAPE_SCREEN = ${SHAPE.SCREEN}u;
 // a sheet's px a unit at level 0 (SHEETS lays every sheet so: SH7), and so a quad's sheet's size, px
@@ -162,7 +162,7 @@ ${mode === 'cast' || mode === 'mask' ? '' : /* wgsl */ `  if ((e_view.flags & e_
   o.page = in.page;
   o.fx = posed.fx;
   o.px = px;
-  o.sheer = q.sheer;
+  o.lit = vec4f(q.sheer, 0.0, 0.0, 0.0);
   var has = 1.0;
   if (kind == e_QUAD_FACING) { has = 0.0; }
   var inside = 0.0;
@@ -182,7 +182,7 @@ ${receiver && mode === 'solid' ? /* wgsl */ `
     if ((q.flags & e_QUAD_GLOWS) != 0u) {
       o.tint = vec4f(k * q.tint.a, 1.0);
     } else {
-      let L = e_lightOn(P, e_faced(P, N, has), has, inside, q.recv, true, 0.0, q.sheer);
+      let L = e_lightOn(P, e_faced(P, N, has), has, inside, q.recv, true, true, 0.0, q.sheer);
       o.tint = vec4f(L.base * k, 1.0);
       o.veil = k;
     }
@@ -190,7 +190,9 @@ ${receiver && mode === 'solid' ? /* wgsl */ `
     let a = e_airAt(P);
     var light = vec3f(q.tint.a);
     // (what glows: its own light, none of the scene's; the air before it as before anything)
-    if ((q.flags & e_QUAD_GLOWS) == 0u) { light = e_lightOn(P, e_faced(P, N, has), has, inside, q.recv, false, e_blobAt(P), q.sheer).base; }
+    if ((q.flags & e_QUAD_GLOWS) == 0u) {
+      light = e_lightOn(P, e_faced(P, N, has), has, inside, q.recv, false, ${mode === 'solid'}, e_blobAt(P), q.sheer).base;
+${mode === 'solid' ? '      o.lit = vec4f(q.sheer, k);\n' : ''}    }
     o.tint = vec4f(light * k * (1.0 - a.a), 1.0 - a.a);
     o.veil = a.rgb;
 `}  }
@@ -276,13 +278,18 @@ ${cut ? /* wgsl */ `  // (as much of it as is there as the eye passes it close b
 ${receiver ? /* wgsl */ `
   // (the lights its vertices worked out; here the light all round, less what the people near take of it, and the key
   // lights whole; the air where it is)
-  let pixels = e_around(in.more.y) * e_blobAt(in.world) + e_keys(in.world, e_faced(in.world, normalize(in.normal), in.more.z), in.more.z, in.more.y, in.info.y, in.sheer);
+  // (the lights with an edge: e_edges)
+  let N = e_faced(in.world, normalize(in.normal), in.more.z);
+  let pixels = e_around(in.more.y) * e_blobAt(in.world) + e_keys(in.world, N, in.more.z, in.more.y, in.info.y, in.lit.x) + e_edges(in.world, N, in.more.z, in.more.y, in.info.y, true, in.lit.x);
   let a = e_airAt(in.world);
   o.colour = vec4f(e_dithered(c.rgb * (in.tint.rgb + pixels * in.veil) * (1.0 - a.a) + a.rgb, in.position.xy) * there, there);
 ` : /* wgsl */ `
+  // (the lights its vertices worked out, and here the lights with an edge — as its brightness and the air before it
+  // take them)
+  let edges = e_edges(in.world, e_faced(in.world, normalize(in.normal), in.more.z), in.more.z, in.more.y, in.info.y, false, in.lit.x) * in.lit.yzw * in.tint.a;
 ${own ? /* wgsl */ `  // (its shader's own light, as its blend adds it)
-  o.colour = vec4f(e_dithered(c.rgb * in.tint.rgb + in.veil + e_finite3(emission) * (in.tint.a * in.more.w), in.position.xy) * there, there);
-` : /* wgsl */ `  o.colour = vec4f(e_dithered(c.rgb * in.tint.rgb + in.veil, in.position.xy) * there, there);
+  o.colour = vec4f(e_dithered(c.rgb * (in.tint.rgb + edges) + in.veil + e_finite3(emission) * (in.tint.a * in.more.w), in.position.xy) * there, there);
+` : /* wgsl */ `  o.colour = vec4f(e_dithered(c.rgb * (in.tint.rgb + edges) + in.veil, in.position.xy) * there, there);
 `}`}  o.ids = vec4u(0u);
   return o;
 }

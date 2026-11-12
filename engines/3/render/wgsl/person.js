@@ -44,7 +44,7 @@ ${twoSided ? /* wgsl */ `  @location(5) lightBack: vec3f,
 ${carry.map(m => `  o.${m.name} = c.${m.name};`).join('\n')}
 ${pass === 'main' ? /* wgsl */ `
   let N = normalize(vec3f(dot(n.r0.xyz, p.normal), dot(n.r1.xyz, p.normal), dot(n.r2.xyz, p.normal)));
-  let L = e_lightOn(P, N, 1.0, personInside(), 0xffffffffu, false, 1.0, 0.0);
+  let L = e_lightOn(P, N, 1.0, personInside(), 0xffffffffu, false, false, 1.0, 0.0);
   // (the highlight's breath)
   let k = personGlow();
   // (in a mirror that fades with height: how much of them is there)
@@ -55,7 +55,7 @@ ${pass === 'main' ? /* wgsl */ `
   o.lightFlat = o.light;
   o.aroundFlat = o.around;
 ${twoSided ? /* wgsl */ `  // (its other side: the same place, turned the other way — the light all round is the same)
-  o.lightBack = e_lightOn(P, -N, 1.0, personInside(), 0xffffffffu, false, 1.0, 0.0).base * k;
+  o.lightBack = e_lightOn(P, -N, 1.0, personInside(), 0xffffffffu, false, false, 1.0, 0.0).base * k;
   o.lightBackFlat = o.lightBack;
 ` : ''}  o.air = e_airAt(P);
 ` : ''}  return o;
