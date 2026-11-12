@@ -360,7 +360,7 @@ paint, 5.7).
 | `edge` | no | `greater` | — |
 | `tested` | no | `greater-equal` | — |
 | `over` (insert) | no | `always` | — |
-| `cast` | yes | `greater` | −4, slope −2 |
+| `cast` | yes | `greater` | −`DEPTH.BIAS` (−4), no slope — no shadow of itself is the receiver's plane's (`e_shadowAt`) |
 
 | When | Keys |
 |---|---|
