@@ -1,12 +1,10 @@
 // e.point on a card (issue #13): where the eye now sees the point on the card as drawn — the line from the eye through
-// the point meets the card's plane; a point on that plane answers itself; none behind the eye or edge-on. And the eye
-// it is seen from is the frame's: a step that begins a shot (the scene's first, a cut) has the camera placed for it
-// before the animates run. A world of numbers in node (no GPU); the stepper's parts stood in for.
+// the point meets the card's plane; a point on that plane answers itself; none behind the eye or edge-on. A world of
+// numbers in node (no GPU).
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { compile } from '../engines/3/world/spec.js';
 import { createWorld } from '../engines/3/world/world.js';
-import { createStepper } from '../engines/3/play/step.js';
 
 globalThis.GPUTextureUsage ??= { TEXTURE_BINDING: 4, COPY_DST: 2 };
 
@@ -64,35 +62,4 @@ test('none behind the eye, none edge-on', () => {
   // the eye in the card's plane (it faces the view's yaw: the eye beside it, looking along it)
   eye(w, 3, 1.7, -5);
   assert.equal(w.toPainting(el(w, 'luca'), [0, 1, -4], o), false);
-});
-
-// a stepper over stand-ins: the camera's yaw is its shot's; the one animate notes the yaw it reads
-function stepped() {
-  const read = [];
-  const world = {
-    yaw: 0, eye: Float64Array.of(0, 1.7, 0), people: null, persons: [],
-    tables: { nodes: { shown: [1] } },
-    elements: [{ spec: { animated: true }, kind: 'card', node: 0, id: 'luca', ctx: { animate: () => read.push(world.yaw) } }],
-    frame() {}, emitters: { frame() {} }, rebase() {}, lit: { frame() {} }, flush() {}, stepped() {},
-  };
-  let shot = 1;
-  const camera = { counted: () => shot, step() { world.yaw = 10 * shot; } };
-  const S = { world, state: { changed: () => [] }, camera, director: { step() {} }, lookOf: { keys: new Set(), update() {} }, shots: { stepped() {} } };
-  const stepper = createStepper(S, { shot: 0, whole: true }, { sync() {}, parts: null });
-  return { stepper, read, cut: () => { shot++; } };
-}
-
-test('the first step reads the camera\'s eye, not the one before any step', () => {
-  const s = stepped();
-  s.stepper.step(0, true);
-  assert.deepEqual(s.read, [10]);
-});
-
-test('a cut: its step reads the new shot\'s eye; the steps after it as before', () => {
-  const s = stepped();
-  s.stepper.step(0.016, true);
-  s.cut();
-  s.stepper.step(0.016, true);
-  s.stepper.step(0.016, true);
-  assert.deepEqual(s.read, [10, 20, 20]);
 });

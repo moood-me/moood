@@ -3,10 +3,7 @@
 //   a. the director: actions, sequences, the showcase's beats; a cut sets its values now and gives a new shot number;
 //   b. the keys changed → world.frame: answered makes taken (only on a seen step), swaps whose pages are there written
 //      into quads.sheet, nodes placed, what reads a changed key marked to paint; the look, when a key of it moved;
-//   c. a step that begins a shot (the scene's first, a cut): the camera placed for it, of no time, as the opening's view
-//      is — so what reads the eye before the camera steps (an animate's e.point on a card) never reads the shot
-//      before's, nor the eye's place before the first step; then the animates of the elements people read this step
-//      (what they are on, look at, reach for);
+//   c. the animates of the elements people read this step (what they are on, look at, reach for);
 //   d. people.frame (where a hand is now); each person's root copied into their node's row;
 //   e. the other animates — of elements whose node is shown (5.16) —, the emitters' histories, the camera, the render
 //      origin, the sky's animates (what the sky sees of the world is seen from where the eye is now), the lights' rows;
@@ -29,8 +26,6 @@ export function createStepper(S, f, env) {
   const animated = world.elements.filter(el => el.spec.animated && el.kind !== 'sky'), skyAnimated = world.elements.filter(el => el.spec.animated && el.kind === 'sky');
   const root = new Float64Array(12), none = new Set(), noKeys = [], parts = env.parts;
   let keys = noKeys, yawWas = NaN, since = 0;
-  // (the shot the camera was last stepped in: the eye that world.eye and world.yaw hold is that shot's)
-  let eyeShot = -1;
   // (the detail run: the time since the last reading is that part's)
   const spent = () => { const now = performance.now(), ms = now - since; since = now; return ms; };
   const stepper = {
@@ -61,7 +56,6 @@ export function createStepper(S, f, env) {
       if (lookChanged) lookOf.update(state.value);
       if (parts) parts.world = spent();
       // c
-      if (camera.counted() !== eyeShot) { camera.step(t, 0, true); eyeShot = camera.counted(); }
       const people = world.people, before = people ? people.reads(state.now) : none, shown = T.nodes.shown;
       if (before.size) {
         world.beforePeople = true;
@@ -82,7 +76,6 @@ export function createStepper(S, f, env) {
       world.emitters.frame(t, dt);
       if (parts) parts.world += spent();
       camera.step(t, dt, f.whole);
-      eyeShot = camera.counted();
       world.rebase(world.eye);
       if (parts) parts.camera = spent();
       for (let i = 0; i < skyAnimated.length; i++) skyAnimated[i].ctx.animate(t, dt);

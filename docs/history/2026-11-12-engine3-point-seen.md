@@ -14,9 +14,11 @@ in the language). No engine change for the order.
 the card's plane as drawn — one turned to the eye by the view's yaw, else its node's plane — and that point is given in
 the card's units; none when the line meets it behind the eye, runs along it, or the eye is edge-on. Animates run before
 the camera steps (the camera frames what they mark), so they read the eye of the step before: one step behind a moving
-camera — kept. But a cut's step read the shot before's eye, and the scene's first step the eye's place before any
-step (0, 1.7, 0); a cut's frame drawn at once (its shot made ready) showed it. `engines/3/play/step.js`: a step that
-begins a shot (its number other than the one the camera last stepped in — the first, a cut, a restore) places the camera
-for it, of no time, before the animates, as the opening's view does (`thread.js` `prepare`). Docs:
-`docs/worlds/scene-format-3.md` (e.point's meaning, that it follows the camera, the order of marks),
-`docs/engine3/design.md` (the step). Test: `test/point-seen.test.js`.
+camera; a cut's step reads the shot before's eye, the scene's first step the eye before any step (1.7 m up at the
+start, looking ahead) — kept so, and said. A first try placed the camera for a new shot before the animates (a second
+`camera.step` of no time in `play/step.js`); the review found it used up the operator's snap of the cut on people not
+yet posed (they are posed after the animates), so a plain cut eased from a wrong framing; and the shot's pure pose
+(`cameraFor`) is not the camera's first frame in every mode (sway, lean, the panorama's run, a platformer). The owner's
+word: the camera steps once a step and nothing touches it early — with no pure pose true in every case, the early
+placing was dropped. Docs: `docs/worlds/scene-format-3.md` (e.point's meaning, that it follows
+the camera a step late, the order of marks), `docs/engine3/design.md` (the step). Test: `test/point-seen.test.js`.
