@@ -417,7 +417,7 @@ export function createShadows(gpu, host, sheets, quads, lib) {
         for (let m = 0; m < 2; m++) { if (c.stop[m] > s.stop[m]) s.stop[m] = c.stop[m]; s.onto[m] |= c.onto[m]; }
         if (!c.has) continue;
         viewProj(c.drawn, O, f32, vo);
-        f32[vo + 16] = c.rect[0]; f32[vo + 17] = c.rect[1]; f32[vo + 18] = c.rect[2];
+        f32[vo + 16] = c.rect[0]; f32[vo + 17] = c.rect[1]; f32[vo + 18] = c.rect[2]; f32[vo + 19] = c.drawn.yaw;
       }
       for (let a = 0; s.light >= 0 && a < casters.length; a++) { const person = casters[a]; if (world.personCastsIn(person.index, s.light)) { if (person.strength > s.stop[1]) s.stop[1] = person.strength; s.onto[1] |= person.onto; } }
       // (particles that cast: in the movers' maps of the far lights, their strength in their coverage, onto the ground)

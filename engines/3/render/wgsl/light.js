@@ -22,8 +22,9 @@
 // (−1: it casts nothing now), its kind (0 a far light's two cascades, 1 a point's faces, 2 a window's one view),
 // what each of its two maps stops of the light (the strongest of its casters) and the receivers they fall on (the
 // union of its casters'); a view: its matrix (the world less the origin → its clip space), its cell of the atlases
-// (x, y, side: shares of the atlas's side — the same in both). No shadow of itself: the receiver's own plane, read
-// in the map (e_shadowAt) — the one safeguard.
+// (x, y, side: shares of the atlas's side — the same in both) and its yaw (what faces the eye is turned by it there:
+// a card casts turned to its light). No shadow of itself: the receiver's own plane, read in the map (e_shadowAt) —
+// the one safeguard.
 //   The air (5.18): the haze between the eye and a thing D away tints it toward the haze's colour, 1 − e^(−D/reach);
 // the light in it (render/air.js: shafts, the lamps' glow) is a small volume of the frame's view read by whatever is
 // hazed, where it stands — two filtered reads of a small texture and a mix. Not in a mirror's view nor a light's.
@@ -141,8 +142,9 @@ fn e_term(i: u32, P: vec3f, N: vec3f, has: f32, inside: f32, sheer: f32) -> vec3
   return L.b.rgb * e_lin(fall * (mix(e_rounded(P, way), e_facing(N, way), has) + e_behind(P, way, sheer)));
 }
 ${shadows ? /* wgsl */ `
-// how much of slot s's light arrives at P (N: its face; recv: the receivers it is) past what its maps hold
-fn e_shadowAt(s: u32, P: vec3f, N: vec3f, recv: u32) -> f32 {
+// how much of slot s's light arrives at P (N: its face; has: whether it is lit by it — 0: rounded toward the eye, a
+// card that faces the eye; recv: the receivers it is) past what its maps hold
+fn e_shadowAt(s: u32, P: vec3f, N: vec3f, has: f32, recv: u32) -> f32 {
   let S = e_shadows.slot[s];
   if (S.light < 0) { return 1.0; }
   var on = S.stop.xy;
@@ -176,27 +178,35 @@ fn e_shadowAt(s: u32, P: vec3f, N: vec3f, recv: u32) -> f32 {
   // each map's 2 × 2 compare reads texels a texel of that map off the point read at the most, each axis — where the
   // receiver's own plane lies up to |g.x| + |g.y| texels' worth nearer the light than P: P is read as that much
   // nearer, and as where its plane is at the point read (uv kept within its cell). What faces no way (N 0: the air)
-  // is read as it is. A caster close before its receiver keeps its shadow down to that texel of the receiver's slope.
+  // is read as it is. A card that faces the eye is lit as rounded, not by N, and casts turned to its light: its plane
+  // is the one it casts with — upright, turned by this view's yaw. A caster close before its receiver keeps its
+  // shadow down to that texel of the receiver's slope.
   var z = vec2f(at.z);
+  var n = N;
+  if (has <= 0.0) { n = vec3f(-sin(V.cell.w), 0.0, cos(V.cell.w)); }
   if (dot(N, N) > 0.25) {
     // (two ways along its plane, a step of a hundredth of the way from the light there — a far light's: of a metre)
     var step = 0.01;
     if (S.kind != 0u) { step = 0.01 * max(length(P - L.a.xyz), 0.05); }
-    let a = select(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), abs(N.x) > 0.7);
-    let t1 = normalize(cross(N, a)) * step;
-    let t2 = normalize(cross(N, t1)) * step;
+    let a = select(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), abs(n.x) > 0.7);
+    let t1 = normalize(cross(n, a)) * step;
+    let t2 = normalize(cross(n, t1)) * step;
     let c1 = V.vp * vec4f(P + t1, 1.0);
     let c2 = V.vp * vec4f(P + t2, 1.0);
     let d1 = c1.xyz / c1.w - at;
     let d2 = c2.xyz / c2.w - at;
     let det = d1.x * d2.y - d2.x * d1.y;
-    // (seen edge-on by the light: its plane takes none of its light — nothing to shade)
-    if (abs(det) < 1e-14) { return 1.0; }
-    let g = vec2f(d1.z * d2.y - d2.z * d1.y, d2.z * d1.x - d1.z * d2.x) / det;
-    // (the point read, kept within its cell, as the map's clip: where P's plane is there)
-    let held = (uv - V.cell.xy) / V.cell.z * vec2f(2.0, -2.0) + vec2f(-1.0, 1.0) - at.xy;
-    let side = V.cell.z / e_shadows.texel.xy;
-    z = vec2f(at.z + dot(g, held)) + (abs(g.x) + abs(g.y)) * 2.0 / side;
+    // (seen edge-on by the light: a face lit by N takes none of its light — nothing to shade; a card that faces the
+    // eye, cast edge-on — a light straight over it —, is read as it is)
+    if (abs(det) < 1e-14) {
+      if (has > 0.0) { return 1.0; }
+    } else {
+      let g = vec2f(d1.z * d2.y - d2.z * d1.y, d2.z * d1.x - d1.z * d2.x) / det;
+      // (the point read, kept within its cell, as the map's clip: where P's plane is there)
+      let held = (uv - V.cell.xy) / V.cell.z * vec2f(2.0, -2.0) + vec2f(-1.0, 1.0) - at.xy;
+      let side = V.cell.z / e_shadows.texel.xy;
+      z = vec2f(at.z + dot(g, held)) + (abs(g.x) + abs(g.y)) * 2.0 / side;
+    }
   }
   var kept = 1.0;
   if (on.x > 0.0) { kept *= 1.0 - on.x * (1.0 - textureSampleCompareLevel(e_shadowStatic, e_shadowSampler, uv, z.x)); }
@@ -208,7 +218,7 @@ fn e_keys(P: vec3f, N: vec3f, has: f32, inside: f32, recv: u32, sheer: f32) -> v
   var L = vec3f(0.0);
   for (var s = 0u; s < ${SHADOW.KEYS}u; s++) {
     let i = e_shadows.slot[s].light;
-    if (i >= 0) { L += e_term(u32(i), P, N, has, inside, sheer) * e_shadowAt(s, P, N, recv) * e_landShade(u32(i), P); }
+    if (i >= 0) { L += e_term(u32(i), P, N, has, inside, sheer) * e_shadowAt(s, P, N, has, recv) * e_landShade(u32(i), P); }
   }
   return L;
 }
@@ -242,7 +252,7 @@ fn e_lightOn(P: vec3f, N: vec3f, has: f32, inside: f32, recv: u32, keys: bool, o
     var key = false;
 ${shadows ? /* wgsl */ `    for (var s = 0u; s < ${SHADOW.LIGHTS}u; s++) {
       if (e_shadows.slot[s].light == i32(i)) {
-        if (keys && s < ${SHADOW.KEYS}u) { key = true; } else if (recv != 0u) { shade = e_shadowAt(s, P, N, recv); }
+        if (keys && s < ${SHADOW.KEYS}u) { key = true; } else if (recv != 0u) { shade = e_shadowAt(s, P, N, has, recv); }
       }
     }
 ` : ''}    if (!key) { L += e_term(i, P, N, has, inside, sheer) * shade * e_landShade(i, P); }

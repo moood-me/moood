@@ -260,7 +260,7 @@ fn e_phase(c: f32) -> f32 { return 0.25 * (1.0 - 0.27 * 0.27) / pow(1.0 + 0.27 *
 // what of far light i reaches P past what the maps hold
 fn e_shaft(i: u32, P: vec3f) -> f32 {
   var k = 1.0;
-  for (var s = 0u; s < ${SHADOW.LIGHTS}u; s++) { if (e_shadows.slot[s].light == i32(i)) { k = e_shadowAt(s, P, vec3f(0.0), 0xffffffffu); } }
+  for (var s = 0u; s < ${SHADOW.LIGHTS}u; s++) { if (e_shadows.slot[s].light == i32(i)) { k = e_shadowAt(s, P, vec3f(0.0), 1.0, 0xffffffffu); } }
   return k;
 }
 @fragment fn e_fragment(in: e_Full) -> @location(0) vec4f {
@@ -479,7 +479,7 @@ struct e_BeamOut {
     let t = lo + (f32(n) + 0.5) * step;
     let X = e_view.eye + dir * t;
     // (its shadow maps, read once a pair of samples — between the two)
-    if (in.slot >= 0 && (n & 1) == 0) { shade = e_shadowAt(u32(in.slot), X + dir * (0.5 * step), vec3f(0.0), 0xffffffffu); }
+    if (in.slot >= 0 && (n & 1) == 0) { shade = e_shadowAt(u32(in.slot), X + dir * (0.5 * step), vec3f(0.0), 1.0, 0xffffffffu); }
     let v = X - L.a.xyz;
     let l = max(length(v), 1e-4);
     let w = v / l;
