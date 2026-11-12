@@ -14,9 +14,9 @@ const card = (o, right, down) => [o, [o[0] + right[0], o[1] + right[1], o[2] + r
 const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} is not ${b}`);
 
 test('a curtain straight ahead: its distance is the eye\'s to its plane', () => {
-  // (a sheet 2 m wide across the gaze, 0.3 m before an eye at 1.6 m)
-  const C = card([-1, 2.5, -0.3], [2, 0, 0], [0, -2.5, 0]);
-  close(nearestOf([0, 1.6, 0], C), 0.3);
+  // (a sheet 2 m wide across the gaze, 0.2 m before an eye at 1.6 m)
+  const C = card([-1, 2.5, -0.2], [2, 0, 0], [0, -2.5, 0]);
+  close(nearestOf([0, 1.6, 0], C), 0.2);
   assert.ok(nearestOf([0, 1.6, 0], C) < PASS.TO);
 });
 
@@ -49,6 +49,9 @@ test('a sheared card (a parallelogram) still measured to its own points', () => 
   close(d, Math.hypot(p[0] - f * s[0], p[1] - f * s[1]));
 });
 
-test('the pass: gone at 20 cm from the eye, whole from 60', () => {
-  assert.ok(PASS.FROM > 0.1 && PASS.FROM < PASS.TO && PASS.TO < 0.65);
+test('the pass: gone at 10 cm from the eye, whole from 30 — the desk\'s front under a lens 35 cm over the top is whole', () => {
+  assert.equal(PASS.FROM, 0.1);
+  assert.equal(PASS.TO, 0.3);
+  // (the desk of the test above: its front is past the band)
+  assert.ok(nearestOf([0, 1.11, 0], card([-0.5, 0.76, -0.25], [1, 0, 0], [0, -0.17, 0])) >= PASS.TO);
 });

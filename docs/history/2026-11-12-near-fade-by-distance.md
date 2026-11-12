@@ -34,3 +34,13 @@ fade, however near they are along the gaze.
 drawer's sides, the desk's apron, the chair and him behind them all ghosts; after (ffd30c3) 43667 — he, his chair and
 the desk's far side are whole; the drawer's front and its near side, within 60 cm of the lens, still fade, as
 designed. A sheer curtain 32 cm before the eye (43668): fades softly, no seam. Test: `test/near-fade.test.js`.
+
+**Then: the band narrowed (Pavel, the same day).** So that a close-up from 30–40 cm is solid, `PASS` is now gone at
+0.1 m and whole from 0.3 m from the eye (was 0.204…0.595). With the fade by distance, the near plane (along the gaze)
+must cut only what is already gone: a point at depth d at angle θ off the gaze is d / cos θ from the eye, so at the
+old near plane (0.1 m) a card would have been cut while still partly seen at the frame's sides. The near plane is now
+a tenth of `PASS.FROM` (1 cm, play/camera.js `NEAR`): what it cuts is gone out to some 84° off the gaze, past any
+frame's corner (about 65° at the widest: a 32:9 screen with the gaze far off the frame's middle). The depth is
+reversed float32 — as fine at 1 cm as at 10; mirrors and lights have near planes of their own; nothing else reads the
+number but the camera's own test of a lens inside a person (now within 1 cm of their body). The camera's nearest
+point, its rays' start and the least distance it frames from go by the same two numbers, as before.

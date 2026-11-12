@@ -2547,7 +2547,7 @@ never a late compile.
 | `LIGHT.FAR_MOST`, `LIGHT.THROUGH_MOST`, `LIGHT.SPOT_MOST` | 8, 4, 2: the far lights, the through lights and the beams lit at once — the strongest far and through lights, the beams most worth to the view; a scene with more is told once (5.5) | RENDER |
 | `CAST.ALPHA` | 0.5: below it a cast program drops the fragment (4.6; 5.5) | RENDER |
 | `RECV.GROUND` | 1: bit 0 of a quad's `recv` — THE GROUND (WT2) | SCENE / RENDER |
-| `PASS.FROM`, `PASS.TO` | 0.12 and 0.35 of the eye's height (0.204 m, 0.595 m): where a standing thing passed close by has faded out, and where it begins to — its distance from the eye (5.17); the camera's nearest and its rays' start go by the same two | SCENE / RENDER |
+| `PASS.FROM`, `PASS.TO` | 0.1 m, 0.3 m: where a standing thing passed close by has faded out, and where it begins to — its distance from the eye (5.17; 0.204 and 0.595 m, by depth along the gaze, before 2026-11-12); the camera's nearest, its rays' start and its near plane (`PASS.FROM` / 10) go by the same two | SCENE / RENDER |
 | `CLIP.SETS` | 4 cutter sets a scene, a channel of `masks` each (WT2) | SCENE / RENDER |
 | `WIND.FAST` | 0.45: the fast part of a layer's bend — with the look's wind strength, the bound of the bend, in the posed layer's metres (SH10) | RENDER / SHEETS |
 | `SHEET.PAGE, BORDER, UNIT, TOP, SLOT, SLOTS_SIDE, LAYER, MAX_PPM, WINDOW` | 256, 8, 68, 52, 272, 7, 1904, 2048, 7 (main's values) | SHEETS |
@@ -3273,7 +3273,9 @@ crossfade comes at a loop's seam, seconds in); a long loop is a
   running past the eye lays its depth where it does not fade, and what reads the depth (the bounce, the air) never
   takes what stands behind it for it. Not a plane,
   the land, the sky, an insert or a form; not in a mirror's or a shadow's view. The camera keeps its eye no nearer to
-  what it looks at, and its rays begin `PASS.FROM` ahead, by the same two numbers (4.7).
+  what it looks at, and its rays begin `PASS.FROM` ahead, by the same two numbers (4.7); its near plane is a tenth of
+  `PASS.FROM` along the gaze, so what it cuts is gone already wherever the frame sees it (out to some 84° off the
+  gaze — a frame's corner is within 65° even on the widest screen): nothing pops at the frame's sides.
 - **No depth-only "cores" pre-pass** (main lays the depth of the opaque middles of mixed sheets in a pass before
   colour): `cut` writes those middles as opaque colour WITH their depth, once, in the solid pass — the way
   the count found 3 % cheaper than main's, and no pass more. What made it look risky — layers of one element in
