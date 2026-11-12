@@ -32,12 +32,17 @@ right.
 means: a light that nothing casts for lights every face turned to it within its cone (render/wgsl/light.js `e_term`:
 nothing in it asks what lies between). Not changed.
 
-**Cost** (measure_scene on the dev stand, T4, phone profile; main cd0cd31 against f1e59b1 — which also carries the
-shadows branch's 450f07f): GPU p95 / main-solid / mirror, ms — `desk` (a through-light of 4 panes, 2 beams) 3.52 →
-4.05 / 1.66 → 2.09 / 0.30 → 0.33 (43696, 43697); `airport` (a through-light of 10 panes, a mirror floor) 3.99 → 4.33
-/ 1.44 → 1.57 / 0.66 → 0.82 (43694, 43695); `habits-remain` / `tram` (neither kind) 2.87 → 2.96 / 0.96 → 1.05 / 0.44
-→ 0.49 (43698, 43699). Frames held at 16.7 ms in all. Brought to the owner before going further: on a weak phone the
-desk's +0.5 ms would be several.
+**Cost** (measure_scene on the dev stand, T4, phone profile; GPU p95 / main-solid / mirror, ms). The first build
+(every opaque quad, every pixel) against main cd0cd31: `desk` 3.52 → 4.05, `airport` 3.99 → 4.33. Then, by the
+owner's word, a pane's mask read only past its plane, and the per-pixel work only on quads a light with an edge may
+change across (`L.edged`, SHAPE.EDGES). Against the shadows branch's head 4659a31 alone (43712–43714) → 5db72fb
+(43718–43720):
+- `habits-remain` / `tram` (neither kind): 2.94 / 0.97 / 0.45 → 2.97 / 1.00 / 0.48 — the same, within the noise.
+- `airport` (one through-light of 10 panes, a floor that mirrors): 4.03 / 1.51 / 0.66 → 4.32 / 1.60 / 0.84 (+7%).
+- `desk` (a through-light of 4 panes, two beams, one 130° wide): 3.58 / 1.70 / 0.30 → 4.10 / 2.09 / 0.33 (+15%).
+In these two the patches reach nearly every opaque surface in view, so the per-quad test spares little; frames held
+at 16.7 ms on this stand. 5db72fb's `L.edged` allocated (Math.hypot, numbers passed as arguments): fixed in 3ad1aa2,
+not measured again. Brought to the owner before going further.
 
 **Checks.** `node --test test/light-edges.test.js` — 3 of 3; `test/gpu/check.mjs` (with `letter`, an own shader) —
 no errors.
