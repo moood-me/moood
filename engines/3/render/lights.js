@@ -241,6 +241,34 @@ export function createLights(gpu) {
     return Math.min(n, room);
   }
 
+  // Whether a light whose patch has an edge — a row of this frame's lit set through panes, or a beam — may change
+  // across a sphere (x, y, z: the world's; r) → what is drawn there works it out at its pixels (render/quads.js:
+  // SHAPE.EDGES). Not reached, it is none or whole across the sphere — at its vertices as any light. Through panes:
+  // the sphere's middle carried along the light's way onto each pane's plane, in cells of its mask (its soft edge
+  // within it), the sphere's radius as many cells as the mapping stretches a metre; or the sphere across a pane's
+  // plane (outside before it, in past it). A beam: within its reach and its cone widened by the sphere's half angle
+  L.edged = (x, y, z, r) => {
+    const px = x - O[0], py = y - O[1], pz = z - O[2];
+    for (let row = L.farN; row < L.farN + L.throughN; row++) {
+      const w = 20 * row, first = data[w + 12], count = data[w + 13];
+      for (let k = first; k < first + count; k++) {
+        const v = 20 * (LIGHT.LIT + k), side = data[v] * px + data[v + 1] * py + data[v + 2] * pz + data[v + 3];
+        if (side < -r) continue;
+        if (side < r) return true;
+        const ax = data[v + 4] * px + data[v + 5] * py + data[v + 6] * pz + data[v + 7], ay = data[v + 8] * px + data[v + 9] * py + data[v + 10] * pz + data[v + 11];
+        const rx = r * Math.hypot(data[v + 4], data[v + 5], data[v + 6]), ry = r * Math.hypot(data[v + 8], data[v + 9], data[v + 10]);
+        if (ax + rx > 0 && ax - rx < data[v + 14] && ay + ry > 0 && ay - ry < data[v + 15]) return true;
+      }
+    }
+    for (let row = L.farN + L.throughN; row < L.farN + L.throughN + L.spotN; row++) {
+      const w = 20 * row, dx = px - data[w], dy = py - data[w + 1], dz = pz - data[w + 2], l = Math.hypot(dx, dy, dz);
+      if (l - r >= data[w + 8]) continue;
+      if (l <= r) return true;
+      const along = Math.acos(Math.min(1, Math.max(-1, (dx * data[w + 12] + dy * data[w + 13] + dz * data[w + 14]) / l)));
+      if (along - Math.asin(r / l) < Math.acos(Math.min(1, data[w + 15]))) return true;
+    }
+    return false;
+  };
   L.build = w => { world = w; panesStamp = -1; said.far = said.through = said.spot = said.planes = false; L.glowN = 0; L.skyGlowN = 0; L.haloN = 0; };
   // The frame's lights chosen for its view (view.e: its frustum), written where they changed. origin: the render
   // origin; hazeGlow: the look's. → nothing; L's fields say what there is

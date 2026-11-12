@@ -209,6 +209,8 @@ export function createQuads(gpu, lib, sheets) {
   // air, the haze (by its reach: across a quad HAZE_STEP times smaller than it the haze changes by less than a step
   // of the main target's colour), the people's blob (its square of the level: x0, z0, x1, z1 — the world's)
   const varies = { light: false, air: false, reach: Infinity, blob: false, at: new Float64Array(4) };
+  // the frame's lights whose patch has an edge (render/lights.js L.edged), or null: none shines
+  let edges = null;
   // how far up and down the land goes, by the heights RENDER sampled (render/land.js): what a draped quad's sphere holds
   let tall = 0;
   // of the call, all its views together (RN8): quads that have an entry among what blends; draws, triangles; lit
@@ -350,9 +352,10 @@ export function createQuads(gpu, lib, sheets) {
   }
   // The frame begins: the order emptied, the families' groups forgotten. light, air: whether the light, the light in
   // the air vary across every quad this frame; reach: the haze's; blob: the people's blob map's square (x0, z0, x1,
-  // z1 — the world's), or null; land: how far up and down the land goes (render/land.js Ld.tall)
-  function begin(light, air, reach, blob, land) {
-    rows = 0; groups.length = 1;
+  // z1 — the world's), or null; land: how far up and down the land goes (render/land.js Ld.tall); edged: the frame's
+  // test of where a light with an edge may change (render/lights.js L.edged), or null when none shines
+  function begin(light, air, reach, blob, land, edged) {
+    rows = 0; groups.length = 1; edges = edged;
     varies.light = light; varies.air = air; varies.reach = reach; varies.blob = !!blob;
     if (blob) varies.at.set(blob);
     tall = land;
@@ -754,10 +757,15 @@ export function createQuads(gpu, lib, sheets) {
       }
       const flags = Q.flags[q], kind = Q.kind[q], own = Q.own[q], recv = castsAny && Q.recv[q] !== 0 ? 1 : 0;
       let sh = SHAPE.FLAT, p, g = 0, px = 0, py = 0, bits = 0;
+      // (what is opaque where a light with an edge may change across it: its pixels work that light out — SHAPE.EDGES)
+      if (edges && kindOf === LIST.SOLID && extra !== OVERLAY && !(flags & FLAG.GLOWS)) {
+        sphereOf(q, null, S4);
+        if (edges(S4[0], S4[1], S4[2], S4[3])) bits = SHAPE.EDGES;
+      }
       DIM[3] = 1;
       if (extra & LEAF) {
         // (a leaf of the land under a draped quad: its row of the leaves in the shape's word)
-        sh = SHAPE.FINE; bits = (extra & ~LEAF) << 8; g = o.land.group;
+        sh = SHAPE.FINE; bits |= (extra & ~LEAF) << 8; g = o.land.group;
         p = pipeAt[set + (kindOf === LIST.SOLID ? P.LAND_SOLID : P.LAND_BLEND)];
         o.land.page(extra & ~LEAF, page);
         px = page[0]; py = page[1];

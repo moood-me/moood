@@ -91,11 +91,11 @@ fn e_through(L: e_Light, P: vec3f, inside: f32) -> f32 {
     if (g >= count) { break; }
     let R = e_lights[first + g];
     let at = vec2f(dot(R.b.xyz, P) + R.b.w, dot(R.c.xyz, P) + R.c.w);
-    let m = textureSampleLevel(e_panes, e_linear, (R.d.xy + clamp(at, vec2f(0.5), R.d.zw - 0.5)) / vec2f(textureDimensions(e_panes)), 0.0).r;
-    var beyond = 0.0;
-    if (dot(R.a.xyz, P) + R.a.w > 0.0) { beyond = 1.0; }
-    deep += m * beyond;
-    past = max(past, beyond);
+    // (its mask read only past its plane)
+    if (dot(R.a.xyz, P) + R.a.w > 0.0) {
+      deep += textureSampleLevel(e_panes, e_linear, (R.d.xy + clamp(at, vec2f(0.5), R.d.zw - 0.5)) / vec2f(textureDimensions(e_panes)), 0.0).r;
+      past = 1.0;
+    }
   }
   if (past > 0.5) { return min(deep, 1.0); }
   return 1.0;
