@@ -1,13 +1,11 @@
 // What stands upright fades as the eye passes it close by (5.17) by how far it is FROM THE EYE, not by its depth along
-// the gaze (moood-me/moood#8): the renderer's test of whether a card may fade at all (render/quads.js nearestOf — the
+// the gaze (moood-me/moood#8): the renderer's test of whether a card may fade at all (render/views.js nearestOf — the
 // eye's distance to the card's nearest point) and the pass's two numbers. In node: no GPU.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { PASS } from '../engines/3/base.js';
 
-globalThis.GPUBufferUsage ??= { STORAGE: 1, COPY_DST: 2, VERTEX: 4, UNIFORM: 8, INDEX: 16 };
-globalThis.GPUTextureUsage ??= { TEXTURE_BINDING: 1, COPY_DST: 2 };
-const { nearestOf } = await import('../engines/3/render/quads.js');
+import { nearestOf } from '../engines/3/render/views.js';
 
 // a card's four placed corners — (l, t), (r, t), (l, b), (r, b) — from its top-left corner and its two sides
 const card = (o, right, down) => [o, [o[0] + right[0], o[1] + right[1], o[2] + right[2]], [o[0] + down[0], o[1] + down[1], o[2] + down[2]], [o[0] + right[0] + down[0], o[1] + right[1] + down[1], o[2] + right[2] + down[2]]];

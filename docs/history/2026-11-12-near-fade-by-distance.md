@@ -17,8 +17,9 @@ nearness to the eye itself — what walking through leaves needs —, not by a n
   its `cut` laying the depth of what does not fade — is the eye's distance to the card's nearest point
   (`nearestOf`: to its plane where the eye's foot is on it, else to its nearest side; its sphere first, by the
   distance of its middle less its radius).
-- `play/inspect.js`: the layout's `fade` goes by the same distance (of the element's anchor, else of the nearest of
-  what of it is before the eye).
+- `play/inspect.js`: the layout's `fade` goes by the same distance (of the element's anchor, else of its nearest
+  point, by `nearestOf` — after the review: the nearest of its corners is not its nearest point). `nearestOf` lives in
+  `render/views.js` (no GPU), and the cull works out a sphere's distance only in a view where things fade.
 - Docs: `architecture.md` 5.17 and its table, `base.js`, `scene-format-3.md` (the sentence on moving past near things).
 
 **Walking through leaves** still fades well: a curtain across the gaze is now see-through first where it is
@@ -40,8 +41,9 @@ must cut only what is already gone: a point at depth d at angle θ off the gaze 
 old near plane (0.1 m) a card would have been cut while still partly seen at the frame's sides. The near plane is now
 a tenth of `PASS.FROM` (1 cm, play/camera.js `NEAR`): what it cuts is gone out to some 84° off the gaze, past any
 frame's corner (about 65° at the widest: a 32:9 screen with the gaze far off the frame's middle). The depth is
-reversed float32 — as fine at 1 cm as at 10; mirrors and lights have near planes of their own; nothing else reads the
-number but the camera's own test of a lens inside a person (now within 1 cm of their body). The camera's nearest
+reversed float32 — as fine at 1 cm as at 10; mirrors and lights have near planes of their own. The camera's test of a
+lens inside a person read the same number as its margin round the body's capsules; after the review that margin is
+its own (`BODY`, 0.1 m as it was: the capsules are a rough shape, hair and clothes reach past them). The camera's nearest
 point, its rays' start and the least distance it frames from go by the same two numbers, as before.
 Renders (5549f7b): the same close-up, 43709 — the drawer's front and sides, the apron, the chair, all solid; the
 sheer curtain 12 cm and 7 cm before the eye on a 21:9 frame (43711, 43710) — it thins out softly toward the frame's

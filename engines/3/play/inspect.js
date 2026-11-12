@@ -12,6 +12,7 @@
 // held), the pacer's step, the renderer's counters, the GPU's memory, the sheets' numbers. No clock is read for it.
 import { PASS } from '../base.js';
 import { project } from './camera.js';
+import { nearestOf } from '../render/views.js';
 
 const r1 = v => Math.round(v * 10) / 10;
 const fadeOf = D => Math.max(0, Math.min(1, (D - PASS.FROM) / (PASS.TO - PASS.FROM)));
@@ -28,7 +29,7 @@ export function createInspect(world, camera, state, host) {
   // a rectangle of el's painting (box, on its base sheet or — part ≥ 0 — a part's) as seen — what of it is before the
   // eye: [x, y, w, h] into b, and into s its anchor, its depth, its fade, whether it is in the frame — false: behind
   // the eye. Nothing made (the selection's box is asked every tick)
-  const ring = [0, 1, 2, 3].map(() => new Float64Array(3)), kept = [0, 1, 2, 3, 4, 5, 6, 7].map(() => new Float64Array(3)), CORNER = [0, 1, 2, 1, 2, 3, 0, 3];
+  const ring = [0, 1, 2, 3].map(() => new Float64Array(3)), flat = [ring[0], ring[1], ring[3], ring[2]], ZERO = new Float64Array(3), kept = [0, 1, 2, 3, 4, 5, 6, 7].map(() => new Float64Array(3)), CORNER = [0, 1, 2, 1, 2, 3, 0, 3];
   const sight = { anchor: [0, 0], hasAnchor: false, distance: 0, fade: 0, inFrame: false }, corner = { x: 0, y: 0, part: -1, layer: -1 };
   function seenInto(el, copy, part, node, box, b, s) {
     const C = cam(), R = C.rot, P = C.proj, r = camera.seen;
@@ -46,10 +47,10 @@ export function createInspect(world, camera, state, host) {
       if (pin !== qin) { const f = (-PASS.FROM - p[2]) / (q[2] - p[2]), k = kept[n++]; k[0] = p[0] + (q[0] - p[0]) * f; k[1] = p[1] + (q[1] - p[1]) * f; k[2] = p[2] + (q[2] - p[2]) * f; }
     }
     if (!n) return false;
-    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, depth = Infinity, close = Infinity;
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, depth = Infinity;
     for (let i = 0; i < n; i++) {
       const p = kept[i], d = -p[2];
-      depth = Math.min(depth, d); close = Math.min(close, Math.hypot(p[0], p[1], p[2]));
+      depth = Math.min(depth, d);
       const x = r.x + ((P[0] * p[0] - P[8] * d) / d + 1) / 2 * r.w, y = r.y + (1 - (P[5] * p[1] - P[9] * d) / d) / 2 * r.h;
       if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
     }
@@ -59,9 +60,9 @@ export function createInspect(world, camera, state, host) {
     // (what reaches past the place — a floor going under the eye — as far as its edge)
     x0 = Math.max(-host.w, x0); x1 = Math.min(2 * host.w, x1); y0 = Math.max(-host.h, y0); y1 = Math.min(2 * host.h, y1);
     b[0] = r1(x0); b[1] = r1(y0); b[2] = r1(x1 - x0); b[3] = r1(y1 - y0);
-    // (along the gaze: its anchor's depth; its fade, as the renderer's, by how far from the eye — its anchor, else the
-    // nearest of what is before the eye of it)
-    const D = a ? a[2] : depth, away = a ? Math.hypot(V[0] - C.eye[0], V[1] - C.eye[1], V[2] - C.eye[2]) : close;
+    // (along the gaze: its anchor's depth; its fade, as the renderer's, by how far from the eye — its anchor, else its
+    // nearest point: render/views.js nearestOf, here in the eye's space, the eye at 0)
+    const D = a ? a[2] : depth, away = a ? Math.hypot(V[0] - C.eye[0], V[1] - C.eye[1], V[2] - C.eye[2]) : nearestOf(ZERO, flat);
     s.inFrame = b[0] < r.x + r.w && b[0] + b[2] > r.x && b[1] < r.y + r.h && b[1] + b[3] > r.y;
     s.hasAnchor = !!a; if (a) { s.anchor[0] = r1(a[0]); s.anchor[1] = r1(a[1]); }
     s.distance = r1(D); s.fade = Math.round(fadeOf(away) * 100) / 100;

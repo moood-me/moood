@@ -220,3 +220,26 @@ export function createView(gpu, kind, drawn = true) {
   e.drop = () => { if (drawn) gpu.drop(e.buffer); };
   return view;
 }
+// The distance from a point E to a flat quad of four placed corners C — (l, t), (r, t), (l, b), (r, b): a
+// parallelogram — in metres: to the point of its plane under E when that is on it, else to the nearest of its sides.
+// Nothing allocated
+export function nearestOf(E, C) {
+  const o = C[0], ux = C[1][0] - o[0], uy = C[1][1] - o[1], uz = C[1][2] - o[2], vx = C[2][0] - o[0], vy = C[2][1] - o[1], vz = C[2][2] - o[2];
+  const ex = E[0] - o[0], ey = E[1] - o[1], ez = E[2] - o[2];
+  const uu = ux * ux + uy * uy + uz * uz, vv = vx * vx + vy * vy + vz * vz, uv = ux * vx + uy * vy + uz * vz, eu = ex * ux + ey * uy + ez * uz, ev = ex * vx + ey * vy + ez * vz;
+  const det = uu * vv - uv * uv;
+  if (det > 1e-12 * uu * vv) {
+    const s = (eu * vv - ev * uv) / det, t = (ev * uu - eu * uv) / det;
+    if (s >= 0 && s <= 1 && t >= 0 && t <= 1) { const x = ex - s * ux - t * vx, y = ey - s * uy - t * vy, z = ez - s * uz - t * vz; return Math.sqrt(x * x + y * y + z * z); }
+  }
+  // (its sides: (l, t)–(r, t), (r, t)–(r, b), (r, b)–(l, b), (l, b)–(l, t))
+  let d = Infinity;
+  for (let k = 0; k < 4; k++) {
+    const a = C[SIDE_FROM[k]], b = C[SIDE_TO[k]], dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], px = E[0] - a[0], py = E[1] - a[1], pz = E[2] - a[2];
+    const ll = dx * dx + dy * dy + dz * dz, f = ll > 0 ? Math.max(0, Math.min(1, (px * dx + py * dy + pz * dz) / ll)) : 0;
+    const x = px - f * dx, y = py - f * dy, z = pz - f * dz;
+    d = Math.min(d, x * x + y * y + z * z);
+  }
+  return Math.sqrt(d);
+}
+const SIDE_FROM = [0, 1, 3, 2], SIDE_TO = [1, 3, 2, 0];

@@ -54,6 +54,9 @@ const NEAREST = 0.3 * PASS.TO + 0.7 * PASS.FROM;
 // eye); a frame's corner is well inside that (the widest screen, the gaze far off the frame's middle: some 65°). The
 // depth is reversed and float: as fine at 1 cm as at 10
 const NEAR = 0.1 * PASS.FROM;
+// how near a person's capsules the lens may come before it is in their body — the capsules are a body's rough
+// shape, its hair and clothes reach past them
+const BODY = 0.1;
 // (the operator on its target: this near where it frames it — metres, screen heights, radians)
 const FRAMED = 0.01;
 // a picture's breath and lean (metres aside; screen heights up and down), the lean while walking
@@ -446,18 +449,18 @@ export function createCamera(world, state, host) {
     return world.raycast(Ov, Dv, L - PASS.FROM - 0.01, skip, yaw ?? Math.atan2(Dv[0], -Dv[2]));
   }
   // whose body an eye at o (a world point) is in — any one here, the target too: within their capsules (PEOPLE's, as
-  // they stand now) or as near them as the near plane — where the lens would cut into them (that person; null: none)
+  // they stand now) or BODY near them (that person; null: none)
   const Sp = new Float64Array(4);
   function inBody(o) {
     const P = world.people;
     if (!P) return null;
     for (const el of world.persons) {
-      if (!P.sphere(el.id, Sp) || Math.hypot(o[0] - Sp[0], o[1] - Sp[1], o[2] - Sp[2]) > Sp[3] + NEAR) continue;
+      if (!P.sphere(el.id, Sp) || Math.hypot(o[0] - Sp[0], o[1] - Sp[1], o[2] - Sp[2]) > Sp[3] + BODY) continue;
       const K = P.capsules(el.id), C = K.data;
       for (let i = 0; i < K.n * 7; i += 7) {
         const sx = C[i + 3] - C[i], sy = C[i + 4] - C[i + 1], sz = C[i + 5] - C[i + 2], ss = sx * sx + sy * sy + sz * sz;
         const u = ss > 1e-12 ? clamp(((o[0] - C[i]) * sx + (o[1] - C[i + 1]) * sy + (o[2] - C[i + 2]) * sz) / ss, 0, 1) : 0;
-        if (Math.hypot(o[0] - C[i] - sx * u, o[1] - C[i + 1] - sy * u, o[2] - C[i + 2] - sz * u) <= C[i + 6] + NEAR) return el;
+        if (Math.hypot(o[0] - C[i] - sx * u, o[1] - C[i + 1] - sy * u, o[2] - C[i + 2] - sz * u) <= C[i + 6] + BODY) return el;
       }
     }
     return null;

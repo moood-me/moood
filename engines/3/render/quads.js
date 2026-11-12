@@ -73,7 +73,7 @@ import { QUAD, FLAG, FORM, LIT, PASS, SHEET, WIND } from '../base.js';
 import { place, backdropAt, turnOf } from '../world/place.js';
 import { since, stampedAt } from '../world/tables.js';
 import { SHAPE } from './wgsl/quad.js';
-import { sees, ahead, pxAt, clip, covers } from './views.js';
+import { sees, ahead, pxAt, clip, covers, nearestOf } from './views.js';
 
 const ROW = 68, WORDS = 17;
 // a sheet this many px a side has its origin page under the eye's foot (SH14)
@@ -146,28 +146,6 @@ export function viewLists() {
   lists.all = [lists.solid, lists.blend, lists.sky, lists.inserts, lists.cast, lists.movers, lists.mask, lists.marks];
   return lists;
 }
-// The distance from a point E to a flat quad of four placed corners C — (l, t), (r, t), (l, b), (r, b): a
-// parallelogram — in metres: to the point of its plane under E when that is on it, else to the nearest of its sides.
-// Nothing allocated
-export function nearestOf(E, C) {
-  const o = C[0], ux = C[1][0] - o[0], uy = C[1][1] - o[1], uz = C[1][2] - o[2], vx = C[2][0] - o[0], vy = C[2][1] - o[1], vz = C[2][2] - o[2];
-  const ex = E[0] - o[0], ey = E[1] - o[1], ez = E[2] - o[2];
-  const uu = ux * ux + uy * uy + uz * uz, vv = vx * vx + vy * vy + vz * vz, uv = ux * vx + uy * vy + uz * vz, eu = ex * ux + ey * uy + ez * uz, ev = ex * vx + ey * vy + ez * vz;
-  const det = uu * vv - uv * uv;
-  if (det > 1e-12 * uu * vv) {
-    const s = (eu * vv - ev * uv) / det, t = (ev * uu - eu * uv) / det;
-    if (s >= 0 && s <= 1 && t >= 0 && t <= 1) return Math.hypot(ex - s * ux - t * vx, ey - s * uy - t * vy, ez - s * uz - t * vz);
-  }
-  // (its sides: (l, t)–(r, t), (r, t)–(r, b), (r, b)–(l, b), (l, b)–(l, t))
-  let d = Infinity;
-  for (let k = 0; k < 4; k++) {
-    const a = C[SIDE_FROM[k]], b = C[SIDE_TO[k]], dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], px = E[0] - a[0], py = E[1] - a[1], pz = E[2] - a[2];
-    const ll = dx * dx + dy * dy + dz * dz, f = ll > 0 ? Math.max(0, Math.min(1, (px * dx + py * dy + pz * dz) / ll)) : 0;
-    d = Math.min(d, Math.hypot(px - f * dx, py - f * dy, pz - f * dz));
-  }
-  return d;
-}
-const SIDE_FROM = [0, 1, 3, 2], SIDE_TO = [1, 3, 2, 0];
 // an entry's `extra` when it is a quad: 0 the quad itself; OVERLAY its mirror's overlay; CUT, EDGE — a mixed sheet's
 // opaque paint, its other pixels; a leaf of the land: LEAF | its row. An entry that is no quad: GLOW — `extra` a row
 // of the glows; EMITTER — `extra` an emitter
@@ -627,9 +605,13 @@ export function createQuads(gpu, lib, sheets) {
     for (let q = 0; q < Q.n; q++) {
       if (!admits(view, o, q)) continue;
       const flags = Q.flags[q], kind = Q.kind[q], el = Q.el[q], node = Q.node[q], glass = (flags & FLAG.GLASS) !== 0;
-      // (its sphere's middle: how far before the eye along the gaze, how far from the eye)
+      // (its sphere's middle: how far before the eye along the gaze; in a view where what stands fades, how far from
+      // the eye)
       let depth = 0, away = 0, radius = 0;
-      if (kind !== QUAD.INSERT && kind !== QUAD.SKY) { ahead(e, S4, far, 0); depth = far[0]; away = Math.hypot(S4[0] - e.eye[0], S4[1] - e.eye[1], S4[2] - e.eye[2]); radius = S4[3]; }
+      if (kind !== QUAD.INSERT && kind !== QUAD.SKY) {
+        ahead(e, S4, far, 0); depth = far[0]; radius = S4[3];
+        if (o.passes) { const dx = S4[0] - e.eye[0], dy = S4[1] - e.eye[1], dz = S4[2] - e.eye[2]; away = Math.sqrt(dx * dx + dy * dy + dz * dz); }
+      }
       view.list[n++] = q;
       if (!draw || Q.sheet[q] < 0 || flags & FLAG.READ) continue;
       if (light >= 0) {
