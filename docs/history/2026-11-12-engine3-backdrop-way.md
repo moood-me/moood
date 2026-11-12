@@ -17,7 +17,7 @@ takes a backdrop as a flat piece — its way (the gaze) + o · (its right) + up 
 (place.js `backdropWay`) — and names the levels a flat piece needs, with an eighth of slack. A way made a unit is the
 same direction but another weight at each corner, so the rasterizer's perspective interpolation is no longer that
 mapping: inside a cell the sheet's point drifts and the footprint swells, by up to about a sixth of a level near one
-corner — past the slack. The frame mostly reads the sheet's finest level, where nothing finer is asked; the mirror's
+corner — past the slack. Why the frame did not show it (inferred, not measured): it mostly reads the sheet's finest level, where nothing finer is asked; the mirror's
 image, finer since `engine3-mirror-density` (a5478d0 drew the same shot whole: 43656), reads a middle level, where a
 level more is one not asked.
 
@@ -27,6 +27,9 @@ unchanged: it is curved and asked as such). The way is used only to place the ve
 3.5 (it said "made a unit only for drawing"). Test: `test/sky-backdrop-way.test.js` runs the shader's own
 `e_skyWayIn` in node against `backdropWay` and checks that interpolation between a cell's corners lands on the sheet's
 own point (both fail with the old line). `test/gpu/check.mjs`: no errors.
+
+**After** (engine 9f8fff5): the boat's shot at yaw −22 (43705) and 0 (43706) — the mirrored moon whole; works-009
+`hope` / `lake` (43707) as on main (43708) — its square-ish blurred moon in the water is there on main too.
 
 **Not looked into.** The dark upright block a `reflect` plane of puddles laid over the ground in `the-pasture` (its
 notes): the scene no longer has that mirror and its history here has none, so it could not be drawn again.
