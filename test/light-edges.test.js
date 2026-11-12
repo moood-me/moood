@@ -54,7 +54,7 @@ function edged() {
   v.e.place(world, c, 1920, 1080);
   L.choose(v, new Float64Array(3), 0);
   assert.equal(L.throughN, 1); assert.equal(L.spotN, 1);
-  return L.edged;
+  return (x, y, z, r) => L.edged(Float64Array.of(x, y, z, r));
 }
 
 test('through panes: reached where its patch or its pane\'s plane may cross the sphere, not elsewhere', () => {

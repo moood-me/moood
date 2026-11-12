@@ -91,7 +91,7 @@ Numbers marked ≈ are orientations (the owner's numbers are orientations with a
     once with depth; then what blends, tested against that depth, its fully transparent pixels dropped: opaque
     paint hides by depth, whatever sheet it is in (5.17). Light at
     the vertices for what blends; per pixel on what is opaque only the lights whose patch has an edge (through panes,
-    beams), and on opaque receivers the two key lights and their shadow maps.
+    beams), where they may change across it, and on opaque receivers the two key lights and their shadow maps.
     One full-screen pass after the main ones. (K5, S1, S6, C8, C9; rulings 2-A1, 3-2.1, 3-2.2.)
 12. **Pipelines are a small closed set built in parallel as soon as the spec is compiled**; "ready" is one promise.
     A repaint, a change of clothes, a cut never makes a pipeline. No compute pipelines. (S8, W1.)
@@ -2813,10 +2813,13 @@ rank among the four: rank 0 — a cascade or window 1/2, a face 1/4; rank 1 — 
 - **Reading**: one function for vertices and fragments, two compare reads a casting light (static, movers). Opaque
   receivers read the first `SHADOW.KEYS` (2) casting lights per pixel — and work those two lights out per pixel
   (a lamp's pool on a floor is sharp). The lights whose patch has an edge — the through-lights and the beams, the lit
-  set's rows after the far lights — are worked out per pixel on every opaque quad and the land, receiver or not, in
-  their shadow as at its vertices (render.light `e_edges`; their vertices skip them): a window's patch, a beam's pool
-  are as sharp as they are on any wall, whatever the grid of its vertices (#10). Everything else, everything that
-  blends, particles and people, at vertices.
+  set's rows after the far lights — are worked out per pixel on an opaque quad or the land, receiver or not, where
+  they may change across it, in their shadow as at its vertices (render.light `e_edges`; its vertices skip them): a
+  window's patch, a beam's pool are as sharp as they are on any wall, whatever the grid of its vertices (#10). Where
+  they may change is the scene's thread's test of the quad's sphere, each frame (render/lights.js `L.edged`: each
+  pane's plane, and its mask carried along the light's way onto it; a beam's reach and cone) — its row's
+  `SHAPE.EDGES`; a quad it does not reach has those lights none or whole across it, at its vertices as before.
+  Everything else, everything that blends, particles and people, at vertices.
 - A card that faces the eye casts turned to its light, whatever the camera's turn.
 - People ground by the `blob` map. The land's own shadow of the far lights is a baked field (by count), a field a
   view (4.2, group 1): the land, what is draped on it and everything lit that stands in the scene — quads and
@@ -3290,9 +3293,9 @@ whose shader reads many layers a pixel (5.12's first row).
 **What a blended pixel may read**: one table entry (read once: SH14's `sheetFind`) and one cache sample (two taps on a plane), its clip's mask if
 clipped — nothing else; light, haze and air come from its vertices. An own shader's pixel: one entry and one
 sample for each `layer` it reads (the skies of two scenes read nine). A particle's: its sprite and, if `soft`,
-the scene's depth. **An opaque pixel**: + the lights with an edge that are no key (none in a scene without
-through-lights or beams: one compare) — each a pane's mask for each of its panes or a beam's cone, its land's shadow,
-and on a receiver its shadow's compares. **An opaque receiver's pixel**: + two key lights worked out, 4 shadow
+the scene's depth. **An opaque pixel** of a quad a light with an edge may change across: + those lights that are
+no key — each a pane's mask for each of its panes the pixel is past or a beam's cone, its land's shadow, and on a
+receiver its shadow's compares (any other opaque pixel: one compare). **An opaque receiver's pixel**: + two key lights worked out, 4 shadow
 compares, the blob, a pane's mask for each pane of a through-light key, the land's shadow of each far key light (4
 loads), the air (2 taps).
 

@@ -242,13 +242,13 @@ export function createLights(gpu) {
   }
 
   // Whether a light whose patch has an edge — a row of this frame's lit set through panes, or a beam — may change
-  // across a sphere (x, y, z: the world's; r) → what is drawn there works it out at its pixels (render/quads.js:
+  // across a sphere (S: x, y, z — the world's —, r; an array: nothing allocated, 5.16) → what is drawn there works it out at its pixels (render/quads.js:
   // SHAPE.EDGES). Not reached, it is none or whole across the sphere — at its vertices as any light. Through panes:
   // the sphere's middle carried along the light's way onto each pane's plane, in cells of its mask (its soft edge
   // within it), the sphere's radius as many cells as the mapping stretches a metre; or the sphere across a pane's
   // plane (outside before it, in past it). A beam: within its reach and its cone widened by the sphere's half angle
-  L.edged = (x, y, z, r) => {
-    const px = x - O[0], py = y - O[1], pz = z - O[2];
+  L.edged = S => {
+    const r = S[3], px = S[0] - O[0], py = S[1] - O[1], pz = S[2] - O[2];
     for (let row = L.farN; row < L.farN + L.throughN; row++) {
       const w = 20 * row, first = data[w + 12], count = data[w + 13];
       for (let k = first; k < first + count; k++) {
@@ -256,12 +256,12 @@ export function createLights(gpu) {
         if (side < -r) continue;
         if (side < r) return true;
         const ax = data[v + 4] * px + data[v + 5] * py + data[v + 6] * pz + data[v + 7], ay = data[v + 8] * px + data[v + 9] * py + data[v + 10] * pz + data[v + 11];
-        const rx = r * Math.hypot(data[v + 4], data[v + 5], data[v + 6]), ry = r * Math.hypot(data[v + 8], data[v + 9], data[v + 10]);
+        const rx = r * Math.sqrt(data[v + 4] ** 2 + data[v + 5] ** 2 + data[v + 6] ** 2), ry = r * Math.sqrt(data[v + 8] ** 2 + data[v + 9] ** 2 + data[v + 10] ** 2);
         if (ax + rx > 0 && ax - rx < data[v + 14] && ay + ry > 0 && ay - ry < data[v + 15]) return true;
       }
     }
     for (let row = L.farN + L.throughN; row < L.farN + L.throughN + L.spotN; row++) {
-      const w = 20 * row, dx = px - data[w], dy = py - data[w + 1], dz = pz - data[w + 2], l = Math.hypot(dx, dy, dz);
+      const w = 20 * row, dx = px - data[w], dy = py - data[w + 1], dz = pz - data[w + 2], l = Math.sqrt(dx * dx + dy * dy + dz * dz);
       if (l - r >= data[w + 8]) continue;
       if (l <= r) return true;
       const along = Math.acos(Math.min(1, Math.max(-1, (dx * data[w + 12] + dy * data[w + 13] + dz * data[w + 14]) / l)));

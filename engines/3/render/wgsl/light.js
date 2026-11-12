@@ -13,8 +13,8 @@
 // linear; each term's own amount (its strength, its falloff, how it faces) is the painted engine's, taken to linear
 // (e_lin) term by term.
 //   WHERE it is worked out: where a thing's vertices are — never in a fragment of what blends. What is opaque leaves
-// the lights whose patch has an edge (through panes, beams) to its pixels (e_edges): a window's patch, a beam's pool
-// are sharp on any wall. What is opaque and takes shadows (a receiver) leaves the SHADOW.KEYS first casting lights to
+// the lights whose patch has an edge (through panes, beams) to its pixels where they may change across it (e_edges;
+// render/lights.js L.edged): a window's patch, a beam's pool are sharp on any wall. What is opaque and takes shadows (a receiver) leaves the SHADOW.KEYS first casting lights to
 // its pixels too, which work those lights out whole (e_keys): a lamp's pool on a floor is sharp.
 //   Lights: the lit set (render/lights.js), a row each — far lights first, then those through panes, then the beams,
 // then points and windows, found through a grid over the level (cells across x and z: each its count, then its rows).
@@ -224,8 +224,8 @@ fn e_blobAt(P: vec3f) -> f32 {
 
 // The light at P: base — all of it (the light all round and every light's term in its shadow); around — of it, the
 // light all round without the sources' (a person's rim is the rest). keys: a receiver — the first SHADOW.KEYS
-// casting lights are left to its pixels (e_keys). edges: what is opaque — the lights whose patch has an edge (those
-// through panes, the beams) are left to its pixels (e_edges). occlusion: what the people near leave of the light all
+// casting lights are left to its pixels (e_keys). edges: what is opaque where they may change across it — the lights
+// whose patch has an edge (those through panes, the beams) are left to its pixels (e_edges). occlusion: what the people near leave of the light all
 // round (0: a solid receiver's vertex — its pixels add the light all round themselves). sheer: how much of the light
 // behind it comes through (0: none).
 struct e_Lit { base: vec3f, around: vec3f }

@@ -760,7 +760,7 @@ export function createQuads(gpu, lib, sheets) {
       // (what is opaque where a light with an edge may change across it: its pixels work that light out — SHAPE.EDGES)
       if (edges && kindOf === LIST.SOLID && extra !== OVERLAY && !(flags & FLAG.GLOWS)) {
         sphereOf(q, null, S4);
-        if (edges(S4[0], S4[1], S4[2], S4[3])) bits = SHAPE.EDGES;
+        if (edges(S4)) bits = SHAPE.EDGES;
       }
       DIM[3] = 1;
       if (extra & LEAF) {
