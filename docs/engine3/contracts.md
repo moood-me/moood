@@ -1303,7 +1303,7 @@ Plan 4.7, 4.9. All in `engines/3/base.js` (imports nothing) unless said.
 | `LIGHT` `FAR, THROUGH, POINT, WINDOW`; `INSIDE, GLOW`; `LIT, CELL, SMALL`; `FAR_MOST, THROUGH_MOST, SPOT_MOST` | 0…3; 1, 2; 256, 16, 4; 8, 4, 2 | |
 | `SHADOW` `COARSER, LIGHTS, KEYS, HOLD` | 8, 4, 2, 1.5 | |
 | `RECV.GROUND`, `CAST.ALPHA` | 1, 0.5 | |
-| `PASS` `FROM, TO` | 0.204, 0.595 (m) | |
+| `PASS` `FROM, TO` | 0.1, 0.3 (m; from the eye) — the camera's near plane `0.1 · FROM` (play/camera.js `NEAR`) | |
 | `CLIP.SETS`, `WIND.FAST` | 4, 0.45 | |
 | `SHEET` `PAGE, BORDER, UNIT, TOP, SLOT, SLOTS_SIDE, LAYER, MAX_PPM, WINDOW, OPAQUE` | 256, 8, 68, 52, 272, 7, 1904, 2048, 7, 242 | |
 | `DEPTH` `BIAS, SLOPE` | 4, 1 | |

@@ -43,9 +43,9 @@
 // element) and is not clipped; a form always, by its nearest point: near to far. With every one of those conditions but a MIXED sheet (opaque paint and holes or soft
 // edges) the quad is drawn twice: among the solids by `cut` — its opaque pixels, with their depth — and among what
 // blends by `edge` — the same triangles under the strict depth test, so only its other pixels blend. In the frame's
-// view a card with a point nearer the eye than PASS.TO fades as the eye passes it (render/wgsl/quad.js): what fades is
-// no opaque paint, so such a card is at most a mixed sheet — its `cut` lays the depth of its opaque paint where it does
-// not fade. BLENDED — every other quad, far to near, by its plane's depth along the gaze: a
+// view a card with a point nearer the eye than PASS.TO (its distance from the eye) fades as the eye passes it
+// (render/wgsl/quad.js): what fades is no opaque paint, so such a card is at most a mixed sheet — its `cut` lays the
+// depth of its opaque paint where it does not fade. BLENDED — every other quad, far to near, by its plane's depth along the gaze: a
 // quad that faces the eye by its node's origin, a card turned its own way and a plane by the farthest of its four
 // placed corners (the farthest of all the quads of that plane), a layer as much nearer as its `depth` says; at one
 // key by their rows (an element's layers in their order); `behind` / `inFront` put an element's quads just behind
@@ -146,6 +146,28 @@ export function viewLists() {
   lists.all = [lists.solid, lists.blend, lists.sky, lists.inserts, lists.cast, lists.movers, lists.mask, lists.marks];
   return lists;
 }
+// The distance from a point E to a flat quad of four placed corners C — (l, t), (r, t), (l, b), (r, b): a
+// parallelogram — in metres: to the point of its plane under E when that is on it, else to the nearest of its sides.
+// Nothing allocated
+export function nearestOf(E, C) {
+  const o = C[0], ux = C[1][0] - o[0], uy = C[1][1] - o[1], uz = C[1][2] - o[2], vx = C[2][0] - o[0], vy = C[2][1] - o[1], vz = C[2][2] - o[2];
+  const ex = E[0] - o[0], ey = E[1] - o[1], ez = E[2] - o[2];
+  const uu = ux * ux + uy * uy + uz * uz, vv = vx * vx + vy * vy + vz * vz, uv = ux * vx + uy * vy + uz * vz, eu = ex * ux + ey * uy + ez * uz, ev = ex * vx + ey * vy + ez * vz;
+  const det = uu * vv - uv * uv;
+  if (det > 1e-12 * uu * vv) {
+    const s = (eu * vv - ev * uv) / det, t = (ev * uu - eu * uv) / det;
+    if (s >= 0 && s <= 1 && t >= 0 && t <= 1) return Math.hypot(ex - s * ux - t * vx, ey - s * uy - t * vy, ez - s * uz - t * vz);
+  }
+  // (its sides: (l, t)–(r, t), (r, t)–(r, b), (r, b)–(l, b), (l, b)–(l, t))
+  let d = Infinity;
+  for (let k = 0; k < 4; k++) {
+    const a = C[SIDE_FROM[k]], b = C[SIDE_TO[k]], dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], px = E[0] - a[0], py = E[1] - a[1], pz = E[2] - a[2];
+    const ll = dx * dx + dy * dy + dz * dz, f = ll > 0 ? Math.max(0, Math.min(1, (px * dx + py * dy + pz * dz) / ll)) : 0;
+    d = Math.min(d, Math.hypot(px - f * dx, py - f * dy, pz - f * dz));
+  }
+  return d;
+}
+const SIDE_FROM = [0, 1, 3, 2], SIDE_TO = [1, 3, 2, 0];
 // an entry's `extra` when it is a quad: 0 the quad itself; OVERLAY its mirror's overlay; CUT, EDGE — a mixed sheet's
 // opaque paint, its other pixels; a leaf of the land: LEAF | its row. An entry that is no quad: GLOW — `extra` a row
 // of the glows; EMITTER — `extra` an emitter
@@ -320,13 +342,12 @@ export function createQuads(gpu, lib, sheets) {
     out[3] += lift;
     return out;
   }
-  // how near the eye the nearest point of an upright quad (a card, what faces the eye) comes along the gaze: a flat
-  // quad's nearest is at a corner — its sphere only says it may be near (a wall as wide as a street always may)
+  // how near the eye an upright quad (a card, what faces the eye) comes: the distance from the eye to its nearest
+  // point — its sphere only says it may be near (a wall as wide as a street always may)
   function nearest(q, view) {
     cornersOf(q, view);
     const windy = world.quads.layer[q] >= 0 && (world.quads.flags[q] & FLAG.WIND) !== 0;
-    for (let k = 0; k < 4; k++) ahead(view.e, C[k], far, k);
-    return Math.min(far[0], far[1], far[2], far[3]) - (windy ? bendOf(q) : 0);
+    return nearestOf(view.e.eye, C) - (windy ? bendOf(q) : 0);
   }
   // The four placed corners of a flat quad in a drawn view → C: (l, t), (r, t), (l, b), (r, b) of its rect. What
   // faces the eye is placed turned to this view; any other is as kept with its sphere
@@ -606,8 +627,9 @@ export function createQuads(gpu, lib, sheets) {
     for (let q = 0; q < Q.n; q++) {
       if (!admits(view, o, q)) continue;
       const flags = Q.flags[q], kind = Q.kind[q], el = Q.el[q], node = Q.node[q], glass = (flags & FLAG.GLASS) !== 0;
-      let depth = 0, radius = 0;
-      if (kind !== QUAD.INSERT && kind !== QUAD.SKY) { ahead(e, S4, far, 0); depth = far[0]; radius = S4[3]; }
+      // (its sphere's middle: how far before the eye along the gaze, how far from the eye)
+      let depth = 0, away = 0, radius = 0;
+      if (kind !== QUAD.INSERT && kind !== QUAD.SKY) { ahead(e, S4, far, 0); depth = far[0]; away = Math.hypot(S4[0] - e.eye[0], S4[1] - e.eye[1], S4[2] - e.eye[2]); radius = S4[3]; }
       view.list[n++] = q;
       if (!draw || Q.sheet[q] < 0 || flags & FLAG.READ) continue;
       if (light >= 0) {
@@ -643,7 +665,7 @@ export function createQuads(gpu, lib, sheets) {
       // not opaque paint, so it is a mixed sheet at most: its `cut` lays the depth of what is opaque and not fading — a
       // ceiling or a wall running past the eye hides what stands behind it from all that reads the depth —, its `edge`
       // blends the rest)
-      const passed = !!o.passes && !flat && depth - radius < PASS.TO && nearest(q, view) < PASS.TO;
+      const passed = !!o.passes && !flat && away - radius < PASS.TO && nearest(q, view) < PASS.TO;
       // (its opaque paint: 2 all of it — solid —, 1 some of it — its `cut` and its `edge` —, 0 none that lays depth; an
       // own shader's painting with any is cut and edge as it shades it: its shader may paint where the painting has none)
       const opaque = first && !(flags & (FLAG.ADD | FLAG.MULTIPLY | FLAG.CLIPPED)) && !ruled[el] && (layer < 0 || world.layers.pose[8 * layer + 5] >= 1) ? (own || passed ? Math.min(1, sheets.solid(Q.sheet[q])) : sheets.solid(Q.sheet[q])) : 0;

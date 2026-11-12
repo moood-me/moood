@@ -16,9 +16,10 @@
 // clipped). A RECEIVER that is solid leaves the key lights, the light all round (the people near take of it: the
 // blob) and the air to its pixels (5.5, 5.17).
 //   Passed close by, what stands upright fades (5.17): in the frame's view — not in a mirror's, not in a light's — a
-// card's alpha is multiplied by how far before the eye the point is along the gaze, from PASS.FROM (nothing) to
-// PASS.TO (all of it) — the distance carried from its vertices, bounded at the pixel; render/quads.js draws such a
-// card, while a point of it is that near, as a mixed sheet at most: its `cut` drops what fades, its `edge` blends it.
+// card's alpha is multiplied by how far the point is from the eye, from PASS.FROM (nothing) to PASS.TO (all of it) —
+// the pixel's own distance (its point of the world, interpolated); what is beside or below the lens, out of its way,
+// stays whole. render/quads.js draws such a card, while a point of it is that near, as a mixed sheet at most: its
+// `cut` drops what fades, its `edge` blends it.
 //   In a mirror that fades with height (5.7) a thing is THERE less the higher it stands over the mirror: the factor
 // multiplies how much of it there is (its alpha — colour, coverage and an own shader's emission together); what is
 // solid writes it as its colour's alpha, which a mirror's image keeps (how much of a mirror image there is): a fog
@@ -66,7 +67,7 @@ struct e_In {
 struct e_Out {
   @builtin(position) @invariant position: vec4f,
   @location(0) at: vec2f,                        // its painting here: px at level 0 from its origin page
-  @location(1) uvA: vec4f,                       // uv over its rect; how much of it there is; how far it is past the eye's close pass (0 gone … 1 whole: not bounded)
+  @location(1) uvA: vec3f,                       // uv over its rect; how much of it there is
   @location(2) world: vec3f,                     // the world less the origin (the sky: its way; an insert: the stage)
   @location(3) tint: vec4f,                      // what its painting is multiplied by; how much of the air before it is clear
   @location(4) veil: vec3f,                      // what is added as much as there is of it (a solid receiver: what its pixels' light is multiplied by)
@@ -127,7 +128,6 @@ fn e_shaded(in: e_In, q: e_Quad, kind: u32, P: vec3f, N: vec3f, uv: vec2f, at: v
   var o: e_Out;
   let staged = kind == e_QUAD_SKY || kind == e_QUAD_INSERT;
   var alpha = posed.alpha * in.edge;
-  var near = 1.0;
   if (kind == e_QUAD_SKY) {
     o.position = e_clipWay(P);
     o.position.z = 0.0;
@@ -137,8 +137,6 @@ fn e_shaded(in: e_In, q: e_Quad, kind: u32, P: vec3f, N: vec3f, uv: vec2f, at: v
     o.position = vec4f(e_view.e_stage.x + P.x * e_view.e_stage.z, e_view.e_stage.y - P.y * e_view.e_stage.w, 1.0, 1.0);
   } else {
     o.position = e_clip(P);
-    // (passed close by, what stands upright fades away — in the frame's view alone; its fragment bounds it: e_amount)
-    if ((kind == e_QUAD_CARD || kind == e_QUAD_FACING) && (e_view.flags & (e_VIEW_MIRROR | e_VIEW_CAST)) == 0u) { near = (e_ahead(P) - ${PASS.FROM}) / ${PASS.TO - PASS.FROM}; }
   }
   // how much of it is there, in a mirror that fades with height (5.7) — the sky is all there: the fade is the
   // elements', toward the mirror's own paint
@@ -149,7 +147,7 @@ ${mode === 'cast' || mode === 'mask' ? '' : /* wgsl */ `  if ((e_view.flags & e_
 `}  let carry = e_sheetCarry(e_sheetOf(q.sheet));
   o.at = at;
   // (what is solid writes \`there\` as its colour's alpha and nothing else of its own alpha: it is wholly opaque)
-  o.uvA = vec4f(uv, ${mode === 'solid' ? 'there' : 'alpha * there'}, near);
+  o.uvA = vec3f(uv, ${mode === 'solid' ? 'there' : 'alpha * there'});
   o.world = P;
   o.normal = N;
   o.own = mix(q.rect.xy, q.rect.zw, uv);
@@ -236,13 +234,20 @@ ${mode === 'cast' ? '' : /* wgsl */ `  if ((in.info.x & e_QUAD_DRIFT) != 0u) { a
   if ((in.info.x & e_QUAD_SHIMMER) != 0u) { at += e_shimmerOf(at + vec2f(in.page) * ${SHEET.PAGE}.0, in.fx.z, in.fx.w, in.more.x); }
 `}  return at;
 }
+// how much of what stands upright is there as the eye passes it close by (5.17): in the frame's view, by how far this
+// point of it is from the eye — gone at PASS.FROM, whole from PASS.TO; elsewhere, and of every other kind, all of it
+fn e_passing(in: e_Out) -> f32 {
+  let kind = in.info.x & e_QUAD_KIND;
+  if ((kind != e_QUAD_CARD && kind != e_QUAD_FACING) || (e_view.flags & (e_VIEW_MIRROR | e_VIEW_CAST)) != 0u) { return 1.0; }
+  return clamp((distance(in.world, e_view.eye) - ${PASS.FROM}) / ${PASS.TO - PASS.FROM}, 0.0, 1.0);
+}
 // how much of it there is here now, beside its paint: its own alpha — less as the eye passes it close by, as its
 // height over a fading mirror says —, an insert's iris (SCENE's: at the posed point of the stage), a backdrop's turn
 // (a row draws one turn of it: past that turn's sides, where the next turn's row draws, none — the way interpolated
 // is the pixel's own: a point at infinity's way is its clip position's, undone), its clip's mask — its cutter set's
 // channel, from inside its cutters or from outside them
 fn e_amount(in: e_Out) -> f32 {
-  var a = in.uvA.z * clamp(in.uvA.w, 0.0, 1.0);
+  var a = in.uvA.z * e_passing(in);
   let kind = in.info.x & e_QUAD_KIND;
   if (kind == e_QUAD_INSERT) {
     var q: e_Quad;
@@ -263,7 +268,7 @@ struct e_Solid { @location(0) colour: vec4f, @location(1) ids: vec4u }
   let dy = dpdy(in.at);
 ${own ? '  e_shadeBegin(dpdx(in.own), dpdy(in.own), e_taps(in.info.x), in.page, in.at);\n' : ''}  var c = e_sheetRead(e_sheetFrom(e_SheetCarry(in.sa, in.sb)), in.page, e_readAt(in), dx, dy, e_taps(in.info.x));
 ${cut ? /* wgsl */ `  // (as much of it as is there as the eye passes it close by: what fades is no opaque paint — its \`edge\`'s: 5.17)
-  let passing = clamp(in.uvA.w, 0.0, 1.0);
+  let passing = e_passing(in);
 ` : ''}${own && cut ? /* wgsl */ `  // (an own shader's painting: only where the painting itself is opaque is it shaded here — what its shader paints
   // where the painting is see-through is its \`edge\`'s alone, never shaded twice)
   if (c.a * passing < ${SHEET.OPAQUE / 255}) { discard; }

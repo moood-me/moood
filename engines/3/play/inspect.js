@@ -2,10 +2,10 @@
 // the P panel.
 //   layout(view): by element (its id, else its name, else its kind and place in the spec) — { kind, seen, box: [x, y, w,
 // h] (where its painting may reach, the place's CSS px), anchor: [x, y], at — the point it marks as itself, points —
-// those it names ({name: [x, y]}), distance (metres along the gaze), fade (1; less in the last steps before the eye),
-// parts — [{dx, dz, box, seen, distance}], notes — what its code wrote (e.debug: {value, at?}), paint — { repaint:
-// 'state' (it reads keys: painted again as they change) | 'once', keys, repaints } }. view: another Camera than the
-// film's (a moment drawn as another camera sees it).
+// those it names ({name: [x, y]}), distance (metres along the gaze), fade (1; less in the last steps before the eye —
+// by its distance from it), parts — [{dx, dz, box, seen, distance}], notes — what its code wrote (e.debug: {value,
+// at?}), paint — { repaint: 'state' (it reads keys: painted again as they change) | 'once', keys, repaints } }. view:
+// another Camera than the film's (a moment drawn as another camera sees it).
 //   overlay(): drawn over the frame (?debug; =keeper,boy — only those): each element seen, its box and id, its anchor (a
 // ring), its point (a cross), its named points, its parts, its notes; the scene's errors and warnings; the time.
 //   perf(): the P panel's text — the ticks' intervals by the display's timestamps, what the frames were (drawn, idle,
@@ -46,10 +46,10 @@ export function createInspect(world, camera, state, host) {
       if (pin !== qin) { const f = (-PASS.FROM - p[2]) / (q[2] - p[2]), k = kept[n++]; k[0] = p[0] + (q[0] - p[0]) * f; k[1] = p[1] + (q[1] - p[1]) * f; k[2] = p[2] + (q[2] - p[2]) * f; }
     }
     if (!n) return false;
-    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, depth = Infinity;
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, depth = Infinity, close = Infinity;
     for (let i = 0; i < n; i++) {
       const p = kept[i], d = -p[2];
-      depth = Math.min(depth, d);
+      depth = Math.min(depth, d); close = Math.min(close, Math.hypot(p[0], p[1], p[2]));
       const x = r.x + ((P[0] * p[0] - P[8] * d) / d + 1) / 2 * r.w, y = r.y + (1 - (P[5] * p[1] - P[9] * d) / d) / 2 * r.h;
       if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
     }
@@ -59,10 +59,12 @@ export function createInspect(world, camera, state, host) {
     // (what reaches past the place — a floor going under the eye — as far as its edge)
     x0 = Math.max(-host.w, x0); x1 = Math.min(2 * host.w, x1); y0 = Math.max(-host.h, y0); y1 = Math.min(2 * host.h, y1);
     b[0] = r1(x0); b[1] = r1(y0); b[2] = r1(x1 - x0); b[3] = r1(y1 - y0);
-    const D = a ? a[2] : depth;
+    // (along the gaze: its anchor's depth; its fade, as the renderer's, by how far from the eye — its anchor, else the
+    // nearest of what is before the eye of it)
+    const D = a ? a[2] : depth, away = a ? Math.hypot(V[0] - C.eye[0], V[1] - C.eye[1], V[2] - C.eye[2]) : close;
     s.inFrame = b[0] < r.x + r.w && b[0] + b[2] > r.x && b[1] < r.y + r.h && b[1] + b[3] > r.y;
     s.hasAnchor = !!a; if (a) { s.anchor[0] = r1(a[0]); s.anchor[1] = r1(a[1]); }
-    s.distance = r1(D); s.fade = Math.round(fadeOf(D) * 100) / 100;
+    s.distance = r1(D); s.fade = Math.round(fadeOf(away) * 100) / 100;
     return true;
   }
   // (the same, as an object of its own: what is where, asked now and then)

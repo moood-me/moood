@@ -183,8 +183,6 @@ fn e_insertOpen(i: u32) -> f32 { let k = min(i, ${INSERTS.MOST - 1}u); return e_
 // a point of the world less the origin → the view's clip space; a way (a point at infinity)
 fn e_clip(P: vec3f) -> vec4f { return e_view.proj * vec4f(e_view.rot * (P - e_view.eye), 1.0); }
 fn e_clipWay(d: vec3f) -> vec4f { return e_view.proj * vec4f(e_view.rot * d, 0.0); }
-// how far before the eye a point is, along its gaze
-fn e_ahead(P: vec3f) -> f32 { return -(e_view.rot * (P - e_view.eye)).z; }
 `;
 
 const MOTION = /* wgsl */ `

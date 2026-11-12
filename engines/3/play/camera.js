@@ -49,9 +49,13 @@ const LOOK_UP = -0.3, LOOK_DOWN = 0.2, WALK_BACK = -0.6 * EYE, TRACK = 40, ROOM 
 // by the same two) — and are not shot through nor stood in
 // (the nearest a point is placed on the screen: nearer, it is passing the eye)
 const NEAREST = 0.3 * PASS.TO + 0.7 * PASS.FROM;
+// the near plane, metres along the gaze: a tenth of PASS.FROM — what it cuts of a card is gone already wherever the
+// frame sees it, out to some 84° from the gaze (a point at depth d that far off the axis is d / cos 84° ≈ 10 d from the
+// eye); a frame's corner is well inside that (the widest screen, the gaze far off the frame's middle: some 65°). The
+// depth is reversed and float: as fine at 1 cm as at 10
+const NEAR = 0.1 * PASS.FROM;
 // (the operator on its target: this near where it frames it — metres, screen heights, radians)
 const FRAMED = 0.01;
-const NEAR = 0.1;
 // a picture's breath and lean (metres aside; screen heights up and down), the lean while walking
 const SWAY = 0.033 * EYE, SWAY_LOOK = 0.011, LEAN = 0.047;
 // the operator: shot sizes (the target's height in frame heights), its glide (seconds), the head's place in the frame

@@ -55,9 +55,10 @@ export const SHADOW = Object.freeze({ COARSER: 8, LIGHTS: 4, KEYS: 2, HOLD: 1.5 
 export const RECV = Object.freeze({ GROUND: 1 });
 // below this alpha a cast program drops the fragment (4.6)
 export const CAST = Object.freeze({ ALPHA: 0.5 });
-// what stands close before the eye fades out in the last steps to it (5.17): gone at FROM metres along the gaze, whole
-// from TO on — 0.12 and 0.35 of the eye's height (1.7 m). The camera's nearest and its rays' start go by the same two
-export const PASS = Object.freeze({ FROM: 0.204, TO: 0.595 });
+// what stands close before the eye fades out in the last steps to it (5.17): gone at FROM metres from the eye, whole
+// from TO on — a close-up 30 cm away is solid. The camera's nearest, its rays' start and its near plane (a tenth of
+// FROM: play/camera.js) go by the same two
+export const PASS = Object.freeze({ FROM: 0.1, TO: 0.3 });
 // the cutter sets a scene has, a channel of `masks` each (WT2)
 export const CLIP = Object.freeze({ SETS: 4 });
 // the fast part of a layer's bend in the wind: with the look's wind strength, the bound of the bend (SH10)

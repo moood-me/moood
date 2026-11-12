@@ -4,6 +4,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createCamera } from '../engines/3/play/camera.js';
+import { PASS } from '../engines/3/base.js';
 
 const EYE = 1.7;
 // a person's capsules standing at (x, d) — or a seated figure three times a person, its knees toward the viewer
@@ -169,8 +170,8 @@ test('a thing\'s named point it marks is framed; one it does not mark is said, n
 // ahead the operator steps round nothing: a settled lens inside someone's body is said once (where it goes unchanged)
 test('ahead: a thing framed with the lens inside a person standing before it is said', () => {
   const bowl = { id: 'bowl', x: 0, d: 6, h: 0.15, marks: ['coins'], painted: true };
-  const { p, said, depth } = scene({ mode: 'walk', people: [{ id: 'f', x: 0, d: 5.4, away: true }], points: [bowl] }, { camera_target: 'bowl#coins', camera_shot: 'full' });
-  assert.ok(depth('f') > 0 && Math.abs(p.z - (6 - 0.595)) < 1e-6, JSON.stringify(p));
+  const { p, said, depth } = scene({ mode: 'walk', people: [{ id: 'f', x: 0, d: 5.75, away: true }], points: [bowl] }, { camera_target: 'bowl#coins', camera_shot: 'full' });
+  assert.ok(depth('f') > 0 && Math.abs(p.z - (6 - PASS.TO)) < 1e-6, JSON.stringify(p));
   assert.equal(said.length, 1, said.join('|'));
   assert.match(said[0], /camera_target "bowl#coins" is framed from inside the body of "f"/);
 });
