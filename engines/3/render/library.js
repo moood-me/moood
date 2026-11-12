@@ -7,8 +7,7 @@
 // family's, group 3 `none` or `person` — and declares the main passes' targets (colour, `ids`, depth) in every world:
 // one set serves `main-solid` and `main-blend`. A mirror's pass has a set of its own (a world that reflects or has a
 // pane): its image has an alpha (4.3), so its pipelines declare that format — the same modules, the keys with
-// `:mirror` —, with no receiver variant among them: in a mirror everything is lit at its vertices but the lights with
-// an edge on what is opaque (5.5).
+// `:mirror` —, with no receiver variant among them: in a mirror everything is lit at its vertices.
 //   Keys. In every world, made at createRenderer: sky, sky-base (the sky past its painting), glow, multiply (what only
 // paint code tells has its pipeline in every world), and the engine's own pictures — bake, air, air-halo, air-sum,
 // air-sky, blob, shadow-clear (a static

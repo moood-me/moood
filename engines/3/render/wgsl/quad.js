@@ -13,9 +13,8 @@
 // its quad's kind (4.8): the ask named the pages of that level.
 //   Its light is worked out at its vertices (render.light e_lightOn) and given to its fragment as what its painting is
 // multiplied by and what is added: a fragment of what blends reads its painting and nothing else (its clip's mask if
-// clipped). What is solid leaves the lights whose patch has an edge to its pixels (render.light e_edges: through
-// panes, beams); a RECEIVER that is solid the key lights, the light all round (the people near take of it: the
-// blob) and the air too (5.5, 5.17).
+// clipped). A RECEIVER that is solid leaves the key lights, the light all round (the people near take of it: the
+// blob) and the air to its pixels (5.5, 5.17).
 //   Passed close by, what stands upright fades (5.17): in the frame's view — not in a mirror's, not in a light's — a
 // card's alpha is multiplied by how far before the eye the point is along the gaze, from PASS.FROM (nothing) to
 // PASS.TO (all of it) — the distance carried from its vertices, bounded at the pixel; render/quads.js draws such a
@@ -46,10 +45,9 @@ import { CAST, OWN, PASS, SHEET } from '../../base.js';
 // The shapes of the one corner buffer, by their number in the order row's `shape` (its low byte): four points; a
 // column the wind bends; the even grids of 4, 8, 16 and 32 cells a side (a form's four strides are these). SCREEN — a
 // bit beside a grid's number: the grid is laid over a part of the piece of the quad the view sees (the row's
-// `piece`). EDGES — a bit beside them: what is opaque, where a light whose patch has an edge may change across it
-// (render/lights.js L.edged): its pixels work those lights out (render.light e_edges), its vertices leave them. Land:
-// the leaf's row from bit 8. The sky: the turn of a backdrop the row draws, from bit 8 (signed: render/quads.js)
-export const SHAPE = Object.freeze({ FLAT: 0, COLUMN: 1, MID: 2, FORM8: 3, FINE: 4, FORM32: 5, EDGES: 64, SCREEN: 128 });
+// `piece`). Land: the leaf's row from bit 8. The sky: the turn of a backdrop the row draws, from bit 8 (signed:
+// render/quads.js)
+export const SHAPE = Object.freeze({ FLAT: 0, COLUMN: 1, MID: 2, FORM8: 3, FINE: 4, FORM32: 5, SCREEN: 128 });
 // an own shader's uniform (group 2, layout `own`: e_Own below), bytes
 export const OWN_BYTES = 4 * OWN.VALUES + 3 * 16 * OWN.SHEETS;
 
@@ -81,10 +79,9 @@ struct e_Out {
   @location(11) @interpolate(flat) fx: vec4f,    // its drift (px a second), its shimmer (px aside, px across a wave)
   @location(12) @interpolate(flat) more: vec4f,  // its seed, whether inside, whether it faces a way, its own glow
   @location(13) @interpolate(flat) px: vec2f,    // its sheet's size, px
-  @location(14) @interpolate(flat) lit: vec4f,   // how much of the light behind it comes through (WT2); what is opaque and lit at its vertices: what its pixels' lights with an edge are multiplied by (its brightness now; 0 when it glows)
+  @location(14) @interpolate(flat) sheer: f32,   // how much of the light behind it comes through (WT2)
 }
 const e_SHAPE_SCREEN = ${SHAPE.SCREEN}u;
-const e_SHAPE_EDGES = ${SHAPE.EDGES}u;
 // a sheet's px a unit at level 0 (SHEETS lays every sheet so: SH7), and so a quad's sheet's size, px
 const e_PPU = ${SHEET.MAX_PPM}.0;
 fn e_sheetPx(q: e_Quad) -> vec2f { return (q.rect.zw - q.rect.xy) * e_PPU; }
@@ -165,10 +162,7 @@ ${mode === 'cast' || mode === 'mask' ? '' : /* wgsl */ `  if ((e_view.flags & e_
   o.page = in.page;
   o.fx = posed.fx;
   o.px = px;
-  o.lit = vec4f(q.sheer, 0.0, 0.0, 0.0);
-  // (what is opaque where a light with an edge may change across it: those lights are its pixels' — o.lit.yzw its
-  // brightness for them, 0 where they are not)
-  let edged = ${mode === 'solid'} && (in.shape & e_SHAPE_EDGES) != 0u;
+  o.sheer = q.sheer;
   var has = 1.0;
   if (kind == e_QUAD_FACING) { has = 0.0; }
   var inside = 0.0;
@@ -188,8 +182,7 @@ ${receiver && mode === 'solid' ? /* wgsl */ `
     if ((q.flags & e_QUAD_GLOWS) != 0u) {
       o.tint = vec4f(k * q.tint.a, 1.0);
     } else {
-      let L = e_lightOn(P, e_faced(P, N, has), has, inside, q.recv, true, edged, 0.0, q.sheer);
-      if (edged) { o.lit = vec4f(q.sheer, k); }
+      let L = e_lightOn(P, e_faced(P, N, has), has, inside, q.recv, true, 0.0, q.sheer);
       o.tint = vec4f(L.base * k, 1.0);
       o.veil = k;
     }
@@ -197,10 +190,7 @@ ${receiver && mode === 'solid' ? /* wgsl */ `
     let a = e_airAt(P);
     var light = vec3f(q.tint.a);
     // (what glows: its own light, none of the scene's; the air before it as before anything)
-    if ((q.flags & e_QUAD_GLOWS) == 0u) {
-      light = e_lightOn(P, e_faced(P, N, has), has, inside, q.recv, false, edged, e_blobAt(P), q.sheer).base;
-      if (edged) { o.lit = vec4f(q.sheer, k); }
-    }
+    if ((q.flags & e_QUAD_GLOWS) == 0u) { light = e_lightOn(P, e_faced(P, N, has), has, inside, q.recv, false, e_blobAt(P), q.sheer).base; }
     o.tint = vec4f(light * k * (1.0 - a.a), 1.0 - a.a);
     o.veil = a.rgb;
 `}  }
@@ -286,20 +276,13 @@ ${cut ? /* wgsl */ `  // (as much of it as is there as the eye passes it close b
 ${receiver ? /* wgsl */ `
   // (the lights its vertices worked out; here the light all round, less what the people near take of it, and the key
   // lights whole; the air where it is)
-  let N = e_faced(in.world, normalize(in.normal), in.more.z);
-  var pixels = e_around(in.more.y) * e_blobAt(in.world) + e_keys(in.world, N, in.more.z, in.more.y, in.info.y, in.lit.x);
-  // (the lights with an edge, where they may change across it: e_edges)
-  if (in.lit.y + in.lit.z + in.lit.w > 0.0) { pixels += e_edges(in.world, N, in.more.z, in.more.y, in.info.y, true, in.lit.x); }
+  let pixels = e_around(in.more.y) * e_blobAt(in.world) + e_keys(in.world, e_faced(in.world, normalize(in.normal), in.more.z), in.more.z, in.more.y, in.info.y, in.sheer);
   let a = e_airAt(in.world);
   o.colour = vec4f(e_dithered(c.rgb * (in.tint.rgb + pixels * in.veil) * (1.0 - a.a) + a.rgb, in.position.xy) * there, there);
 ` : /* wgsl */ `
-  // (the lights its vertices worked out, and here the lights with an edge — as its brightness and the air before it
-  // take them)
-  var edges = vec3f(0.0);
-  if (in.lit.y + in.lit.z + in.lit.w > 0.0) { edges = e_edges(in.world, e_faced(in.world, normalize(in.normal), in.more.z), in.more.z, in.more.y, in.info.y, false, in.lit.x) * in.lit.yzw * in.tint.a; }
 ${own ? /* wgsl */ `  // (its shader's own light, as its blend adds it)
-  o.colour = vec4f(e_dithered(c.rgb * (in.tint.rgb + edges) + in.veil + e_finite3(emission) * (in.tint.a * in.more.w), in.position.xy) * there, there);
-` : /* wgsl */ `  o.colour = vec4f(e_dithered(c.rgb * (in.tint.rgb + edges) + in.veil, in.position.xy) * there, there);
+  o.colour = vec4f(e_dithered(c.rgb * in.tint.rgb + in.veil + e_finite3(emission) * (in.tint.a * in.more.w), in.position.xy) * there, there);
+` : /* wgsl */ `  o.colour = vec4f(e_dithered(c.rgb * in.tint.rgb + in.veil, in.position.xy) * there, there);
 `}`}  o.ids = vec4u(0u);
   return o;
 }

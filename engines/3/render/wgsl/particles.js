@@ -414,7 +414,7 @@ ${cast ? '' : /* wgsl */ `  if (e_E.kind.y < 0.5) {
       through = mix(1.0, exp(-3.0 * e_E.source.w * deep), 0.85);
     }
     // (lit as what faces no way, where it is — at its vertices: 5.5 —, what is behind it showing through as its sheer says)
-    let L = e_lightOn(P, normalize(e_view.eye - P), 0.0, e_E.turb.w, 0u, false, false, 1.0, e_E.turb.z);
+    let L = e_lightOn(P, normalize(e_view.eye - P), 0.0, e_E.turb.w, 0u, false, 1.0, e_E.turb.z);
     rgb = colour * (L.base * through + g);
   }
 `}

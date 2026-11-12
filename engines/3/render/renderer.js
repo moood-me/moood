@@ -696,7 +696,7 @@ export async function createRenderer(gpu, sheets, host) {
       shadows.blobs(frameView, O);
       // e. cull and order
       timing.mark('cull');
-      quads.begin(lights.points || lights.throughN > 0 || land.shades(), air.on, reach, shadows.blobRect, land.tall, lights.throughN + lights.spotN > 0 ? lights.edged : null);
+      quads.begin(lights.points || lights.throughN > 0 || land.shades(), air.on, reach, shadows.blobRect, land.tall);
       own.frameNo++;
       land.group = land.bind ? quads.group(land.bind) : 0;
       mirrors.groups();

@@ -12,10 +12,9 @@
 // colour is
 // linear; each term's own amount (its strength, its falloff, how it faces) is the painted engine's, taken to linear
 // (e_lin) term by term.
-//   WHERE it is worked out: where a thing's vertices are — never in a fragment of what blends. What is opaque leaves
-// the lights whose patch has an edge (through panes, beams) to its pixels where they may change across it (e_edges;
-// render/lights.js L.edged): a window's patch, a beam's pool are sharp on any wall. What is opaque and takes shadows (a receiver) leaves the SHADOW.KEYS first casting lights to
-// its pixels too, which work those lights out whole (e_keys): a lamp's pool on a floor is sharp.
+//   WHERE it is worked out: where a thing's vertices are — never in a fragment of what blends. What is opaque and
+// takes shadows (a receiver) leaves the SHADOW.KEYS first casting lights to its pixels, which work those lights out
+// whole (e_keys): a lamp's pool on a floor is sharp.
 //   Lights: the lit set (render/lights.js), a row each — far lights first, then those through panes, then the beams,
 // then points and windows, found through a grid over the level (cells across x and z: each its count, then its rows).
 //   Shadows (5.5): two atlases of depth (reversed), read through one comparison sampler — the hardware's 2 × 2 —,
@@ -91,11 +90,11 @@ fn e_through(L: e_Light, P: vec3f, inside: f32) -> f32 {
     if (g >= count) { break; }
     let R = e_lights[first + g];
     let at = vec2f(dot(R.b.xyz, P) + R.b.w, dot(R.c.xyz, P) + R.c.w);
-    // (its mask read only past its plane)
-    if (dot(R.a.xyz, P) + R.a.w > 0.0) {
-      deep += textureSampleLevel(e_panes, e_linear, (R.d.xy + clamp(at, vec2f(0.5), R.d.zw - 0.5)) / vec2f(textureDimensions(e_panes)), 0.0).r;
-      past = 1.0;
-    }
+    let m = textureSampleLevel(e_panes, e_linear, (R.d.xy + clamp(at, vec2f(0.5), R.d.zw - 0.5)) / vec2f(textureDimensions(e_panes)), 0.0).r;
+    var beyond = 0.0;
+    if (dot(R.a.xyz, P) + R.a.w > 0.0) { beyond = 1.0; }
+    deep += m * beyond;
+    past = max(past, beyond);
   }
   if (past > 0.5) { return min(deep, 1.0); }
   return 1.0;
@@ -224,12 +223,11 @@ fn e_blobAt(P: vec3f) -> f32 {
 
 // The light at P: base — all of it (the light all round and every light's term in its shadow); around — of it, the
 // light all round without the sources' (a person's rim is the rest). keys: a receiver — the first SHADOW.KEYS
-// casting lights are left to its pixels (e_keys). edges: what is opaque where they may change across it — the lights
-// whose patch has an edge (those through panes, the beams) are left to its pixels (e_edges). occlusion: what the people near leave of the light all
-// round (0: a solid receiver's vertex — its pixels add the light all round themselves). sheer: how much of the light
-// behind it comes through (0: none).
+// casting lights are left to its pixels (e_keys). occlusion: what the people near leave of the light all round (0: a
+// solid receiver's vertex — its pixels add the light all round themselves). sheer: how much of the light behind it
+// comes through (0: none).
 struct e_Lit { base: vec3f, around: vec3f }
-fn e_lightOn(P: vec3f, N: vec3f, has: f32, inside: f32, recv: u32, keys: bool, edges: bool, occlusion: f32, sheer: f32) -> e_Lit {
+fn e_lightOn(P: vec3f, N: vec3f, has: f32, inside: f32, recv: u32, keys: bool, occlusion: f32, sheer: f32) -> e_Lit {
   var o: e_Lit;
   o.around = e_around(inside) * occlusion;
   var L = o.around;
@@ -240,7 +238,6 @@ fn e_lightOn(P: vec3f, N: vec3f, has: f32, inside: f32, recv: u32, keys: bool, e
     if (n >= all) { break; }
     var i = n;
     if (n >= sky) { i = e_lightGrid[cell.x + n - sky]; }
-    if (edges && n >= e_frame.e_farN && n < sky) { continue; }
     var shade = 1.0;
     var key = false;
 ${shadows ? /* wgsl */ `    for (var s = 0u; s < ${SHADOW.LIGHTS}u; s++) {
@@ -252,28 +249,6 @@ ${shadows ? /* wgsl */ `    for (var s = 0u; s < ${SHADOW.LIGHTS}u; s++) {
   }
   o.base = L;
   return o;
-}
-
-// The lights whose patch has an edge — those through panes, the beams: the rows of the lit set after the far lights,
-// before the points — worked out whole where an opaque thing's pixel is (e_lightOn's edges): a patch of sun cut by a
-// window, a beam's pool, as sharp as they are, whatever the grid of its vertices. Each in its shadow as e_lightOn
-// has it there (keys: a receiver's — a key light is e_keys'); none when the scene has none of them.
-fn e_edges(P: vec3f, N: vec3f, has: f32, inside: f32, recv: u32, keys: bool, sheer: f32) -> vec3f {
-  var L = vec3f(0.0);
-  let n = e_frame.e_throughN + e_frame.e_spotN;
-  for (var k = 0u; k < ${LIGHT.THROUGH_MOST + LIGHT.SPOT_MOST}u; k++) {
-    if (k >= n) { break; }
-    let i = e_frame.e_farN + k;
-    var shade = 1.0;
-    var key = false;
-${shadows ? /* wgsl */ `    for (var s = 0u; s < ${SHADOW.LIGHTS}u; s++) {
-      if (e_shadows.slot[s].light == i32(i)) {
-        if (keys && s < ${SHADOW.KEYS}u) { key = true; } else if (recv != 0u) { shade = e_shadowAt(s, P, N, recv); }
-      }
-    }
-` : ''}    if (!key) { L += e_term(i, P, N, has, inside, sheer) * shade * e_landShade(i, P); }
-  }
-  return L;
 }
 
 // the light in the air between the eye and P
