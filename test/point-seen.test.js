@@ -63,3 +63,19 @@ test('none behind the eye, none edge-on', () => {
   eye(w, 3, 1.7, -5);
   assert.equal(w.toPainting(el(w, 'luca'), [0, 1, -4], o), false);
 });
+
+test('a form: the point\'s foot on its plane, along its face, wherever the eye is', () => {
+  const w = made(), o = [0, 0], c = el(w, 'wall');
+  // (its form's row stood in for: what its paint is on is the form, not the plane)
+  c.form = 0;
+  const p = new Float64Array(3);
+  w.sheetPoint(c, 0, { x: 0.4, y: -0.8, part: -1, layer: -1 }, 0, p);
+  // the wall faces 135°: its normal (its node's z) pushed along, the foot the same
+  const M = w.tables.nodes.m, k = 12 * c.node, n = [M[k + 6], M[k + 7], M[k + 8]], l = Math.hypot(...n);
+  const q = [0, 1, 2].map(i => p[i] + 0.5 * n[i] / l);
+  for (const [x, y, z] of [[0.5, 1.7, 0], [-2, 3, 1]]) {
+    eye(w, x, y, z);
+    assert.equal(w.toPainting(c, q, o), true);
+    close(o, [0.4, -0.8]);
+  }
+});

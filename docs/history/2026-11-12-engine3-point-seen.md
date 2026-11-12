@@ -12,7 +12,7 @@ in the language). No engine change for the order.
 
 **How.** `engines/3/world/world.js` `toPainting`: for a card the line from the eye (`world.eye`) through the point meets
 the card's plane as drawn — one turned to the eye by the view's yaw, else its node's plane — and that point is given in
-the card's units; none when the line meets it behind the eye, runs along it, or the eye is edge-on. Animates run before
+the card's units — a flat painting's only: a card, a plane not draped on the land (the review: a form's paint and a draped plane's are not on that plane, so they answer as before, the point's foot along the face); none when the line meets it behind the eye, runs along it, or the eye is edge-on. Animates run before
 the camera steps (the camera frames what they mark), so they read the eye of the step before: one step behind a moving
 camera; a cut's step reads the shot before's eye, the scene's first step the eye before any step (1.7 m up at the
 start, looking ahead) — kept so, and said. A first try placed the camera for a new shot before the animates (a second

@@ -763,9 +763,10 @@ export function createWorld(C, env) {
   world.placedNow = id => byId.get(id)?.jumpedAt === T.tick;
   // a world point v in el's painting (its units, x right, y down) → out (x, y); false: none (an insert's — it is over
   // the frame, not in the world). Where the eye now sees it there: the sky's — the stage point its painting shows the
-  // point at, x from its painting's left, 2π round; a card's — where the line from the eye through the point meets the
-  // card's plane as drawn (a point on that plane: itself); none where the line meets it behind the eye, or runs along
-  // it, or the eye is edge-on to the card
+  // point at, x from its painting's left, 2π round; a flat painting's (a card, a plane not draped on the land) — where
+  // the line from the eye through the point meets its plane as drawn (a point on that plane: itself); none where the
+  // line meets it behind the eye, or runs along it, or the eye is edge-on to it. A form's and a draped plane's paint
+  // is not on that plane: the point's foot on it, along its face (as before 2026-11-12)
   const eyeIn = new Float64Array(3);
   world.toPainting = (el, v, out) => {
     if (el.kind === 'insert') return false;
@@ -776,6 +777,13 @@ export function createWorld(C, env) {
       return true;
     }
     const M = T.nodes.m, o = 12 * el.node, E = world.eye;
+    if (el.form >= 0 || (el.kind === 'plane' && el.flags.drape && height)) {
+      if (el.faces[0]) {
+        const s = m34.scaleOf(M, o), dx = v[0] - M[o + 9], dz = v[2] - M[o + 11], cy = Math.cos(world.yaw), sy = Math.sin(world.yaw);
+        out[0] = (dx * cy + dz * sy) / s; out[1] = -(v[1] - M[o + 10]) / s;
+      } else { m34.inversePoint(M, o, v[0], v[1], v[2], P3); out[0] = P3[0]; out[1] = -P3[1]; }
+      return true;
+    }
     if (el.faces[0]) {
       // (upright through its node, turned by the view's yaw: its right (cos, 0, sin), its normal (−sin, 0, cos) — place.js)
       const s = m34.scaleOf(M, o), cy = Math.cos(world.yaw), sy = Math.sin(world.yaw);
