@@ -98,8 +98,9 @@ const DEPTHS = {
   edge: { format: FORMATS.DEPTH, depthWriteEnabled: false, depthCompare: 'greater' },
   tested: { format: FORMATS.DEPTH, depthWriteEnabled: false, depthCompare: 'greater-equal' },
   over: { format: FORMATS.DEPTH, depthWriteEnabled: false, depthCompare: 'always' },
-  // (a light's view: away from the light by a hair, so what casts does not shade itself)
-  cast: { format: FORMATS.DEPTH, depthWriteEnabled: true, depthCompare: 'greater', depthBias: -DEPTH.BIAS, depthBiasSlopeScale: -2 * DEPTH.SLOPE },
+  // (a light's view: away from the light by a hair — a few of the depth's last bits, against ties; no slope: what
+  // keeps a caster from shading itself is the receiver's own plane, where the map is read — render/wgsl/light.js)
+  cast: { format: FORMATS.DEPTH, depthWriteEnabled: true, depthCompare: 'greater', depthBias: -DEPTH.BIAS },
 };
 // the quads' two vertex buffers (4.1): the corners of every shape; the order, a row an instance — the quad, the
 // shape, the origin page, the edge-on fade, the corners of a part of the SCREEN shape's piece (four vec3f)

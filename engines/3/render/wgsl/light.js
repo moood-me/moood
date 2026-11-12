@@ -22,8 +22,8 @@
 // (−1: it casts nothing now), its kind (0 a far light's two cascades, 1 a point's faces, 2 a window's one view),
 // what each of its two maps stops of the light (the strongest of its casters) and the receivers they fall on (the
 // union of its casters'); a view: its matrix (the world less the origin → its clip space), its cell of the atlases
-// (x, y, side: shares of the atlas's side — the same in both) and the metres a texel of it spans (a far light's; a
-// metre away, a point's and a window's).
+// (x, y, side: shares of the atlas's side — the same in both). No shadow of itself: the receiver's own plane, read
+// in the map (e_shadowAt) — the one safeguard.
 //   The air (5.18): the haze between the eye and a thing D away tints it toward the haze's colour, 1 − e^(−D/reach);
 // the light in it (render/air.js: shafts, the lamps' glow) is a small volume of the frame's view read by whatever is
 // hazed, where it stands — two filtered reads of a small texture and a mix. Not in a mirror's view nor a light's.
@@ -150,26 +150,13 @@ fn e_shadowAt(s: u32, P: vec3f, N: vec3f, recv: u32) -> f32 {
   if (on.x + on.y <= 0.0) { return 1.0; }
   let L = e_lights[u32(S.light)];
   var v = s * ${SHADOWS.VIEWS}u;
-  var toward = L.a.xyz;
-  var far = 1.0;
   if (S.kind == 0u) {
     // (a far light: the first cascade whose square holds P)
     let c = e_shadows.view[v].vp * vec4f(P, 1.0);
     if (max(abs(c.x), abs(c.y)) > 0.94 * c.w || e_shadows.view[v].cell.z <= 0.0) { v += 1u; }
-  } else {
+  } else if (S.kind == 1u) {
+    // (a point: the face its way from the light is most along)
     let e = P - L.a.xyz;
-    far = length(e);
-    toward = -e / max(far, 1e-6);
-  }
-  var n = N;
-  if (dot(n, toward) < 0.0) { n = -n; }
-  // (off its face toward the light by two texels of the map there: no shadow of itself — a point's faces all span
-  // the same, kept in each of them, drawn or not)
-  let R = P + n * (2.0 * e_shadows.view[v].cell.w * far);
-  if (S.kind == 1u) {
-    // (a point: the face the way from the light to the point read is most along — that point's, not P's: near a
-    // seam between two faces the point read may lie in the other)
-    let e = R - L.a.xyz;
     let m = abs(e);
     if (m.x >= m.y && m.x >= m.z) { if (e.x <= 0.0) { v += 1u; } }
     else if (m.y >= m.z) { if (e.y > 0.0) { v += 2u; } else { v += 3u; } }
@@ -177,16 +164,42 @@ fn e_shadowAt(s: u32, P: vec3f, N: vec3f, recv: u32) -> f32 {
   }
   let V = e_shadows.view[v];
   if (V.cell.z <= 0.0) { return 1.0; }
-  let q = V.vp * vec4f(R, 1.0);
+  let q = V.vp * vec4f(P, 1.0);
   if (q.w <= 0.0) { return 1.0; }
   let at = q.xyz / q.w;
   if (abs(at.x) >= 1.0 || abs(at.y) >= 1.0 || at.z <= 0.0 || at.z > 1.0) { return 1.0; }
   // (kept a texel of the coarser atlas within its cell: the 2 × 2 compare reads no neighbour's)
   let lo = V.cell.xy + vec2f(e_shadows.texel.y);
   let uv = clamp(V.cell.xy + (at.xy * vec2f(0.5, -0.5) + 0.5) * V.cell.z, lo, max(lo, V.cell.xy + vec2f(V.cell.z - e_shadows.texel.y)));
+  // No shadow of itself — the one safeguard: P's own plane (N) in the map, its depth as it runs across the map (g);
+  // each map's 2 × 2 compare reads texels a texel of that map off the point read at the most, each axis — where the
+  // receiver's own plane lies up to |g.x| + |g.y| texels' worth nearer the light than P: P is read as that much
+  // nearer, and as where its plane is at the point read (uv kept within its cell). What faces no way (N 0: the air)
+  // is read as it is. A caster close before its receiver keeps its shadow down to that texel of the receiver's slope.
+  var z = vec2f(at.z);
+  if (dot(N, N) > 0.25) {
+    // (two ways along its plane, a step of a hundredth of the way from the light there — a far light's: of a metre)
+    var step = 0.01;
+    if (S.kind != 0u) { step = 0.01 * max(length(P - L.a.xyz), 0.05); }
+    let a = select(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), abs(N.x) > 0.7);
+    let t1 = normalize(cross(N, a)) * step;
+    let t2 = normalize(cross(N, t1)) * step;
+    let c1 = V.vp * vec4f(P + t1, 1.0);
+    let c2 = V.vp * vec4f(P + t2, 1.0);
+    let d1 = c1.xyz / c1.w - at;
+    let d2 = c2.xyz / c2.w - at;
+    let det = d1.x * d2.y - d2.x * d1.y;
+    // (seen edge-on by the light: its plane takes none of its light — nothing to shade)
+    if (abs(det) < 1e-14) { return 1.0; }
+    let g = vec2f(d1.z * d2.y - d2.z * d1.y, d2.z * d1.x - d1.z * d2.x) / det;
+    // (the point read, kept within its cell, as the map's clip: where P's plane is there)
+    let held = (uv - V.cell.xy) / V.cell.z * vec2f(2.0, -2.0) + vec2f(-1.0, 1.0) - at.xy;
+    let side = V.cell.z / e_shadows.texel.xy;
+    z = vec2f(at.z + dot(g, held)) + (abs(g.x) + abs(g.y)) * 2.0 / side;
+  }
   var kept = 1.0;
-  if (on.x > 0.0) { kept *= 1.0 - on.x * (1.0 - textureSampleCompareLevel(e_shadowStatic, e_shadowSampler, uv, at.z)); }
-  if (on.y > 0.0) { kept *= 1.0 - on.y * (1.0 - textureSampleCompareLevel(e_shadowMovers, e_shadowSampler, uv, at.z)); }
+  if (on.x > 0.0) { kept *= 1.0 - on.x * (1.0 - textureSampleCompareLevel(e_shadowStatic, e_shadowSampler, uv, z.x)); }
+  if (on.y > 0.0) { kept *= 1.0 - on.y * (1.0 - textureSampleCompareLevel(e_shadowMovers, e_shadowSampler, uv, z.y)); }
   return kept;
 }
 // the key lights (the first SHADOW.KEYS casting ones) worked out whole where a receiver's pixel is
