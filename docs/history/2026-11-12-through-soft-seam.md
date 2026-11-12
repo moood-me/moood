@@ -21,6 +21,6 @@ left as it is. Mended now, the two faults found beside them.
 
 **Not done here (held by the owner).** A through-light's patch on what is not a receiver of a casting light is worked
 out at the quad's vertices (render/wgsl/quad.js), so its edge comes out jagged and soft — render 43646 against 43647
-(the same scene with one caster). To be mended after the shadows work (#7, #14), in the same pipeline.
+(the same scene with one caster). A mend was tried and dropped: 2026-11-12-light-edges-dropped.md.
 
 **Checks.** `node --test test/through-soft.test.js` — 2 of 2; `test/gpu/check.mjs` — no errors.
