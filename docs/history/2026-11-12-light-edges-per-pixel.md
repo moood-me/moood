@@ -32,7 +32,12 @@ right.
 means: a light that nothing casts for lights every face turned to it within its cone (render/wgsl/light.js `e_term`:
 nothing in it asks what lies between). Not changed.
 
-**Cost** (measure_scene, phone profile, main cd0cd31 against this branch): see the report of the work (ids there).
+**Cost** (measure_scene on the dev stand, T4, phone profile; main cd0cd31 against f1e59b1 — which also carries the
+shadows branch's 450f07f): GPU p95 / main-solid / mirror, ms — `desk` (a through-light of 4 panes, 2 beams) 3.52 →
+4.05 / 1.66 → 2.09 / 0.30 → 0.33 (43696, 43697); `airport` (a through-light of 10 panes, a mirror floor) 3.99 → 4.33
+/ 1.44 → 1.57 / 0.66 → 0.82 (43694, 43695); `habits-remain` / `tram` (neither kind) 2.87 → 2.96 / 0.96 → 1.05 / 0.44
+→ 0.49 (43698, 43699). Frames held at 16.7 ms in all. Brought to the owner before going further: on a weak phone the
+desk's +0.5 ms would be several.
 
 **Checks.** `node --test test/light-edges.test.js` — 3 of 3; `test/gpu/check.mjs` (with `letter`, an own shader) —
 no errors.
