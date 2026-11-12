@@ -35,8 +35,8 @@ export const VIEWU = Object.freeze({ BYTES: 208, PROJ: 0, ROT: 64, EYE: 112, YAW
 export const LIT = Object.freeze({ BYTES: 80, PLANES: 16, PLANE0: LIGHT.LIT });
 // the grid over the lit set: cells a side; a cell's words (how many, then their rows)
 export const GRID = Object.freeze({ SIDE: 32, WORDS: 1 + LIGHT.CELL });
-// the shadows' uniform: a slot 48 bytes, a view 80; six views a slot
-export const SHADOWS = Object.freeze({ SLOT: 48, VIEW: 80, VIEWS: 6, VIEW0: 48 * SHADOW.LIGHTS, BLOB: 48 * SHADOW.LIGHTS + 80 * 6 * SHADOW.LIGHTS, BYTES: 48 * SHADOW.LIGHTS + 80 * 6 * SHADOW.LIGHTS + 32 });
+// the shadows' uniform: a slot 48 bytes, a view 144; six views a slot
+export const SHADOWS = Object.freeze({ SLOT: 48, VIEW: 144, VIEWS: 6, VIEW0: 48 * SHADOW.LIGHTS, BLOB: 48 * SHADOW.LIGHTS + 144 * 6 * SHADOW.LIGHTS, BYTES: 48 * SHADOW.LIGHTS + 144 * 6 * SHADOW.LIGHTS + 32 });
 // the air's volume: cells across and down, depths, how those lie in its texture, where its depths turn from even to
 // ever farther apart (m)
 export const AIR = Object.freeze({ W: 64, H: 36, S: 24, TX: 6, TY: 4, Z0: 1 });
@@ -152,7 +152,7 @@ struct e_View {
 // of panes' row (from row ${LIT.PLANE0}): a — when a point is past it (xyz · P + w > 0); b, c — where the way to the light from P meets it, in cells of its mask; d — its mask's rect in \`panes\` (x, y, w, h: px)
 struct e_Light { a: vec4f, b: vec4f, c: vec4f, d: vec4f, e: vec4f }
 struct e_ShadowSlot { light: i32, kind: u32, views: u32, e_spare: u32, stop: vec4f, onto: vec4u }
-struct e_ShadowView { vp: mat4x4f, cell: vec4f }
+struct e_ShadowView { vp: mat4x4f, cell: vec4f, planes: mat4x4f }
 struct e_Shadows {
   slot: array<e_ShadowSlot, ${SHADOW.LIGHTS}>,
   view: array<e_ShadowView, ${SHADOW.LIGHTS * SHADOWS.VIEWS}>,

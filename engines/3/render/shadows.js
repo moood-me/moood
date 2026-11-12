@@ -36,7 +36,7 @@
 import { LIGHT, RECV, SHADOW, empty } from '../base.js';
 import { SHADOWS, VIEWU } from './wgsl/frame.js';
 import { since, placedAt, stampedAt } from '../world/tables.js';
-import { createView, newCamera, copyCamera, sameCamera, lookRot, perspective, orthographic, viewProj, sees } from './views.js';
+import { createView, newCamera, copyCamera, sameCamera, lookRot, perspective, orthographic, viewProj, inverseTranspose, sees } from './views.js';
 
 const CASCADE = [16, 96], THROW = 300, FACES = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]], UPS = [[0, 1, 0], [0, 1, 0], [0, 0, 1], [0, 0, 1], [0, 1, 0], [0, 1, 0]];
 const ACROSS = [1, 0, 0], UP = [0, 1, 0];
@@ -404,6 +404,8 @@ export function createShadows(gpu, host, sheets, quads, lib) {
   // what each slot's maps stop and fall on (LG11): what its cells keep of the casters their views hold, the persons
   // who cast in it, and — a far light's — the particles that cast; a slot whose cells are all drawn for its light is
   // ready — and the uniform written
+  // (a view's matrix as worked out, before it is laid in the uniform with its inverse transposed)
+  const vp = new Float64Array(16);
   X.write = (lights, O) => {
     f32.fill(0);
     for (let k = 0; k < slots.length; k++) {
@@ -416,8 +418,10 @@ export function createShadows(gpu, host, sheets, quads, lib) {
         if (!c.has) whole = false;
         for (let m = 0; m < 2; m++) { if (c.stop[m] > s.stop[m]) s.stop[m] = c.stop[m]; s.onto[m] |= c.onto[m]; }
         if (!c.has) continue;
-        viewProj(c.drawn, O, f32, vo);
+        viewProj(c.drawn, O, vp);
+        f32.set(vp, vo);
         f32[vo + 16] = c.rect[0]; f32[vo + 17] = c.rect[1]; f32[vo + 18] = c.rect[2]; f32[vo + 19] = c.drawn.yaw;
+        inverseTranspose(vp, f32, vo + 20);
       }
       for (let a = 0; s.light >= 0 && a < casters.length; a++) { const person = casters[a]; if (world.personCastsIn(person.index, s.light)) { if (person.strength > s.stop[1]) s.stop[1] = person.strength; s.onto[1] |= person.onto; } }
       // (particles that cast: in the movers' maps of the far lights, their strength in their coverage, onto the ground)

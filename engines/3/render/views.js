@@ -108,6 +108,19 @@ export function viewProj(camera, origin, out, o = 0) {
   return out;
 }
 
+// a matrix's inverse transposed (column-major, 4 × 4: m → out at o) — what carries a plane (a, b, c, d: a x + b y +
+// c z + d = 0) by the matrix: a view's matrix's, its plane in the view's clip
+export function inverseTranspose(m, out, o = 0) {
+  const b00 = m[0] * m[5] - m[1] * m[4], b01 = m[0] * m[6] - m[2] * m[4], b02 = m[0] * m[7] - m[3] * m[4], b03 = m[1] * m[6] - m[2] * m[5], b04 = m[1] * m[7] - m[3] * m[5], b05 = m[2] * m[7] - m[3] * m[6];
+  const b06 = m[8] * m[13] - m[9] * m[12], b07 = m[8] * m[14] - m[10] * m[12], b08 = m[8] * m[15] - m[11] * m[12], b09 = m[9] * m[14] - m[10] * m[13], b10 = m[9] * m[15] - m[11] * m[13], b11 = m[10] * m[15] - m[11] * m[14];
+  const d = 1 / (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
+  // (the inverse's element (row r, column c) goes to (row c, column r): column-major, out[o + 4 · r + c])
+  out[o] = (m[5] * b11 - m[6] * b10 + m[7] * b09) * d; out[o + 4] = (m[2] * b10 - m[1] * b11 - m[3] * b09) * d; out[o + 8] = (m[13] * b05 - m[14] * b04 + m[15] * b03) * d; out[o + 12] = (m[10] * b04 - m[9] * b05 - m[11] * b03) * d;
+  out[o + 1] = (m[6] * b08 - m[4] * b11 - m[7] * b07) * d; out[o + 5] = (m[0] * b11 - m[2] * b08 + m[3] * b07) * d; out[o + 9] = (m[14] * b02 - m[12] * b05 - m[15] * b01) * d; out[o + 13] = (m[8] * b05 - m[10] * b02 + m[11] * b01) * d;
+  out[o + 2] = (m[4] * b10 - m[5] * b08 + m[7] * b06) * d; out[o + 6] = (m[1] * b08 - m[0] * b10 - m[3] * b06) * d; out[o + 10] = (m[12] * b04 - m[13] * b02 + m[15] * b00) * d; out[o + 14] = (m[9] * b02 - m[8] * b04 - m[11] * b00) * d;
+  out[o + 3] = (m[5] * b07 - m[4] * b09 - m[6] * b06) * d; out[o + 7] = (m[0] * b09 - m[1] * b07 + m[2] * b06) * d; out[o + 11] = (m[13] * b01 - m[12] * b03 - m[15] * b00) * d; out[o + 15] = (m[8] * b03 - m[9] * b01 + m[10] * b00) * d;
+  return out;
+}
 // the sides of a view's frustum, as rows of its projection summed: (the row, its sign) — left, right, bottom, top, near
 const SIDES = [0, 1, 0, -1, 1, 1, 1, -1, 2, -1];
 

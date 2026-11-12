@@ -23,7 +23,7 @@
 // what each of its two maps stops of the light (the strongest of its casters) and the receivers they fall on (the
 // union of its casters'); a view: its matrix (the world less the origin → its clip space), its cell of the atlases
 // (x, y, side: shares of the atlas's side — the same in both) and its yaw (what faces the eye is turned by it there:
-// a card casts turned to its light). No shadow of itself: the receiver's own plane, read in the map (e_shadowAt) —
+// a card casts turned to its light), its matrix inverse transposed (a plane of the world → its clip). No shadow of itself: the receiver's own plane, read in the map (e_shadowAt) —
 // the one safeguard.
 //   The air (5.18): the haze between the eye and a thing D away tints it toward the haze's colour, 1 − e^(−D/reach);
 // the light in it (render/air.js: shafts, the lamps' glow) is a small volume of the frame's view read by whatever is
@@ -182,26 +182,18 @@ fn e_shadowAt(s: u32, P: vec3f, N: vec3f, has: f32, recv: u32) -> f32 {
   // is the one it casts with — upright, turned by this view's yaw. A caster close before its receiver keeps its
   // shadow down to that texel of the receiver's slope.
   var z = vec2f(at.z);
-  var n = N;
-  if (has <= 0.0) { n = vec3f(-sin(V.cell.w), 0.0, cos(V.cell.w)); }
   if (dot(N, N) > 0.25) {
-    // (two ways along its plane, a step of a hundredth of the way from the light there — a far light's: of a metre)
-    var step = 0.01;
-    if (S.kind != 0u) { step = 0.01 * max(length(P - L.a.xyz), 0.05); }
-    let a = select(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), abs(n.x) > 0.7);
-    let t1 = normalize(cross(n, a)) * step;
-    let t2 = normalize(cross(n, t1)) * step;
-    let c1 = V.vp * vec4f(P + t1, 1.0);
-    let c2 = V.vp * vec4f(P + t2, 1.0);
-    let d1 = c1.xyz / c1.w - at;
-    let d2 = c2.xyz / c2.w - at;
-    let det = d1.x * d2.y - d2.x * d1.y;
-    // (seen edge-on by the light: a face lit by N takes none of its light — nothing to shade; a card that faces the
-    // eye, cast edge-on — a light straight over it —, is read as it is)
-    if (abs(det) < 1e-14) {
+    var n = N;
+    if (has <= 0.0) { n = vec3f(-sin(V.cell.w), 0.0, cos(V.cell.w)); }
+    // (its plane in the map's clip — a x + b y + c z + d w = 0, carried by the view's matrix inverse transposed —:
+    // its depth over the map, z = −(a x + b y + d) / c)
+    let k = V.planes * vec4f(n, -dot(n, P));
+    if (abs(k.z) * 1e6 <= abs(k.x) + abs(k.y)) {
+      // (seen edge-on by the light: a face lit by N takes none of its light — nothing to shade; a card that faces the
+      // eye, cast edge-on — a light straight over it —, is read as it is)
       if (has > 0.0) { return 1.0; }
     } else {
-      let g = vec2f(d1.z * d2.y - d2.z * d1.y, d2.z * d1.x - d1.z * d2.x) / det;
+      let g = -k.xy / k.z;
       // (the point read, kept within its cell, as the map's clip: where P's plane is there)
       let held = (uv - V.cell.xy) / V.cell.z * vec2f(2.0, -2.0) + vec2f(-1.0, 1.0) - at.xy;
       let side = V.cell.z / e_shadows.texel.xy;
