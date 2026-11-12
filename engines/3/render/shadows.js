@@ -65,7 +65,7 @@ export function createShadows(gpu, host, sheets, quads, lib) {
   // through; what the casters its view holds stop and fall on — [what stands, what moves]), whether its cells have
   // been drawn for this light at this rank
   const cellOf = drawn => ({ view: createView(gpu, 'light', drawn), moves: drawn ? createView(gpu, 'light movers') : null, camera: newCamera(), drawn: newCamera(), placed: null,
-    has: false, due: true, look: true, now: false, on: false, drawnTick: 0, lookedTick: 0, sig: -1, asked: 1, rect: new Float32Array(4), light: new Float32Array(4), texel: 0,
+    has: false, due: true, look: true, now: false, on: false, drawnTick: 0, lookedTick: 0, sig: -1, asked: 1, rect: new Float32Array(4), light: new Float32Array(4),
     // (a shot's cell: the light its view was last culled for — render/renderer.js)
     culledFor: -1,
     stop: [0, 0], onto: [0, 0] });
@@ -175,8 +175,8 @@ export function createShadows(gpu, host, sheets, quads, lib) {
     }
     return n;
   }
-  // A slot's views placed for its light at a rank: each cell's camera, its share of the atlases, the metres a texel of
-  // it spans, the way or place of its light. eye, gx, gz: the view's eye and its gaze over the level; from: the view
+  // A slot's views placed for its light at a rank: each cell's camera, its share of the atlases, the way or place of
+  // its light. eye, gx, gz: the view's eye and its gaze over the level; from: the view
   // they are of — the frame's, a shot's: its swaps and its overrides are theirs (SH10)
   function placeCells(s, rank, eye, gx, gz, from) {
     const Lt = world.lights, i = s.light, R = RANK[rank], gl = Math.sqrt(gx ** 2 + gz ** 2) || 1;
@@ -195,7 +195,6 @@ export function createShadows(gpu, host, sheets, quads, lib) {
         lookRot(way, Math.abs(way[1]) > 0.99 ? ACROSS : UP, cam.rot);
         orthographic(r, r, 0.1, 2 * THROW, cam.proj);
         cam.ortho = true;
-        c.texel = 2 * r / px;
         light4[0] = -way[0]; light4[1] = -way[1]; light4[2] = -way[2]; light4[3] = 0;
       } else {
         cam.eye[0] = Lt.at[3 * i]; cam.eye[1] = Lt.at[3 * i + 1]; cam.eye[2] = Lt.at[3 * i + 2];
@@ -204,7 +203,6 @@ export function createShadows(gpu, host, sheets, quads, lib) {
         else { way[0] = Lt.way[3 * i]; way[1] = Lt.way[3 * i + 1]; way[2] = Lt.way[3 * i + 2]; lookRot(way, Math.abs(way[1]) > 0.99 ? ACROSS : UP, cam.rot); }
         perspective(tan, 1, 0.05, cam.proj);
         cam.ortho = false;
-        c.texel = 2 * tan / px;
         light4[0] = cam.eye[0]; light4[1] = cam.eye[1]; light4[2] = cam.eye[2]; light4[3] = 1;
       }
       // (what faces the eye is turned to the view: the turn of an eye that looks along `way` — a card casts turned to
@@ -413,14 +411,13 @@ export function createShadows(gpu, host, sheets, quads, lib) {
       let whole = s.light >= 0;
       s.stop[0] = s.stop[1] = 0; s.onto[0] = s.onto[1] = 0;
       for (let v = 0; v < s.views; v++) {
-        const c = s.cells[v];
+        const c = s.cells[v], vo = (SHADOWS.VIEW0 + (k * SHADOWS.VIEWS + v) * SHADOWS.VIEW) / 4;
         if (!c.on) continue;
         if (!c.has) whole = false;
         for (let m = 0; m < 2; m++) { if (c.stop[m] > s.stop[m]) s.stop[m] = c.stop[m]; s.onto[m] |= c.onto[m]; }
-        const vo = (SHADOWS.VIEW0 + (k * SHADOWS.VIEWS + v) * SHADOWS.VIEW) / 4;
         if (!c.has) continue;
         viewProj(c.drawn, O, f32, vo);
-        f32[vo + 16] = c.rect[0]; f32[vo + 17] = c.rect[1]; f32[vo + 18] = c.rect[2]; f32[vo + 19] = c.texel;
+        f32[vo + 16] = c.rect[0]; f32[vo + 17] = c.rect[1]; f32[vo + 18] = c.rect[2];
       }
       for (let a = 0; s.light >= 0 && a < casters.length; a++) { const person = casters[a]; if (world.personCastsIn(person.index, s.light)) { if (person.strength > s.stop[1]) s.stop[1] = person.strength; s.onto[1] |= person.onto; } }
       // (particles that cast: in the movers' maps of the far lights, their strength in their coverage, onto the ground)

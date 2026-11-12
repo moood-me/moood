@@ -278,7 +278,7 @@ export function createLights(world, value, warn) {
       const row = make(id, panes ? LIGHT.THROUGH : LIGHT.FAR);
       if (colour) T.setLight3(Lt.colour, row, colour[0], colour[1], colour[2]);
       if (panes) {
-        Lt.soft[row] = l.soft > 0 ? l.soft : 0.3;
+        Lt.soft[row] = num(l.soft) && l.soft >= 0 ? l.soft : 0.3;
         for (const p of panes) { if (typeof p === 'string') boxPane(row, world.byId.get(p)); else polygonPane(row, p); }
       }
       rules.push({ row, keys, elements, far: true, stale, update() {
