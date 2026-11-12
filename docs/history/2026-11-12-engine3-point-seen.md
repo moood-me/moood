@@ -20,5 +20,6 @@ start, looking ahead) — kept so, and said. A first try placed the camera for a
 yet posed (they are posed after the animates), so a plain cut eased from a wrong framing; and the shot's pure pose
 (`cameraFor`) is not the camera's first frame in every mode (sway, lean, the panorama's run, a platformer). The owner's
 word: the camera steps once a step and nothing touches it early — with no pure pose true in every case, the early
-placing was dropped. Docs: `docs/worlds/scene-format-3.md` (e.point's meaning, that it follows
+placing was dropped. Seen after (8e76c10): works-011 `a-week-maybe-three/kettle`, its showcase over the cut from the
+kitchen to the kettle (43746) — the cut lands whole on her, the camera going on with its slow creep, nothing easing in. Docs: `docs/worlds/scene-format-3.md` (e.point's meaning, that it follows
 the camera a step late, the order of marks), `docs/engine3/design.md` (the step). Test: `test/point-seen.test.js`.
