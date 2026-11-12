@@ -16,7 +16,7 @@ left as it is. Mended now, the two faults found beside them.
   half at the seam on each side. It now takes their sum, at most 1: a blur of two panes that touch is the sum of their
   blurs. Panes apart are as before (their masks do not overlap). The air's shafts read the same function.
   Draft scene on the dev studio (a floor, a sun 40° up through two panes 1.2 m wide touching, `soft` 0.3): render 43655
-  (main cd0cd31) shows the band; the branch's render shows the patch whole.
+  (main cd0cd31) shows the band; render 43657 (this branch, 37cc2d1) shows the patch whole.
 
 **Not done here (held by the owner).** A through-light's patch on what is not a receiver of a casting light is worked
 out at the quad's vertices (render/wgsl/quad.js), so its edge comes out jagged and soft — render 43646 against 43647
