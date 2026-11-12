@@ -54,8 +54,8 @@ export const turnOf = aside => Math.floor(aside / TAU + 0.5);
 // the horizon, the view's yaw; turn: the turn of the circle it is seen in (it is o = aside − TAU · turn aside there)
 // — taken back NOT made a unit: (the gaze) + o · (its right) + up · (up), a plane a unit before the gaze. It is
 // affine in (aside, up): between the corners of a piece of a backdrop its points lie as on any flat piece (SH10
-// asks it so). (The vertex stage's e_skyWay writes the same way as the sine and the cosine of yaw + atan(o), up ·
-// cos(atan(o)): this one less the cosine.)
+// asks it so) — and so does the rasterizer: the vertex stage's e_skyWayIn writes this very way, not made a unit, so
+// what it draws between a cell's corners is the point SHEETS asked there.
 export function backdropWay(p, turn) {
   const o = p[0] - TAU * turn, c = Math.cos(p[2]), s = Math.sin(p[2]);
   p[0] = s + o * c; p[2] = o * s - c;

@@ -1657,7 +1657,7 @@ where a node's points come from.
 - **A flat piece** (a card, a plane, an insert, a block of a form, a turn of a backdrop): its four corners are
   placed once and its points are bilinear between them — exact —, so a node costs no call of `place`.
 - **A backdrop** — a sky that does not go round — **is flat**: it is a plane a unit before the gaze's yaw (WT7:
-  the way toward its point is (the gaze) + o · (its right) + up · (up), made a unit only for drawing), so each
+  the way toward its point is (the gaze) + o · (its right) + up · (up), never made a unit — drawing too: moood#6), so each
   turn of the circle the view may see of it is one flat piece, cut out of the sheet by the turn's two sides where
   the sheet reaches into more turns than one. A sky costs what a plane costs.
 - **A curved kind** — a plane draped on the land, a sky that goes round: a node reads nine points of it (its

@@ -75,7 +75,12 @@ fn e_skyWay(at: vec2f, map: vec3f, yaw: f32) -> vec3f {
 }
 // … a backdrop's point in the turn given (place.js backdropWay's turn; looking round there are no turns): the points
 // of one turn lie as on one flat piece — a piece of a sheet drawn in one turn is never torn across the turn's back
-// (render/quads.js draws a sky quad once for each turn it reaches into; its fragment keeps the turn's own)
+// (render/quads.js draws a sky quad once for each turn it reaches into; its fragment keeps the turn's own). A
+// backdrop's way is place.js backdropWay's, NOT made a unit — (the gaze) + o · (its right) + up · (up), affine in the
+// sheet's point —: so the rasterizer, interpolating between a cell's corners, lands each pixel on its own point of
+// the sheet, and the level its footprint reads is the one SHEETS asked (sheets/ask.js: a backdrop is a flat piece).
+// A way made a unit at each corner is the same corner but another weight: inside a cell the sheet's point drifts and
+// the footprint swells, up to a sixth of a level near a corner — past what was asked (moood#6)
 fn e_skyWayIn(at: vec2f, map: vec3f, yaw: f32, turn: f32) -> vec3f {
   let up = map.x - at.y;
   if (map.z > 0.5) {
@@ -83,9 +88,7 @@ fn e_skyWayIn(at: vec2f, map: vec3f, yaw: f32, turn: f32) -> vec3f {
     return normalize(vec3f(sin(b), up, -cos(b)));
   }
   let o = at.x - 0.5 * e_WORLD_STAGE - yaw - e_WORLD_TAU * turn;
-  let r = atan(o);
-  let b = yaw + r;
-  return normalize(vec3f(sin(b), up * cos(r), -cos(b)));
+  return vec3f(sin(yaw) + o * cos(yaw), up, o * sin(yaw) - cos(yaw));
 }
 // whether a way looks at a backdrop within the turn about the gaze of that yaw (its point at most π aside of it — so
 // within e_WORLD_BEHIND of the gaze, ahead): there a point of each turn is seen where its piece puts it, past it none
