@@ -14,7 +14,8 @@ left as it is. Mended now, the two faults found beside them.
 - Two panes of one light that touch, with a soft edge, left a dark band along their seam: each pane's mask is blurred
   on its own (render/lights.js `rasterPanes`), and `e_through` (render/wgsl/light.js) took the largest of them — about
   half at the seam on each side. It now takes their sum, at most 1: a blur of two panes that touch is the sum of their
-  blurs. Panes apart are as before (their masks do not overlap). The air's shafts read the same function.
+  blurs. Panes farther apart than their soft edges are as before; nearer ones now light the strip between them a
+  little more, as two penumbras add (works-011 `house`: two windows 0.41 m apart, `soft` 0.4 — not rendered). The air's shafts read the same function.
   Draft scene on the dev studio (a floor, a sun 40° up through two panes 1.2 m wide touching, `soft` 0.3): render 43655
   (main cd0cd31) shows the band; render 43657 (this branch, 37cc2d1) shows the patch whole.
 
