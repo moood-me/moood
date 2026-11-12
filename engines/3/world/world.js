@@ -761,9 +761,12 @@ export function createWorld(C, env) {
   // whether element `id` was put where it is at once this step — a key of its place, or of what carries it, set, not
   // moved (PP1 `placed`: a person put somewhere has walked no way)
   world.placedNow = id => byId.get(id)?.jumpedAt === T.tick;
-  // a world point v in el's painting (its units, x right, y down) → out (x, y); false: none (edge on; an insert's —
-  // it is over the frame, not in the world). The sky's: the stage point its painting shows the point at, seen from
-  // the eye — x from its painting's left, 2π round
+  // a world point v in el's painting (its units, x right, y down) → out (x, y); false: none (an insert's — it is over
+  // the frame, not in the world). Where the eye now sees it there: the sky's — the stage point its painting shows the
+  // point at, x from its painting's left, 2π round; a card's — where the line from the eye through the point meets the
+  // card's plane as drawn (a point on that plane: itself); none where the line meets it behind the eye, or runs along
+  // it, or the eye is edge-on to the card
+  const eyeIn = new Float64Array(3);
   world.toPainting = (el, v, out) => {
     if (el.kind === 'insert') return false;
     if (el.kind === 'sky') {
@@ -772,16 +775,31 @@ export function createWorld(C, env) {
       out[0] = l + (((out[0] - l) % TAU) + TAU) % TAU;
       return true;
     }
-    const M = T.nodes.m, o = 12 * el.node;
+    const M = T.nodes.m, o = 12 * el.node, E = world.eye;
     if (el.faces[0]) {
-      const s = m34.scaleOf(M, o), dx = v[0] - M[o + 9], dz = v[2] - M[o + 11], cy = Math.cos(world.yaw), sy = Math.sin(world.yaw);
-      out[0] = (dx * cy + dz * sy) / s; out[1] = -(v[1] - M[o + 10]) / s;
+      // (upright through its node, turned by the view's yaw: its right (cos, 0, sin), its normal (−sin, 0, cos) — place.js)
+      const s = m34.scaleOf(M, o), cy = Math.cos(world.yaw), sy = Math.sin(world.yaw);
+      const u = alongEye((E[2] - M[o + 11]) * cy - (E[0] - M[o + 9]) * sy, (v[2] - M[o + 11]) * cy - (v[0] - M[o + 9]) * sy);
+      if (u === 0) return false;
+      const x = E[0] + u * (v[0] - E[0]) - M[o + 9], y = E[1] + u * (v[1] - E[1]) - M[o + 10], z = E[2] + u * (v[2] - E[2]) - M[o + 11];
+      out[0] = (x * cy + z * sy) / s; out[1] = -y / s;
       return true;
     }
+    m34.inversePoint(M, o, E[0], E[1], E[2], eyeIn);
     m34.inversePoint(M, o, v[0], v[1], v[2], P3);
-    out[0] = P3[0]; out[1] = -P3[1];
+    const u = alongEye(eyeIn[2], P3[2]);
+    if (u === 0) return false;
+    out[0] = eyeIn[0] + u * (P3[0] - eyeIn[0]); out[1] = -(eyeIn[1] + u * (P3[1] - eyeIn[1]));
     return true;
   };
+  // how far along the line from the eye through a point the card's plane is (1: the point is on it), by how far each
+  // is off the plane (eye, point) → 0: none — met behind the eye, the line along the plane, the eye edge-on to it
+  const EDGE = 1e-6;
+  function alongEye(eye, point) {
+    if (Math.abs(eye) < EDGE || Math.abs(eye - point) < EDGE) return 0;
+    const u = eye / (eye - point);
+    return u > 0 ? u : 0;
+  }
   // … as `get` would have things: a painting made ahead for a shot — one object, read at once
   const spotThen = { across: 0, distance: 0, elevation: 0, ground: 0 };
   world.spotAs = (el, get) => { localOf(el, 0, get, C1, 0, spotThen); return spotThen; };

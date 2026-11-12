@@ -56,8 +56,10 @@ script; it loads `page.js` with `import()` when the first engine-3 spec arrives 
 3. `step(dt, seen)` (`engines/3/play/step.js`), always in this order: the director (actions, sequences, the film's beats; a cut
    sets its values now — one that waits for its shot stands the whole story till that is ready, the rest of the step
    running on the world's time) → the world's tables from the changed keys (paintings that arrived written in, nodes placed)
-   → animates people depend on → `people.frame` → other animates, emitters, camera, sky, lights → on a seen step the
-   changed rows flushed to the GPU.
+   → on a step that begins a shot (the scene's first, a cut) the camera placed for it, of no time → animates people depend
+   on → `people.frame` → other animates, emitters, camera, sky, lights → on a seen step the changed rows flushed to the
+   GPU. So an animate reads the eye (`world.eye`, `world.yaw`: `e.point` on a card) as the camera stood at the end of the
+   step before — one step behind a camera that moves —, never the shot before a cut's nor the eye's place before any step.
 4. `show()`: what must be painted is asked of the artist (rationed: one make in flight an element), each live shot's
    people prepared, and the frame record `f` filled (RN4).
 5. `R.frame(f)` (`render/renderer.js`): pages that arrived are placed in the cache; views placed (the frame's, each
