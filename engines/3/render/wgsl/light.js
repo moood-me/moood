@@ -161,20 +161,24 @@ fn e_shadowAt(s: u32, P: vec3f, N: vec3f, recv: u32) -> f32 {
     let e = P - L.a.xyz;
     far = length(e);
     toward = -e / max(far, 1e-6);
-    if (S.kind == 1u) {
-      // (a point: the face its way from the light is most along)
-      let m = abs(e);
-      if (m.x >= m.y && m.x >= m.z) { if (e.x <= 0.0) { v += 1u; } }
-      else if (m.y >= m.z) { if (e.y > 0.0) { v += 2u; } else { v += 3u; } }
-      else if (e.z > 0.0) { v += 4u; } else { v += 5u; }
-    }
+  }
+  var n = N;
+  if (dot(n, toward) < 0.0) { n = -n; }
+  // (off its face toward the light by two texels of the map there: no shadow of itself — a point's faces all span
+  // the same, kept in each of them, drawn or not)
+  let R = P + n * (2.0 * e_shadows.view[v].cell.w * far);
+  if (S.kind == 1u) {
+    // (a point: the face the way from the light to the point read is most along — that point's, not P's: near a
+    // seam between two faces the point read may lie in the other)
+    let e = R - L.a.xyz;
+    let m = abs(e);
+    if (m.x >= m.y && m.x >= m.z) { if (e.x <= 0.0) { v += 1u; } }
+    else if (m.y >= m.z) { if (e.y > 0.0) { v += 2u; } else { v += 3u; } }
+    else if (e.z > 0.0) { v += 4u; } else { v += 5u; }
   }
   let V = e_shadows.view[v];
   if (V.cell.z <= 0.0) { return 1.0; }
-  var n = N;
-  if (dot(n, toward) < 0.0) { n = -n; }
-  // (off its face toward the light by two texels of the map there: no shadow of itself)
-  let q = V.vp * vec4f(P + n * (2.0 * V.cell.w * far), 1.0);
+  let q = V.vp * vec4f(R, 1.0);
   if (q.w <= 0.0) { return 1.0; }
   let at = q.xyz / q.w;
   if (abs(at.x) >= 1.0 || abs(at.y) >= 1.0 || at.z <= 0.0 || at.z > 1.0) { return 1.0; }
