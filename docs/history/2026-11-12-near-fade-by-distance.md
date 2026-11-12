@@ -22,12 +22,11 @@ nearness to the eye itself — what walking through leaves needs —, not by a n
 - Docs: `architecture.md` 5.17 and its table, `base.js`, `scene-format-3.md` (the sentence on moving past near things).
 
 **Walking through leaves** still fades well: a curtain across the gaze is now see-through first where it is
-nearest — straight ahead — and stays a little longer toward the frame's sides; at the near plane (0.1 m) every part
-of the frame within some 60° of the gaze is already gone, so nothing pops.
+nearest — straight ahead — and stays a little longer toward the frame's sides (what this asks of the near plane:
+below).
 
-**What it does not give.** The fade band is still 20…60 cm from the eye: in a close-up with the lens 35 cm over a
-desk, the desk's front edge some 40 cm from the eye is half there. Things more than 60 cm from the lens no longer
-fade, however near they are along the gaze.
+**What it did not give at first.** With the band still 20…60 cm from the eye, in a close-up with the lens 35 cm over
+a desk the desk's front edge some 40 cm from the eye was half there — hence the narrowing below.
 
 **Seen.** Renders on the dev studio, works-011 `not-my-fault/letter`, the lens 34 cm over the desk by its front
 (`camera_x` 0.1, `camera_z` 0.5, `camera_h` −0.6, `camera_yaw` 31, `camera_pitch` −45): before (main) 43666 — the
@@ -44,3 +43,6 @@ frame's corner (about 65° at the widest: a 32:9 screen with the gaze far off th
 reversed float32 — as fine at 1 cm as at 10; mirrors and lights have near planes of their own; nothing else reads the
 number but the camera's own test of a lens inside a person (now within 1 cm of their body). The camera's nearest
 point, its rays' start and the least distance it frames from go by the same two numbers, as before.
+Renders (5549f7b): the same close-up, 43709 — the drawer's front and sides, the apron, the chair, all solid; the
+sheer curtain 12 cm and 7 cm before the eye on a 21:9 frame (43711, 43710) — it thins out softly toward the frame's
+sides and corners, no cut edge anywhere.
