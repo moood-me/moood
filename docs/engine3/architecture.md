@@ -90,7 +90,8 @@ Numbers marked ≈ are orientations (the owner's numbers are orientations with a
     pixels of a sheet that has holes or soft edges —, the land and people are drawn
     once with depth; then what blends, tested against that depth, its fully transparent pixels dropped: opaque
     paint hides by depth, whatever sheet it is in (5.17). Light at
-    the vertices for what blends; per pixel on opaque receivers only the two key lights and their shadow maps.
+    the vertices for what blends; per pixel on what is opaque only the lights whose patch has an edge (through panes,
+    beams), and on opaque receivers the two key lights and their shadow maps.
     One full-screen pass after the main ones. (K5, S1, S6, C8, C9; rulings 2-A1, 3-2.1, 3-2.2.)
 12. **Pipelines are a small closed set built in parallel as soon as the spec is compiled**; "ready" is one promise.
     A repaint, a change of clothes, a cut never makes a pipeline. No compute pipelines. (S8, W1.)
@@ -2481,7 +2482,7 @@ one set serves `main-solid` and `main-blend`. **A mirror's pass has a set of its
 `has.glass`): its image has an alpha (4.3), so its pipelines declare `rgba16float` — the same modules, the names
 with `:mirror` —: `solid`, `cut`, `edge`, `blend`, `multiply`, `sky`, the land's two, one `blend` an own text,
 `glow`, and the people's four mains with the winding turned. No receiver variant among them — the land's two are
-its plain ones there: in a mirror everything is lit at its vertices (a mirror's image is small and, where the
+its plain ones there: in a mirror everything is lit at its vertices but the lights with an edge (5.5), as in the frame (a mirror's image is small and, where the
 mirror is rough, smeared) — which is also the mirror's pass made cheaper. Their fragments write how much of the thing there is as alpha (5.7).
 Quads: `solid`, `blend` — each plain and receiver —, `cut` and `edge` — each plain and receiver: a mixed sheet's
 opaque pixels with depth (the others dropped), and its other pixels blended under the strict test `greater`
@@ -2811,7 +2812,11 @@ rank among the four: rank 0 — a cascade or window 1/2, a face 1/4; rank 1 — 
   tick of the call that drew or looked.
 - **Reading**: one function for vertices and fragments, two compare reads a casting light (static, movers). Opaque
   receivers read the first `SHADOW.KEYS` (2) casting lights per pixel — and work those two lights out per pixel
-  (a lamp's pool on a floor is sharp); everything else, and everything that blends, at vertices.
+  (a lamp's pool on a floor is sharp). The lights whose patch has an edge — the through-lights and the beams, the lit
+  set's rows after the far lights — are worked out per pixel on every opaque quad and the land, receiver or not, in
+  their shadow as at its vertices (render.light `e_edges`; their vertices skip them): a window's patch, a beam's pool
+  are as sharp as they are on any wall, whatever the grid of its vertices (#10). Everything else, everything that
+  blends, particles and people, at vertices.
 - A card that faces the eye casts turned to its light, whatever the camera's turn.
 - People ground by the `blob` map. The land's own shadow of the far lights is a baked field (by count), a field a
   view (4.2, group 1): the land, what is draped on it and everything lit that stands in the scene — quads and
@@ -2877,7 +2882,7 @@ mirrors — a `rough` moved draws its image again (its density, smear and margin
   is as sharp as a small one. The world's mirror textures are all of one size, the most any of its images has
   needed, grown by 64 px when one needs more (its images then drawn anew).
   Drawn in ONE pass by the mirror's own pipelines (opaque paint, the sky, what blends, the lights' glows — 4.4,
-  4.5; its `ids` and depth are discarded), everything lit at its vertices; particles are not drawn in it (their
+  4.5; its `ids` and depth are discarded), everything lit at its vertices but the lights with an edge on what is opaque (5.5); particles are not drawn in it (their
   pipeline reads the scene's depth). Its near plane lies `MIRROR.OVER` over the mirror: what lies level with a
   mirror is not in it;
 - **the image's alpha is how much of a mirror image there is**; the overlay lays `image.rgba · strength · paint`
@@ -3285,8 +3290,11 @@ whose shader reads many layers a pixel (5.12's first row).
 **What a blended pixel may read**: one table entry (read once: SH14's `sheetFind`) and one cache sample (two taps on a plane), its clip's mask if
 clipped — nothing else; light, haze and air come from its vertices. An own shader's pixel: one entry and one
 sample for each `layer` it reads (the skies of two scenes read nine). A particle's: its sprite and, if `soft`,
-the scene's depth. **An opaque receiver's pixel**: + two key lights worked out, 4 shadow compares, the blob, a
-pane's mask for each pane of a through-light key, the land's shadow of each far key light (4 loads), the air (2 taps).
+the scene's depth. **An opaque pixel**: + the lights with an edge that are no key (none in a scene without
+through-lights or beams: one compare) — each a pane's mask for each of its panes or a beam's cone, its land's shadow,
+and on a receiver its shadow's compares. **An opaque receiver's pixel**: + two key lights worked out, 4 shadow
+compares, the blob, a pane's mask for each pane of a through-light key, the land's shadow of each far key light (4
+loads), the air (2 taps).
 
 **The account (rulings 2-A3, 3-2).** The screens below were COUNTED over all 20 scenes (v3-whole-picture §2:
 every painting replayed into a small mask, every quad of a view sorted per cell of a 192 × 108 frame, the start

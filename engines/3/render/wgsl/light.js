@@ -12,9 +12,10 @@
 // colour is
 // linear; each term's own amount (its strength, its falloff, how it faces) is the painted engine's, taken to linear
 // (e_lin) term by term.
-//   WHERE it is worked out: where a thing's vertices are — never in a fragment of what blends. What is opaque and
-// takes shadows (a receiver) leaves the SHADOW.KEYS first casting lights to its pixels, which work those lights out
-// whole (e_keys): a lamp's pool on a floor is sharp.
+//   WHERE it is worked out: where a thing's vertices are — never in a fragment of what blends. What is opaque leaves
+// the lights whose patch has an edge (through panes, beams) to its pixels (e_edges): a window's patch, a beam's pool
+// are sharp on any wall. What is opaque and takes shadows (a receiver) leaves the SHADOW.KEYS first casting lights to
+// its pixels too, which work those lights out whole (e_keys): a lamp's pool on a floor is sharp.
 //   Lights: the lit set (render/lights.js), a row each — far lights first, then those through panes, then the beams,
 // then points and windows, found through a grid over the level (cells across x and z: each its count, then its rows).
 //   Shadows (5.5): two atlases of depth (reversed), read through one comparison sampler — the hardware's 2 × 2 —,

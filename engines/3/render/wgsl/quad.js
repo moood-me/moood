@@ -13,8 +13,9 @@
 // its quad's kind (4.8): the ask named the pages of that level.
 //   Its light is worked out at its vertices (render.light e_lightOn) and given to its fragment as what its painting is
 // multiplied by and what is added: a fragment of what blends reads its painting and nothing else (its clip's mask if
-// clipped). A RECEIVER that is solid leaves the key lights, the light all round (the people near take of it: the
-// blob) and the air to its pixels (5.5, 5.17).
+// clipped). What is solid leaves the lights whose patch has an edge to its pixels (render.light e_edges: through
+// panes, beams); a RECEIVER that is solid the key lights, the light all round (the people near take of it: the
+// blob) and the air too (5.5, 5.17).
 //   Passed close by, what stands upright fades (5.17): in the frame's view — not in a mirror's, not in a light's — a
 // card's alpha is multiplied by how far before the eye the point is along the gaze, from PASS.FROM (nothing) to
 // PASS.TO (all of it) — the distance carried from its vertices, bounded at the pixel; render/quads.js draws such a
